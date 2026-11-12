@@ -82,6 +82,27 @@ void Document::setAvatar(const std::u32string& name, const std::string& base64) 
     setCharacter(c);
 }
 
+std::vector<int> dualSides(const Document& doc) {
+    const auto& ps = doc.paragraphs;
+    const int n = static_cast<int>(ps.size());
+    std::vector<int> side(n, 0);
+    auto speechPart = [&](int i) {
+        return ps[i].type == Element::Parenthetical || ps[i].type == Element::Dialogue;
+    };
+    for (int i = 0; i < n; ++i) {
+        if (ps[i].type != Element::Character || !ps[i].dual) continue;
+        int left = i - 1;
+        while (left >= 0 && speechPart(left)) --left;
+        // A fala da esquerda precisa existir, ser completa e não ser ela mesma a direita de outro par.
+        if (left < 0 || ps[left].type != Element::Character || left == i - 1 || side[left] != 0) continue;
+        int end = i + 1;
+        while (end < n && speechPart(end)) ++end;
+        for (int k = left; k < i; ++k) side[k] = 1;
+        for (int k = i; k < end; ++k) side[k] = 2;
+    }
+    return side;
+}
+
 void Document::ensureNotEmpty() {
     if (paragraphs.empty()) paragraphs.push_back({Element::SceneHeading, U""});
 }

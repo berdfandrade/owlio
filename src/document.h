@@ -24,6 +24,7 @@ struct Paragraph {
     Element type = Element::Action;
     std::u32string text;
     std::u32string synopsis;  // só para Cabeçalho: sinopse mostrada no cartão da cena
+    bool dual = false;        // só para Personagem: esta fala fica ao lado da anterior (diálogo duplo)
 
     Paragraph() = default;
     Paragraph(Element t, std::u32string tx, std::u32string syn = {})
@@ -70,6 +71,10 @@ bool isSpace(char32_t c);
 bool isWordChar(char32_t c);
 std::u32string trim(const std::u32string& s);
 bool startsWithNoCase(const std::u32string& s, const std::u32string& prefix);
+
+// Diálogo duplo: para cada parágrafo, 0 = normal, 1 = coluna da esquerda, 2 = coluna da direita.
+// Uma fala com `dual` vai para a direita e a fala logo antes dela, para a esquerda.
+std::vector<int> dualSides(const Document& doc);
 
 // Texto como aparece na página (maiúsculas quando o elemento pede).
 std::u32string displayText(const Paragraph& p);

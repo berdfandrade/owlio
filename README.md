@@ -32,6 +32,7 @@ It also follows the keyboard-first flow screenwriters know from tools like Final
 - **Six screenplay elements**: Scene Heading, Action, Character, Parenthetical, Dialogue, Transition.
 - **Smart element flow**: Enter after a character name starts dialogue, Enter after dialogue starts the next character, and Tab turns an empty action line into a character cue. Ctrl+1 to Ctrl+6 pick an element directly.
 - **Autocomplete**: suggests character names (most frequent first), locations already used, times of day, extensions such as (V.O.) and (O.S.), and common transitions. Accept with Tab, Enter or →. Suggestions follow the script conventions you pick in Settings: English (DAY, NIGHT, CUT TO:) or Portuguese (DIA, NOITE, CORTA PARA:).
+- **Dual dialogue**: put two speeches side by side when characters talk at the same time. Place the cursor in either speech and use Format → Dual Dialogue (Ctrl+Shift+D). It is saved as `^` in Fountain and as `<DualDialogue>` in Final Draft files.
 - Parentheticals get their parentheses automatically, and full Unicode support covers accented input.
 
 ### Pages and pagination
@@ -45,6 +46,11 @@ It also follows the keyboard-first flow screenwriters know from tools like Final
 - **Drag and drop cards to reorder scenes.** The whole scene moves in the script, and Ctrl+Z undoes the move. Alt+arrow keys move cards from the keyboard.
 - Write a **synopsis** for each scene with F2. When a scene has no synopsis, the card shows the opening of its action.
 - Double-click a card to jump to that scene in the script.
+
+### Saving and backups
+- **Autosave**: scripts that already have a file are saved automatically every 5 minutes (1 or 10 minutes, or off, in Settings).
+- **Crash recovery**: while there are unsaved changes, Owlio keeps a recovery copy every 20 seconds, untitled scripts included. If it closes unexpectedly, it offers the changes back the next time it starts.
+- **Backups**: every save also keeps a dated copy of the script, up to the 30 most recent per script. Automatic saves add at most one backup every 10 minutes. File → Backups opens one as an untitled copy, so the backup itself is never overwritten.
 
 ### Files
 - **Fountain** (`.fountain`) is the native format: plain text, open, and readable by many other screenwriting tools.
@@ -86,6 +92,7 @@ It also follows the keyboard-first flow screenwriters know from tools like Final
 | **Enter** | Next element (Scene Heading → Action, Character → Dialogue, Dialogue → Character, …) |
 | **Tab / Shift+Tab** | Cycle the element type. At the end of a speech, Tab inserts a parenthetical |
 | **Ctrl+1 … Ctrl+6** | Scene Heading, Action, Character, Parenthetical, Dialogue, Transition |
+| **Ctrl+Shift+D** | Dual dialogue on or off for the speech under the cursor |
 | **Tab / Enter / →** | Accept the grey autocomplete suggestion |
 | **Ctrl+Shift+C / Ctrl+Shift+R** | Index cards / script view |
 | **Ctrl+Shift+F** | Focus mode |
@@ -135,7 +142,7 @@ cmake --build build -j
 ## Tests
 
 ```bash
-./build/owlio_tests      # core: Fountain/FDX round-trips, pagination, editing, scene reordering, character sheets
+./build/owlio_tests      # core: Fountain/FDX round-trips, pagination, editing, scene reordering, character sheets, dual dialogue
 ./run.sh --help
 LD_LIBRARY_PATH=$HOME/Qt/6.8.3/gcc_64/lib ./build/owlio_gui_test   # drives the real window with keyboard and mouse events
 ```
@@ -154,6 +161,7 @@ LD_LIBRARY_PATH=$HOME/Qt/6.8.3/gcc_64/lib ./build/owlio_gui_test   # drives the 
 | `src/mainwindow.*` | Menus, toolbar, side panels |
 | `src/titlepagedialog.*`, `src/printdialog.*` | Title page editor and print/PDF window, both with previews |
 | `src/characterdialog.*` | Character sheet window |
+| `src/autosave.*` | Autosave, crash recovery copies and dated backups |
 | `src/settingsdialog.*`, `src/i18n.*` | Settings window, interface language and translation loading |
 | `src/avatars.*` | Character photos: import, crop, cache and circular drawing |
 | `src/theme.*`, `resources/themes/estilo.qss` | Light/dark palettes, the Qt style sheet, recolored SVG icons |
@@ -181,7 +189,5 @@ The build compiles the `.ts` files and embeds them in the app. To add a language
 Owlio is young, and the page size is US Letter. On the roadmap:
 
 - A4 pages
-- Dual dialogue
 - Revision mode with colored pages
 - Reports (scenes, characters, locations)
-- Autosave and backups

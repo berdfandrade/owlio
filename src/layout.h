@@ -25,6 +25,8 @@ struct ElementStyle {
 };
 
 const ElementStyle& elementStyle(Element e);
+// Estilo dentro do diálogo duplo: side 1 = coluna da esquerda, 2 = da direita (0 = normal).
+const ElementStyle& elementStyle(Element e, int side);
 
 struct LayoutLine {
     int para = -1;        // -1 para linhas virtuais, ex.: (MAIS) / (CONT.)

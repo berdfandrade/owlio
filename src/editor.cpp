@@ -163,6 +163,58 @@ CharacterStats Editor::characterStats(const std::u32string& name) const {
     return st;
 }
 
+int Editor::speechCue(int para) const {
+    if (para < 0 || para >= static_cast<int>(doc_.paragraphs.size())) return -1;
+    int i = para;
+    while (i >= 0 && (doc_.paragraphs[i].type == Element::Parenthetical || doc_.paragraphs[i].type == Element::Dialogue))
+        --i;
+    return i >= 0 && doc_.paragraphs[i].type == Element::Character ? i : -1;
+}
+
+bool Editor::isDualDialogue() const {
+    const int cue = speechCue(cursor_.para);
+    return cue >= 0 && dualSides(doc_)[cue] != 0;
+}
+
+bool Editor::toggleDualDialogue() {
+    const int cue = speechCue(cursor_.para);
+    if (cue < 0) return false;
+    const std::vector<int> sides = dualSides(doc_);
+    const int n = static_cast<int>(doc_.paragraphs.size());
+    int target = -1;
+    bool on = true;
+    if (sides[cue] == 2) {
+        target = cue, on = false;
+    } else if (sides[cue] == 1) {
+        // Na fala da esquerda: desliga o par desligando a fala da direita.
+        target = cue + 1;
+        while (target < n && sides[target] == 1) ++target;
+        on = false;
+    } else {
+        // Põe esta fala ao lado da anterior; se não houver, a próxima ao lado desta.
+        Document probe = doc_;
+        probe.paragraphs[cue].dual = true;
+        if (dualSides(probe)[cue] == 2) {
+            target = cue;
+        } else {
+            int next = cue + 1;
+            while (next < n && (doc_.paragraphs[next].type == Element::Parenthetical ||
+                                doc_.paragraphs[next].type == Element::Dialogue))
+                ++next;
+            if (next < n && doc_.paragraphs[next].type == Element::Character && sides[next] == 0) {
+                probe = doc_;
+                probe.paragraphs[next].dual = true;
+                if (dualSides(probe)[next] == 2) target = next;
+            }
+        }
+    }
+    if (target < 0 || target >= n) return false;
+    beginEdit(EditKind::Other);
+    doc_.paragraphs[target].dual = on;
+    changed();
+    return true;
+}
+
 // ------------------------------------------------------------ undo
 
 void Editor::beginEdit(EditKind kind) {
@@ -869,7 +921,9 @@ std::vector<SceneSummary> Editor::sceneSummaries() const {
         const LayoutLine& l = L.lines[lineIndex];
         return l.page * page::kLinesPerPage + l.row;
     };
-    int endRowOfDoc = L.lines.empty() ? 0 : absRow(static_cast<int>(L.lines.size()) - 1) + 1;
+    // A última linha guardada pode ser da coluna da direita de um diálogo duplo: usa a mais baixa.
+    int endRowOfDoc = 0;
+    for (int li = 0; li < static_cast<int>(L.lines.size()); ++li) endRowOfDoc = std::max(endRowOfDoc, absRow(li) + 1);
 
     for (size_t k = 0; k < heads.size(); ++k) {
         const int h = heads[k];
