@@ -6,6 +6,7 @@
 #include <QTimer>
 #include <cstdio>
 
+#include "i18n.h"
 #include "mainwindow.h"
 #include "scriptview.h"
 #include "theme.h"
@@ -20,24 +21,25 @@ int main(int argc, char* argv[]) {
     ThemeManager::instance().init();
 
     QCommandLineParser cli;
-    cli.setApplicationDescription("Owlio — editor de roteiros");
+    cli.setApplicationDescription("Owlio, a screenwriting app");
     cli.addHelpOption();
     cli.addVersionOption();
-    QCommandLineOption pdfOpt("export-pdf", "Exporta o roteiro para PDF e sai.", "saida.pdf");
-    QCommandLineOption shotOpt("screenshot", "Salva uma captura da janela e sai.", "imagem.png");
-    QCommandLineOption themeOpt("tema", "Força o tema nesta execução: claro ou escuro.", "tema");
-    cli.addOption(themeOpt);
-    QCommandLineOption cardsOpt("cartoes", "Abre na tela de cartões.");
-    cli.addOption(cardsOpt);
-    cli.addOption(pdfOpt);
-    cli.addOption(shotOpt);
-    cli.addPositionalArgument("arquivo", "Roteiro .fountain ou .fdx para abrir.");
+    QCommandLineOption pdfOpt("export-pdf", "Export the script to PDF and quit.", "out.pdf");
+    QCommandLineOption shotOpt("screenshot", "Save a screenshot of the window and quit.", "image.png");
+    QCommandLineOption themeOpt({"theme", "tema"}, "Force the theme for this run: light or dark.", "theme");
+    QCommandLineOption langOpt({"language", "lang"}, "Interface language for this run: en or pt_BR.", "code");
+    QCommandLineOption cardsOpt({"cards", "cartoes"}, "Open in the index cards view.");
+    for (const QCommandLineOption& o : {themeOpt, langOpt, cardsOpt, pdfOpt, shotOpt}) cli.addOption(o);
+    cli.addPositionalArgument("file", "A .fountain or .fdx script to open.");
     cli.process(app);
 
-    if (cli.isSet(themeOpt))
-        ThemeManager::instance().setMode(cli.value(themeOpt) == "escuro" ? ThemeManager::Mode::Dark
-                                                                         : ThemeManager::Mode::Light,
-                                         false);
+    i18n::install(app, cli.value(langOpt));
+
+    if (cli.isSet(themeOpt)) {
+        const QString t = cli.value(themeOpt).toLower();
+        const bool dark = t == "dark" || t == "escuro";
+        ThemeManager::instance().setMode(dark ? ThemeManager::Mode::Dark : ThemeManager::Mode::Light, false);
+    }
 
     MainWindow w;
     const QStringList files = cli.positionalArguments();
@@ -45,7 +47,7 @@ int main(int argc, char* argv[]) {
 
     if (cli.isSet(pdfOpt)) {
         bool ok = w.exportPdfTo(cli.value(pdfOpt));
-        std::printf("%s\n", ok ? "PDF exportado." : "Falha ao exportar PDF.");
+        std::printf("%s\n", ok ? "PDF exported." : "Failed to export PDF.");
         return ok ? 0 : 1;
     }
 

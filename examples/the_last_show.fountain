@@ -1,0 +1,146 @@
+Title: The Last Show
+Credit: Written by
+Author: Owlio Sample
+Draft date: November 11, 2026
+Contact:
+    contact@example.com
+
+FADE IN:
+
+EXT. ODEON CINEMA - NIGHT
+= Helena arrives late for the last show at the cinema where she first saw the sea.
+
+Light rain over the facade of a run-down neighborhood cinema. Half the letters on the marquee are dark: "OD ON". A poster announces "LAST SHOW — TONIGHT".
+
+HELENA (60), yellow raincoat, stops in front of the closed box office. She knocks on the glass with her knuckles.
+
+INT. ODEON CINEMA - LOBBY - NIGHT
+
+Worn red carpet, faded posters. TOMAS (25), an usher in a uniform two sizes too big, sweeps up old popcorn. The knocking startles him.
+
+TOMAS
+(without opening the door)
+We're closed, ma'am. The show already started.
+
+HELENA
+I know. I'm always late. Forty years of being late to this place.
+
+Tomas hesitates. He glances toward the auditorium, then at the rain.
+
+TOMAS
+The manager will kill me.
+
+HELENA
+The manager died in nineteen ninety-eight, son. I went to the funeral.
+
+Tomas opens the door. Helena steps in, shaking off her raincoat.
+
+INT. ODEON CINEMA - AUDITORIUM - CONTINUOUS
+
+A huge, almost empty room. A black-and-white film plays on the screen. Three viewers scattered around. Helena picks row F, seat 12, without thinking.
+
+TOMAS (V.O.)
+Why that seat?
+
+Helena doesn't turn around. Tomas stands in the aisle, his flashlight off.
+
+HELENA
+Because this is where I saw the sea for the first time. I was nine, I had never left my hometown. The film was Italian, the print was awful, full of scratches, the sound hissed the whole time. And still, when the camera opened on that beach, I swear to you I could smell the salt. My mother had to drag me out of here by the arm, because I wanted to stay for the next show, and the one after that, and the one after that. I thought that if I left, the sea would end.
+
+Tomas sits in row G, right behind her.
+
+TOMAS
+And did it?
+
+HELENA
+(smiling)
+No. But the cinema will.
+
+On screen, a ship pulls away from the harbor. The other three viewers get up, one by one, and leave.
+
+INT. ODEON CINEMA - PROJECTION BOOTH - NIGHT
+= Tomas talks old Jair into running one last reel: a film with the sea in it.
+
+The old 35mm projector creaks. JAIR (80) dozes in a plastic chair. The reel is almost over.
+
+Tomas comes in, out of breath.
+
+TOMAS
+Jair. Jair! Is there another reel around here?
+
+JAIR
+(waking up)
+What reel, kid?
+
+TOMAS
+Any reel. A film with the sea in it.
+
+Jair stares at him for a long moment. Then he gets up, slowly, and opens a rusty metal cabinet full of film cans.
+
+JAIR
+There's always a film with the sea in it.
+
+INT. ODEON CINEMA - AUDITORIUM - MOMENTS LATER
+
+The screen goes white. Helena closes her eyes, thinking it's over.
+
+Then: the sound of waves. The screen fills with blue. A beach, in washed-out colors, full of scratches.
+
+Helena opens her eyes. She laughs, a short, childlike laugh.
+
+In the booth, through the little window, Tomas and Jair watch.
+
+JAIR
+She comes every week, you know? For forty years.
+
+TOMAS
+And you always play her a film with the sea?
+
+JAIR
+No. Tonight is the first time anyone asked.
+
+CUT TO:
+
+EXT. ODEON CINEMA - DAWN
+
+The rain has stopped. Workers take down the letters of the marquee, one by one. Helena walks out the side door, the yellow raincoat folded over her arm.
+
+Tomas walks her to the sidewalk.
+
+HELENA
+Thank you for the extra show.
+
+TOMAS
+Where are you going now?
+
+Helena looks down the street, where the sun is rising between the buildings.
+
+HELENA
+To see the sea. The real one. I've never been.
+
+She walks away. Tomas stands still under the marquee, which now reads only "O N".
+
+FADE OUT.
+
+/* owlio-characters
+name: HELENA
+age: 60
+occupation: Retired schoolteacher
+role: Protagonist
+traits: Small and stubborn, always in the same yellow raincoat. Talks to strangers as if she had known them for years.
+synopsis: Has come to the Odeon every week for forty years. On the night the cinema closes, she finally decides to see the real sea.
+
+name: TOMAS
+age: 25
+occupation: Usher
+role: Supporting
+traits: Shy, nervous, uniform two sizes too big. Breaks rules only when nobody is looking.
+synopsis: Took the job a month ago and is about to lose it. Helena makes him see what the place meant.
+
+name: JAIR
+age: 80
+occupation: Projectionist
+role: Supporting
+traits: Sleeps through most shows and never misses a reel change.
+
+*/

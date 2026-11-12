@@ -15,6 +15,7 @@ class QToolButton;
 
 // Miniaturas das folhas que serão impressas (rosto + páginas escolhidas).
 class SheetPreview : public QAbstractScrollArea {
+    Q_OBJECT
 public:
     SheetPreview(const Editor& ed, QWidget* parent = nullptr);
     void setOptions(const PrintOptions& opt);
@@ -37,6 +38,7 @@ private:
 
 // Janela de impressão e exportação para PDF.
 class PrintDialog : public QDialog {
+    Q_OBJECT
 public:
     enum class Target { Printer, Pdf };
     PrintDialog(const Editor& ed, Target target, const QString& suggestedPdfPath, bool sceneNumbers,

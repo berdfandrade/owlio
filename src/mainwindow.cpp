@@ -38,9 +38,13 @@
 #include <algorithm>
 
 #include <QInputDialog>
+#include <QProcess>
 #include <QStackedWidget>
 
 #include "avatars.h"
+#include "characterdialog.h"
+#include "i18n.h"
+#include "settingsdialog.h"
 #include "printdialog.h"
 #include "titlepagedialog.h"
 #include "carddelegate.h"
@@ -58,19 +62,20 @@ QString q(const std::string& s) { return QString::fromStdString(s); }
 // ------------------------------------------------------------ Localizar / substituir
 
 class FindDialog : public QDialog {
+    Q_OBJECT
 public:
     FindDialog(Editor* ed, ScriptView* view, QWidget* parent) : QDialog(parent), ed_(ed), view_(view) {
-        setWindowTitle(tr("Localizar e substituir"));
+        setWindowTitle(tr("Find and Replace"));
         auto* form = new QFormLayout;
         findEdit_ = new QLineEdit;
         replaceEdit_ = new QLineEdit;
-        form->addRow(tr("Localizar:"), findEdit_);
-        form->addRow(tr("Substituir por:"), replaceEdit_);
+        form->addRow(tr("Find:"), findEdit_);
+        form->addRow(tr("Replace with:"), replaceEdit_);
         status_ = new QLabel;
-        auto* prev = new QPushButton(tr("Anterior"));
-        auto* next = new QPushButton(tr("Próximo"));
-        auto* rep = new QPushButton(tr("Substituir"));
-        auto* all = new QPushButton(tr("Substituir tudo"));
+        auto* prev = new QPushButton(tr("Previous"));
+        auto* next = new QPushButton(tr("Next"));
+        auto* rep = new QPushButton(tr("Replace"));
+        auto* all = new QPushButton(tr("Replace All"));
         next->setDefault(true);
         auto* buttons = new QHBoxLayout;
         for (auto* b : {prev, next, rep, all}) buttons->addWidget(b);
@@ -87,7 +92,7 @@ public:
         connect(all, &QPushButton::clicked, this, [this] {
             int n = ed_->replaceAll(query(), replaceEdit_->text().toStdU32String());
             view_->refreshAfterExternalEdit();
-            status_->setText(tr("%n substituição(ões).", "", n));
+            status_->setText(tr("%n replacement(s).", "", n));
         });
     }
     void activate() {
@@ -106,7 +111,7 @@ public:
 private:
     std::u32string query() const { return findEdit_->text().toStdU32String(); }
     void run(bool found) {
-        status_->setText(found ? QString() : tr("Nada encontrado."));
+        status_->setText(found ? QString() : tr("Nothing found."));
         view_->refreshAfterExternalEdit();
     }
     Editor* ed_;
@@ -134,7 +139,7 @@ MainWindow::MainWindow() {
         const int now = editor_.moveScene(from, to);
         view_->refreshAfterExternalEdit();  // recarrega o quadro via documentChanged
         board_->selectScene(now);
-        statusBar()->showMessage(tr("Cena %1 movida para a posição %2.").arg(from + 1).arg(now + 1), 2500);
+        statusBar()->showMessage(tr("Scene %1 moved to position %2.").arg(from + 1).arg(now + 1), 2500);
     });
     connect(board_, &SceneBoard::editSynopsisRequested, this, &MainWindow::editSynopsis);
     connect(board_, &SceneBoard::selectionChanged, this, [this](int i) {
@@ -148,7 +153,7 @@ MainWindow::MainWindow() {
     // Painel de cenas (navegador).
     sceneList_ = new QListWidget;
     sceneList_->setItemDelegate(new CardDelegate(CardDelegate::Scene, sceneList_));
-    addDockWidget(Qt::LeftDockWidgetArea, makeDock(tr("Cenas"), "scenes", sceneList_));
+    addDockWidget(Qt::LeftDockWidgetArea, makeDock(tr("Scenes"), "scenes", sceneList_));
     connect(sceneList_, &QListWidget::itemClicked, this, [this](QListWidgetItem* it) {
         if (cardsMode()) board_->selectScene(sceneList_->row(it));
         else view_->gotoParagraph(it->data(Qt::UserRole).toInt());
@@ -157,13 +162,9 @@ MainWindow::MainWindow() {
     // Painel de personagens.
     charList_ = new QListWidget;
     charList_->setItemDelegate(new CardDelegate(CardDelegate::Character, charList_));
-    addDockWidget(Qt::LeftDockWidgetArea, makeDock(tr("Personagens"), "characters", charList_));
-    connect(charList_, &QListWidget::itemClicked, this, [this](QListWidgetItem* it) {
-        editor_.setCursor({0, 0});
-        editor_.find(it->data(Qt::UserRole).toString().toStdU32String());
-        view_->refreshAfterExternalEdit();
-        view_->setFocus();
-    });
+    addDockWidget(Qt::LeftDockWidgetArea, makeDock(tr("Characters"), "characters", charList_));
+    connect(charList_, &QListWidget::itemClicked, this,
+            [this](QListWidgetItem* it) { editCharacter(it->data(Qt::UserRole).toString()); });
     charList_->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(charList_, &QListWidget::customContextMenuRequested, this, [this](const QPoint& pos) {
         QListWidgetItem* it = charList_->itemAt(pos);
@@ -171,18 +172,18 @@ MainWindow::MainWindow() {
         const QString name = it->data(Qt::UserRole).toString();
         const bool hasPhoto = !editor_.doc().avatar(name.toStdU32String()).empty();
         QMenu menu(this);
-        menu.addAction(hasPhoto ? tr("Trocar foto...") : tr("Escolher foto..."), this,
+        menu.addAction(tr("Open Character Sheet..."), this, [this, name] { editCharacter(name); });
+        menu.addSeparator();
+        menu.addAction(hasPhoto ? tr("Change Photo...") : tr("Choose Photo..."), this,
                        [this, name] { chooseAvatar(name); });
-        menu.addAction(tr("Remover foto"), this, [this, name] {
+        menu.addAction(tr("Remove Photo"), this, [this, name] {
             editor_.setAvatar(name.toStdU32String(), {});
             view_->refreshAfterExternalEdit();
         })->setEnabled(hasPhoto);
         menu.addSeparator();
-        menu.addAction(tr("Ir para a primeira fala"), this, [this, it] { charList_->itemClicked(it); });
+        menu.addAction(tr("Go to First Line"), this, [this, name] { gotoFirstLine(name); });
         menu.exec(charList_->viewport()->mapToGlobal(pos));
     });
-    connect(charList_, &QListWidget::itemDoubleClicked, this,
-            [this](QListWidgetItem* it) { chooseAvatar(it->data(Qt::UserRole).toString()); });
 
     for (QListWidget* l : {sceneList_, charList_}) {
         l->setMouseTracking(true);
@@ -219,6 +220,7 @@ MainWindow::MainWindow() {
         resizeDocks({findChild<QDockWidget*>("scenes")}, {290}, Qt::Horizontal);
     }
 
+    editor_.setScriptLanguage(i18n::scriptLanguage());
     newFile();
     view_->setFocus();
 }
@@ -261,45 +263,49 @@ void MainWindow::refreshIcons() {
 
 void MainWindow::buildActions() {
     // ---- Arquivo
-    QMenu* file = menuBar()->addMenu(tr("&Arquivo"));
-    QAction* newAct = iconAction(file->addAction(tr("&Novo"), this, &MainWindow::newFile), "novo");
+    QMenu* file = menuBar()->addMenu(tr("&File"));
+    QAction* newAct = iconAction(file->addAction(tr("&New"), this, &MainWindow::newFile), "novo");
     newAct->setShortcut(QKeySequence::New);
-    QAction* openAct = iconAction(file->addAction(tr("&Abrir..."), this, &MainWindow::open), "abrir");
+    QAction* openAct = iconAction(file->addAction(tr("&Open..."), this, &MainWindow::open), "abrir");
     openAct->setShortcut(QKeySequence::Open);
-    QAction* saveAct = iconAction(file->addAction(tr("&Salvar"), this, &MainWindow::save), "salvar");
+    QAction* saveAct = iconAction(file->addAction(tr("&Save"), this, &MainWindow::save), "salvar");
     saveAct->setShortcut(QKeySequence::Save);
-    QAction* saveAsAct = file->addAction(tr("Salvar &como..."), this, &MainWindow::saveAs);
+    QAction* saveAsAct = file->addAction(tr("Save &As..."), this, &MainWindow::saveAs);
     saveAsAct->setShortcut(QKeySequence::SaveAs);
     file->addSeparator();
-    QAction* pdfAct = iconAction(file->addAction(tr("Exportar &PDF..."), this, &MainWindow::exportPdf), "pdf");
+    QAction* pdfAct = iconAction(file->addAction(tr("Export &PDF..."), this, &MainWindow::exportPdf), "pdf");
     pdfAct->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_E));
-    file->addAction(tr("Exportar para Final Draft (.fdx)..."), this, &MainWindow::exportFdx);
-    QAction* printAct = iconAction(file->addAction(tr("&Imprimir..."), this, &MainWindow::print), "imprimir");
+    file->addAction(tr("Export to Final Draft (.fdx)..."), this, &MainWindow::exportFdx);
+    QAction* printAct = iconAction(file->addAction(tr("&Print..."), this, &MainWindow::print), "imprimir");
     printAct->setShortcut(QKeySequence::Print);
     file->addSeparator();
-    file->addAction(tr("Sai&r"), this, &QWidget::close)->setShortcut(QKeySequence::Quit);
+    file->addAction(tr("&Quit"), this, &QWidget::close)->setShortcut(QKeySequence::Quit);
 
     // ---- Editar
-    QMenu* edit = menuBar()->addMenu(tr("&Editar"));
-    undoAct_ = iconAction(edit->addAction(tr("&Desfazer"), view_, &ScriptView::undo), "desfazer");
+    QMenu* edit = menuBar()->addMenu(tr("&Edit"));
+    undoAct_ = iconAction(edit->addAction(tr("&Undo"), view_, &ScriptView::undo), "desfazer");
     undoAct_->setShortcut(QKeySequence::Undo);
-    redoAct_ = iconAction(edit->addAction(tr("&Refazer"), view_, &ScriptView::redo), "refazer");
+    redoAct_ = iconAction(edit->addAction(tr("&Redo"), view_, &ScriptView::redo), "refazer");
     redoAct_->setShortcuts({QKeySequence::Redo, QKeySequence(Qt::CTRL | Qt::Key_Y)});
     edit->addSeparator();
-    edit->addAction(tr("Recor&tar"), view_, &ScriptView::cut)->setShortcut(QKeySequence::Cut);
-    edit->addAction(tr("&Copiar"), view_, &ScriptView::copy)->setShortcut(QKeySequence::Copy);
-    edit->addAction(tr("C&olar"), view_, &ScriptView::paste)->setShortcut(QKeySequence::Paste);
-    edit->addAction(tr("Selecionar &tudo"), view_, &ScriptView::selectAll)->setShortcut(QKeySequence::SelectAll);
+    edit->addAction(tr("Cu&t"), view_, &ScriptView::cut)->setShortcut(QKeySequence::Cut);
+    edit->addAction(tr("&Copy"), view_, &ScriptView::copy)->setShortcut(QKeySequence::Copy);
+    edit->addAction(tr("&Paste"), view_, &ScriptView::paste)->setShortcut(QKeySequence::Paste);
+    edit->addAction(tr("Select &All"), view_, &ScriptView::selectAll)->setShortcut(QKeySequence::SelectAll);
     edit->addSeparator();
-    QAction* findAct = iconAction(edit->addAction(tr("&Localizar e substituir..."), this, &MainWindow::showFind), "localizar");
+    QAction* findAct = iconAction(edit->addAction(tr("&Find and Replace..."), this, &MainWindow::showFind), "localizar");
     findAct->setShortcut(QKeySequence::Find);
+    edit->addSeparator();
+    QAction* settingsAct = edit->addAction(tr("Se&ttings..."), this, &MainWindow::showSettings);
+    settingsAct->setShortcuts({QKeySequence::Preferences, QKeySequence(Qt::CTRL | Qt::Key_Comma)});
+    settingsAct->setMenuRole(QAction::PreferencesRole);
 
     // ---- Formatar (elementos)
-    QMenu* fmt = menuBar()->addMenu(tr("&Formatar"));
+    QMenu* fmt = menuBar()->addMenu(tr("F&ormat"));
     auto* elementGroup = new QActionGroup(this);
     for (int i = 0; i < kElementCount; ++i) {
         Element e = static_cast<Element>(i);
-        QAction* a = fmt->addAction(q(std::string(elementName(e))), this, [this, e] { view_->setElement(e); });
+        QAction* a = fmt->addAction(i18n::elementLabel(e), this, [this, e] { view_->setElement(e); });
         a->setShortcut(QKeySequence(Qt::CTRL | static_cast<Qt::Key>(Qt::Key_1 + i)));
         a->setCheckable(true);
         elementGroup->addAction(a);
@@ -307,30 +313,21 @@ void MainWindow::buildActions() {
     }
 
     // ---- Documento
-    QMenu* docMenu = menuBar()->addMenu(tr("&Documento"));
-    QAction* titleAct = iconAction(docMenu->addAction(tr("Página de &rosto..."), this, &MainWindow::editTitlePage), "rosto");
-    QAction* sceneNums = docMenu->addAction(tr("&Numerar cenas"));
+    QMenu* docMenu = menuBar()->addMenu(tr("&Document"));
+    QAction* titleAct = iconAction(docMenu->addAction(tr("&Title Page..."), this, &MainWindow::editTitlePage), "rosto");
+    QAction* sceneNums = docMenu->addAction(tr("&Number Scenes"));
     sceneNums->setCheckable(true);
     connect(sceneNums, &QAction::toggled, view_, &ScriptView::setSceneNumbers);
-    QAction* enContd = docMenu->addAction(tr("Usar (MORE)/(CONT'D) em inglês"));
-    enContd->setCheckable(true);
-    connect(enContd, &QAction::toggled, this, [this](bool en) {
-        LayoutOptions o;
-        o.moreText = en ? U"(MORE)" : U"(MAIS)";
-        o.contdText = en ? U"(CONT'D)" : U"(CONT.)";
-        editor_.setLayoutOptions(o);
-        view_->refreshAfterExternalEdit();
-    });
 
     // ---- Exibir
-    QMenu* viewMenu = menuBar()->addMenu(tr("E&xibir"));
+    QMenu* viewMenu = menuBar()->addMenu(tr("&View"));
     auto* modeGroup = new QActionGroup(this);
-    scriptModeAct_ = iconAction(viewMenu->addAction(tr("&Roteiro")), "roteiro");
+    scriptModeAct_ = iconAction(viewMenu->addAction(tr("&Script")), "roteiro");
     scriptModeAct_->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_R));
-    scriptModeAct_->setToolTip(tr("Roteiro  (Ctrl+Shift+R)"));
-    cardsModeAct_ = iconAction(viewMenu->addAction(tr("&Cartões")), "cartoes");
+    scriptModeAct_->setToolTip(tr("Script  (Ctrl+Shift+R)"));
+    cardsModeAct_ = iconAction(viewMenu->addAction(tr("&Cards")), "cartoes");
     cardsModeAct_->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_C));
-    cardsModeAct_->setToolTip(tr("Cenas como cartões  (Ctrl+Shift+C)"));
+    cardsModeAct_->setToolTip(tr("Scenes as index cards  (Ctrl+Shift+C)"));
     for (QAction* a : {scriptModeAct_, cardsModeAct_}) {
         a->setCheckable(true);
         modeGroup->addAction(a);
@@ -339,38 +336,43 @@ void MainWindow::buildActions() {
     connect(scriptModeAct_, &QAction::triggered, this, [this] { setCardsMode(false); });
     connect(cardsModeAct_, &QAction::triggered, this, [this] { setCardsMode(true); });
     viewMenu->addSeparator();
-    QMenu* themeMenu = viewMenu->addMenu(tr("&Tema"));
+    QMenu* themeMenu = viewMenu->addMenu(tr("&Theme"));
     actionIcons_.insert(themeMenu->menuAction(), "tema");
     auto* themeGroup = new QActionGroup(this);
     const std::pair<QString, ThemeManager::Mode> modes[] = {
-        {tr("Seguir o sistema"), ThemeManager::Mode::System},
-        {tr("Claro"), ThemeManager::Mode::Light},
-        {tr("Escuro"), ThemeManager::Mode::Dark}};
+        {tr("Follow System"), ThemeManager::Mode::System},
+        {tr("Light"), ThemeManager::Mode::Light},
+        {tr("Dark"), ThemeManager::Mode::Dark}};
     for (const auto& [label, mode] : modes) {
         QAction* a = themeMenu->addAction(label, this, [mode] { ThemeManager::instance().setMode(mode); });
         a->setCheckable(true);
         a->setChecked(ThemeManager::instance().mode() == mode);
+        a->setData(static_cast<int>(mode));
         themeGroup->addAction(a);
     }
-    QAction* focusAct = iconAction(viewMenu->addAction(tr("Modo &foco")), "foco");
+    connect(&ThemeManager::instance(), &ThemeManager::changed, themeMenu, [themeGroup] {
+        for (QAction* a : themeGroup->actions())
+            a->setChecked(a->data().toInt() == static_cast<int>(ThemeManager::instance().mode()));
+    });
+    QAction* focusAct = iconAction(viewMenu->addAction(tr("&Focus Mode")), "foco");
     focusAct->setCheckable(true);
     focusAct->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_F));
-    focusAct->setToolTip(tr("Modo foco — esmaece tudo menos o trecho atual (Ctrl+Shift+F)"));
+    focusAct->setToolTip(tr("Focus mode — dims everything except the current passage (Ctrl+Shift+F)"));
     connect(focusAct, &QAction::toggled, view_, &ScriptView::setFocusMode);
     viewMenu->addSeparator();
-    viewMenu->addAction(tr("Aumentar zoom"), view_, &ScriptView::zoomIn)->setShortcuts({QKeySequence::ZoomIn, QKeySequence(Qt::CTRL | Qt::Key_Equal)});
-    viewMenu->addAction(tr("Diminuir zoom"), view_, &ScriptView::zoomOut)->setShortcut(QKeySequence::ZoomOut);
+    viewMenu->addAction(tr("Zoom In"), view_, &ScriptView::zoomIn)->setShortcuts({QKeySequence::ZoomIn, QKeySequence(Qt::CTRL | Qt::Key_Equal)});
+    viewMenu->addAction(tr("Zoom Out"), view_, &ScriptView::zoomOut)->setShortcut(QKeySequence::ZoomOut);
     viewMenu->addAction(tr("Zoom 100%"), view_, &ScriptView::zoomReset)->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_0));
     viewMenu->addSeparator();
     for (QDockWidget* d : findChildren<QDockWidget*>()) viewMenu->addAction(d->toggleViewAction());
 
     // ---- Ajuda
-    QMenu* help = menuBar()->addMenu(tr("Aj&uda"));
-    help->addAction(tr("&Atalhos de teclado"), this, &MainWindow::showShortcuts)->setShortcut(QKeySequence::HelpContents);
-    help->addAction(tr("&Sobre o Owlio"), this, &MainWindow::about);
+    QMenu* help = menuBar()->addMenu(tr("&Help"));
+    help->addAction(tr("&Keyboard Shortcuts"), this, &MainWindow::showShortcuts)->setShortcut(QKeySequence::HelpContents);
+    help->addAction(tr("&About Owlio"), this, &MainWindow::about);
 
     // ---- Barra de ferramentas
-    QToolBar* tb = addToolBar(tr("Principal"));
+    QToolBar* tb = addToolBar(tr("Main"));
     tb->setObjectName("main");
     tb->setMovable(false);
     tb->setFloatable(false);
@@ -381,12 +383,12 @@ void MainWindow::buildActions() {
         a->setToolTip(QString("%1  <span style='opacity:.6'>%2</span>")
                           .arg(text, a->shortcut().toString(QKeySequence::NativeText)));
     };
-    tip(newAct, tr("Novo roteiro"));
-    tip(openAct, tr("Abrir"));
-    tip(saveAct, tr("Salvar"));
-    tip(undoAct_, tr("Desfazer"));
-    tip(redoAct_, tr("Refazer"));
-    tip(findAct, tr("Localizar e substituir"));
+    tip(newAct, tr("New script"));
+    tip(openAct, tr("Open"));
+    tip(saveAct, tr("Save"));
+    tip(undoAct_, tr("Undo"));
+    tip(redoAct_, tr("Redo"));
+    tip(findAct, tr("Find and Replace"));
     for (QAction* a : {newAct, openAct, saveAct}) tb->addAction(a);
     tb->addSeparator();
     tb->addAction(undoAct_);
@@ -402,11 +404,11 @@ void MainWindow::buildActions() {
     tb->addSeparator();
 
     elementCombo_ = new QComboBox;
-    elementCombo_->setToolTip(tr("Elemento do parágrafo atual (Ctrl+1 … Ctrl+6)"));
+    elementCombo_->setToolTip(tr("Element of the current paragraph (Ctrl+1 … Ctrl+6)"));
     elementCombo_->setIconSize(QSize(16, 16));
     elementCombo_->setMinimumWidth(170);
     for (int i = 0; i < kElementCount; ++i)
-        elementCombo_->addItem(q(std::string(elementName(static_cast<Element>(i)))));
+        elementCombo_->addItem(i18n::elementLabel(static_cast<Element>(i)));
     elementCombo_->setFocusPolicy(Qt::NoFocus);
     connect(elementCombo_, &QComboBox::activated, this,
             [this](int i) { view_->setElement(static_cast<Element>(i)); });
@@ -421,11 +423,11 @@ void MainWindow::buildActions() {
     tb->addSeparator();
     tb->addAction(titleAct);
     qobject_cast<QToolButton*>(tb->widgetForAction(titleAct))->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-    titleAct->setIconText(tr("Página de rosto"));
+    titleAct->setIconText(tr("Title Page"));
 
-    QAction* pdfTb = new QAction(tr("Exportar PDF"), this);
+    QAction* pdfTb = new QAction(tr("Export PDF"), this);
     pdfTb->setProperty("primario", true);
-    pdfTb->setToolTip(tr("Exportar PDF  (Ctrl+Shift+E)"));
+    pdfTb->setToolTip(tr("Export PDF  (Ctrl+Shift+E)"));
     connect(pdfTb, &QAction::triggered, this, &MainWindow::exportPdf);
     iconAction(pdfTb, "pdf");
     tb->addAction(pdfTb);
@@ -439,7 +441,7 @@ void MainWindow::buildActions() {
     zoomCombo_->setObjectName("plano");
     for (int z : {75, 100, 125, 150, 175, 200}) zoomCombo_->addItem(QString("%1%").arg(z), z / 100.0);
     zoomCombo_->setFocusPolicy(Qt::NoFocus);
-    zoomCombo_->setToolTip(tr("Zoom (Ctrl+roda do mouse)"));
+    zoomCombo_->setToolTip(tr("Zoom (Ctrl+mouse wheel)"));
     connect(zoomCombo_, &QComboBox::activated, this,
             [this](int i) { view_->setZoom(zoomCombo_->itemData(i).toDouble()); });
     connect(view_, &ScriptView::zoomChanged, this, [this](double z) {
@@ -457,7 +459,7 @@ void MainWindow::buildActions() {
 bool MainWindow::maybeSave() {
     if (!editor_.modified()) return true;
     auto r = QMessageBox::warning(this, tr("Owlio"),
-                                  tr("O roteiro tem alterações não salvas.\nDeseja salvá-las?"),
+                                  tr("The script has unsaved changes.\nDo you want to save them?"),
                                   QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
     if (r == QMessageBox::Save) return save();
     return r == QMessageBox::Discard;
@@ -477,15 +479,15 @@ void MainWindow::open() {
     if (!maybeSave()) return;
     QSettings s;
     QString p = QFileDialog::getOpenFileName(
-        this, tr("Abrir roteiro"), s.value("lastDir").toString(),
-        tr("Roteiros (*.fountain *.fdx *.txt *.spmd);;Fountain (*.fountain);;Final Draft (*.fdx);;Todos (*)"));
+        this, tr("Open Script"), s.value("lastDir").toString(),
+        tr("Scripts (*.fountain *.fdx *.txt *.spmd);;Fountain (*.fountain);;Final Draft (*.fdx);;All files (*)"));
     if (!p.isEmpty()) openFile(p);
 }
 
 bool MainWindow::openFile(const QString& path) {
     QFile f(path);
     if (!f.open(QIODevice::ReadOnly)) {
-        QMessageBox::critical(this, tr("Erro"), tr("Não foi possível abrir %1:\n%2").arg(path, f.errorString()));
+        QMessageBox::critical(this, tr("Error"), tr("Could not open %1:\n%2").arg(path, f.errorString()));
         return false;
     }
     const std::string data = f.readAll().toStdString();
@@ -495,21 +497,21 @@ bool MainWindow::openFile(const QString& path) {
     QSettings().setValue("lastDir", QFileInfo(path).absolutePath());
     view_->refresh();
     updateTitle();
-    statusBar()->showMessage(tr("Aberto: %1").arg(QFileInfo(path).fileName()), 3000);
+    statusBar()->showMessage(tr("Opened: %1").arg(QFileInfo(path).fileName()), 3000);
     return true;
 }
 
 bool MainWindow::writeTo(const QString& path) {
     QSaveFile f(path);
     if (!f.open(QIODevice::WriteOnly)) {
-        QMessageBox::critical(this, tr("Erro"), tr("Não foi possível salvar %1:\n%2").arg(path, f.errorString()));
+        QMessageBox::critical(this, tr("Error"), tr("Could not save %1:\n%2").arg(path, f.errorString()));
         return false;
     }
     const std::string data = path.endsWith(".fdx", Qt::CaseInsensitive) ? writeFdx(editor_.doc())
                                                                          : writeFountain(editor_.doc());
     f.write(data.data(), static_cast<qint64>(data.size()));
     if (!f.commit()) {
-        QMessageBox::critical(this, tr("Erro"), tr("Falha ao gravar %1.").arg(path));
+        QMessageBox::critical(this, tr("Error"), tr("Failed to write %1.").arg(path));
         return false;
     }
     return true;
@@ -520,14 +522,14 @@ bool MainWindow::save() {
     if (!writeTo(path_)) return false;
     editor_.markSaved();
     updateTitle();
-    statusBar()->showMessage(tr("Salvo."), 2000);
+    statusBar()->showMessage(tr("Saved."), 2000);
     return true;
 }
 
 bool MainWindow::saveAs() {
     QSettings s;
-    QString suggested = path_.isEmpty() ? s.value("lastDir").toString() + "/roteiro.fountain" : path_;
-    QString p = QFileDialog::getSaveFileName(this, tr("Salvar roteiro"), suggested,
+    QString suggested = path_.isEmpty() ? s.value("lastDir").toString() + "/" + tr("script") + ".fountain" : path_;
+    QString p = QFileDialog::getSaveFileName(this, tr("Save Script"), suggested,
                                              tr("Fountain (*.fountain);;Final Draft (*.fdx)"));
     if (p.isEmpty()) return false;
     if (!p.endsWith(".fountain", Qt::CaseInsensitive) && !p.endsWith(".fdx", Qt::CaseInsensitive))
@@ -538,18 +540,18 @@ bool MainWindow::saveAs() {
 }
 
 void MainWindow::exportFdx() {
-    QString base = path_.isEmpty() ? QSettings().value("lastDir").toString() + "/roteiro"
+    QString base = path_.isEmpty() ? QSettings().value("lastDir").toString() + "/" + tr("script")
                                    : QFileInfo(path_).absolutePath() + "/" + QFileInfo(path_).completeBaseName();
-    QString p = QFileDialog::getSaveFileName(this, tr("Exportar para Final Draft"), base + ".fdx",
+    QString p = QFileDialog::getSaveFileName(this, tr("Export to Final Draft"), base + ".fdx",
                                              tr("Final Draft (*.fdx)"));
     if (p.isEmpty()) return;
     if (!p.endsWith(".fdx", Qt::CaseInsensitive)) p += ".fdx";
-    if (writeTo(p)) statusBar()->showMessage(tr("Exportado: %1").arg(QFileInfo(p).fileName()), 4000);
+    if (writeTo(p)) statusBar()->showMessage(tr("Exported: %1").arg(QFileInfo(p).fileName()), 4000);
 }
 
 QString MainWindow::suggestedPdfPath() const {
     const QString base = path_.isEmpty()
-                             ? QSettings().value("lastDir").toString() + "/roteiro"
+                             ? QSettings().value("lastDir").toString() + "/" + tr("script")
                              : QFileInfo(path_).absolutePath() + "/" + QFileInfo(path_).completeBaseName();
     return base + ".pdf";
 }
@@ -560,9 +562,9 @@ void MainWindow::openPrintDialog(bool pdf) {
     dlg.resize(1100, 720);
     if (dlg.exec() != QDialog::Accepted) return;
     if (!dlg.exportedPath().isEmpty())
-        statusBar()->showMessage(tr("PDF exportado: %1").arg(QFileInfo(dlg.exportedPath()).fileName()), 5000);
+        statusBar()->showMessage(tr("PDF exported: %1").arg(QFileInfo(dlg.exportedPath()).fileName()), 5000);
     else
-        statusBar()->showMessage(tr("Enviado para a impressora."), 4000);
+        statusBar()->showMessage(tr("Sent to the printer."), 4000);
 }
 
 void MainWindow::exportPdf() { openPrintDialog(true); }
@@ -597,44 +599,99 @@ void MainWindow::showFind() {
 }
 
 void MainWindow::showShortcuts() {
-    QMessageBox::information(this, tr("Atalhos de teclado"), tr(
-        "<h3>Fluxo de escrita</h3>"
-        "<table cellpadding=3>"
-        "<tr><td><b>Enter</b></td><td>Próximo elemento: Cabeçalho → Ação, Personagem → Diálogo, "
-        "Diálogo → Personagem, Transição → Cabeçalho</td></tr>"
-        "<tr><td><b>Tab</b></td><td>Ação → Personagem → Transição → Cabeçalho; "
-        "Diálogo ↔ Parentético. No fim de uma fala, cria um parentético.</td></tr>"
-        "<tr><td><b>Shift+Tab</b></td><td>Elemento anterior</td></tr>"
-        "<tr><td><b>Enter em linha vazia</b></td><td>Troca para Ação (ou Cabeçalho)</td></tr>"
-        "<tr><td><b>Ctrl+1 … Ctrl+6</b></td><td>Cabeçalho, Ação, Personagem, Parentético, Diálogo, Transição</td></tr>"
-        "<tr><td><b>Tab / Enter / →</b></td><td>Aceita a sugestão em cinza (personagens, locações, horários, transições)</td></tr>"
-        "</table>"
-        "<h3>Geral</h3>"
-        "<table cellpadding=3>"
-        "<tr><td><b>Ctrl+S / Ctrl+Shift+S</b></td><td>Salvar / Salvar como (.fountain ou .fdx)</td></tr>"
-        "<tr><td><b>Ctrl+Shift+E</b></td><td>Exportar PDF</td></tr>"
-        "<tr><td><b>Ctrl+F</b></td><td>Localizar e substituir</td></tr>"
-        "<tr><td><b>Ctrl+Shift+C / Ctrl+Shift+R</b></td><td>Tela de cartões / roteiro</td></tr>"
-        "<tr><td><b>Ctrl+Shift+F</b></td><td>Modo foco</td></tr>"
-        "</table>"
-        "<h3>Cartões</h3>"
-        "<table cellpadding=3>"
-        "<tr><td><b>Arrastar</b></td><td>Reordena as cenas (o texto inteiro da cena vai junto)</td></tr>"
-        "<tr><td><b>Alt+setas</b></td><td>Move o cartão selecionado</td></tr>"
-        "<tr><td><b>Enter / duplo clique</b></td><td>Abre a cena no roteiro</td></tr>"
-        "<tr><td><b>F2</b></td><td>Edita a sinopse da cena</td></tr>"
-        "<tr><td><b>Ctrl+roda</b></td><td>Cartões maiores ou menores</td></tr>"
-        "<tr><td><b>Ctrl+Z / Ctrl+Y</b></td><td>Desfazer / refazer</td></tr>"
-        "<tr><td><b>Ctrl+roda / Ctrl+= / Ctrl+-</b></td><td>Zoom</td></tr>"
-        "</table>"));
+    auto row = [](const QString& keys, const QString& what) {
+        return QString("<tr><td><b>%1</b></td><td>%2</td></tr>").arg(keys, what);
+    };
+    QString html = "<h3>" + tr("Writing flow") + "</h3><table cellpadding=3>";
+    html += row(tr("Enter"), tr("Next element: Scene Heading → Action, Character → Dialogue, "
+                                "Dialogue → Character, Transition → Scene Heading"));
+    html += row(tr("Tab"), tr("Action → Character → Transition → Scene Heading; Dialogue ↔ Parenthetical. "
+                              "At the end of a speech, inserts a parenthetical."));
+    html += row(tr("Shift+Tab"), tr("Previous element"));
+    html += row(tr("Enter on an empty line"), tr("Switches to Action (or Scene Heading)"));
+    html += row("Ctrl+1 … Ctrl+6", tr("Scene Heading, Action, Character, Parenthetical, Dialogue, Transition"));
+    html += row(tr("Tab / Enter / →"),
+                tr("Accepts the grey suggestion (characters, locations, times of day, transitions)"));
+    html += "</table><h3>" + tr("General") + "</h3><table cellpadding=3>";
+    html += row("Ctrl+S / Ctrl+Shift+S", tr("Save / Save As (.fountain or .fdx)"));
+    html += row("Ctrl+Shift+E", tr("Export PDF"));
+    html += row("Ctrl+F", tr("Find and replace"));
+    html += row("Ctrl+Shift+C / Ctrl+Shift+R", tr("Index cards / script"));
+    html += row("Ctrl+Shift+F", tr("Focus mode"));
+    html += row("Ctrl+,", tr("Settings"));
+    html += row(tr("Ctrl+wheel / Ctrl+= / Ctrl+-"), tr("Zoom"));
+    html += "</table><h3>" + tr("Index cards") + "</h3><table cellpadding=3>";
+    html += row(tr("Drag"), tr("Reorders scenes (the whole scene text moves with the card)"));
+    html += row(tr("Alt+arrows"), tr("Moves the selected card"));
+    html += row(tr("Enter / double-click"), tr("Opens the scene in the script"));
+    html += row("F2", tr("Edits the scene synopsis"));
+    html += row(tr("Ctrl+wheel"), tr("Bigger or smaller cards"));
+    html += row("Ctrl+Z / Ctrl+Y", tr("Undo / redo"));
+    html += "</table>";
+    QMessageBox::information(this, tr("Keyboard Shortcuts"), html);
 }
 
 void MainWindow::about() {
-    QMessageBox::about(this, tr("Sobre o Owlio"),
-                       tr("<h3>Owlio 0.1</h3><p>Editor de roteiros em C++ e Qt %1.</p>"
-                          "<p>Formatação padrão da indústria (Courier 12, US Letter), "
-                          "paginação com (MAIS)/(CONT.), arquivos Fountain e Final Draft (.fdx), "
-                          "exportação para PDF.</p>").arg(qVersion()));
+    QMessageBox::about(this, tr("About Owlio"),
+                       tr("<h3>Owlio %1</h3><p>A screenwriting app written in C++ and Qt %2.</p>"
+                          "<p>Industry-standard formatting (12 pt Courier, US Letter), page breaks with "
+                          "(MORE)/(CONT'D), Fountain and Final Draft (.fdx) files, PDF export.</p>")
+                           .arg(QApplication::applicationVersion(), qVersion()));
+}
+
+void MainWindow::showSettings() {
+    SettingsDialog dlg(this);
+    if (dlg.exec() != QDialog::Accepted) return;
+
+    ThemeManager::instance().setMode(dlg.themeMode());
+    if (dlg.scriptLanguage() != editor_.scriptLanguage()) {
+        i18n::setScriptLanguage(dlg.scriptLanguage());
+        editor_.setScriptLanguage(dlg.scriptLanguage());
+        view_->refreshAfterExternalEdit();
+    }
+
+    const QString lang = dlg.uiLanguage();
+    if (lang == i18n::uiLanguage() && lang == i18n::activeLanguage()) return;
+    i18n::setUiLanguage(lang);
+    if (lang == i18n::activeLanguage()) return;
+
+    QMessageBox box(QMessageBox::Question, tr("Interface Language"),
+                    tr("The new language is used after Owlio restarts. Restart now?"),
+                    QMessageBox::NoButton, this);
+    QPushButton* now = box.addButton(tr("Restart Now"), QMessageBox::AcceptRole);
+    box.addButton(tr("Later"), QMessageBox::RejectRole);
+    box.setDefaultButton(now);
+    box.exec();
+    if (box.clickedButton() != now || !maybeSave()) return;
+    editor_.markSaved();  // já salvo ou descartado: não perguntar de novo ao fechar
+    QStringList args;
+    if (!path_.isEmpty()) args << path_;
+    if (QProcess::startDetached(QCoreApplication::applicationFilePath(), args)) close();
+}
+
+void MainWindow::editCharacter(const QString& name) {
+    if (name.isEmpty()) return;
+    CharacterDialog dlg(editor_, name, this);
+    dlg.resize(900, 680);
+    if (dlg.exec() != QDialog::Accepted) return;
+    const CharacterInfo info = dlg.info();
+    const int renamed = editor_.setCharacter(name.toStdU32String(), info);
+    view_->refreshAfterExternalEdit();
+    if (renamed > 0)
+        statusBar()->showMessage(tr("%1 renamed to %2 in %n cue(s).", "", renamed).arg(name, q(info.name)), 4000);
+    if (dlg.gotoParagraph() >= 0) {
+        setCardsMode(false);
+        view_->gotoParagraph(dlg.gotoParagraph());
+        view_->setFocus();
+    }
+}
+
+void MainWindow::gotoFirstLine(const QString& name) {
+    const CharacterStats st = editor_.characterStats(name.toStdU32String());
+    if (st.firstPara < 0) return;
+    setCardsMode(false);
+    view_->gotoParagraph(st.firstPara);
+    view_->setFocus();
 }
 
 // ------------------------------------------------------------ atualização da UI
@@ -665,7 +722,7 @@ void MainWindow::editSynopsis(int sceneIndex) {
     const SceneSummary& s = scenes[sceneIndex];
     bool ok = false;
     const QString text = QInputDialog::getMultiLineText(
-        this, tr("Sinopse da cena %1").arg(sceneIndex + 1), q(s.heading), q(s.synopsis), &ok);
+        this, tr("Scene %1 Synopsis").arg(sceneIndex + 1), q(s.heading), q(s.synopsis), &ok);
     if (!ok) return;
     editor_.setSynopsis(s.para, text.toStdU32String());
     view_->refreshAfterExternalEdit();
@@ -674,7 +731,7 @@ void MainWindow::editSynopsis(int sceneIndex) {
 
 void MainWindow::chooseAvatar(const QString& name) {
     QSettings settings;
-    const QString path = QFileDialog::getOpenFileName(this, tr("Foto de %1").arg(name),
+    const QString path = QFileDialog::getOpenFileName(this, tr("Photo of %1").arg(name),
                                                       settings.value("lastImageDir").toString(),
                                                       avatars::fileFilter());
     if (path.isEmpty()) return;
@@ -682,12 +739,12 @@ void MainWindow::chooseAvatar(const QString& name) {
     QString error;
     const std::string data = avatars::fromImageFile(path, &error);
     if (data.empty()) {
-        QMessageBox::warning(this, tr("Foto"), tr("Não foi possível abrir a imagem:\n%1").arg(error));
+        QMessageBox::warning(this, tr("Photo"), tr("Could not open the image:\n%1").arg(error));
         return;
     }
     editor_.setAvatar(name.toStdU32String(), data);
     view_->refreshAfterExternalEdit();
-    statusBar()->showMessage(tr("Foto de %1 atualizada.").arg(name), 2500);
+    statusBar()->showMessage(tr("Photo of %1 updated.").arg(name), 2500);
 }
 
 void MainWindow::onDocumentChanged() {
@@ -704,11 +761,11 @@ void MainWindow::onCursorMoved() {
     redoAct_->setEnabled(editor_.canRedo());
 
     const int pages = editor_.layout().pageCount;
-    pageLabel_->setText(tr("Página %1 de %2").arg(view_->currentPage() + 1).arg(pages));
+    pageLabel_->setText(tr("Page %1 of %2").arg(view_->currentPage() + 1).arg(pages));
     const int scene = editor_.sceneIndexAt(editor_.cursor().para);
     const int scenes = static_cast<int>(editor_.scenes().size());
-    sceneLabel_->setText(scene >= 0 ? tr("Cena %1 de %2").arg(scene + 1).arg(scenes)
-                                    : tr("%n cena(s)", "", scenes));
+    sceneLabel_->setText(scene >= 0 ? tr("Scene %1 of %2").arg(scene + 1).arg(scenes)
+                                    : tr("%n scene(s)", "", scenes));
     if (scene >= 0 && scene < sceneList_->count()) {
         QSignalBlocker b(sceneList_);
         sceneList_->setCurrentRow(scene);
@@ -746,9 +803,9 @@ void MainWindow::refreshPanels() {
         std::u32string h = trim(displayText(d.paragraphs[scenes[i].para]));
         QStringList cast;
         for (const auto& n : scenes[i].cast) cast << q(n);
-        QString sub = tr("Pág. %1").arg(L.pageOfPara(scenes[i].para) + 1);
+        QString sub = tr("Page %1").arg(L.pageOfPara(scenes[i].para) + 1);
         if (!cast.isEmpty()) sub += "  ·  " + cast.join(", ");
-        auto* it = new QListWidgetItem(h.empty() ? tr("(sem título)") : q(h));
+        auto* it = new QListWidgetItem(h.empty() ? tr("(untitled)") : q(h));
         it->setData(Qt::UserRole, scenes[i].para);
         it->setData(CardDelegate::kSubtitleRole, sub);
         it->setData(CardDelegate::kBadgeRole, QString::number(i + 1));
@@ -762,19 +819,22 @@ void MainWindow::refreshPanels() {
     for (const auto& [name, count] : editor_.characters()) {
         auto* it = new QListWidgetItem(q(name));
         it->setData(Qt::UserRole, q(name));
-        it->setData(CardDelegate::kBadgeRole, tr("%n fala(s)", "", count));
+        it->setData(CardDelegate::kBadgeRole, tr("%n line(s)", "", count));
         it->setData(CardDelegate::kAvatarRole, QByteArray::fromStdString(editor_.doc().avatar(name)));
-        it->setToolTip(tr("%n fala(s) em %1 cena(s)", "", count).arg(scenesOf.value(q(name)).size()) +
-                       "\n" + tr("Duplo clique ou clique direito para escolher uma foto"));
+        if (const CharacterInfo* info = editor_.doc().character(name))
+            it->setData(CardDelegate::kSubtitleRole, q(info->role));
+        it->setToolTip(tr("%n line(s)", "", count) + "  ·  " +
+                       tr("%n scene(s)", "", static_cast<int>(scenesOf.value(q(name)).size())) +
+                       "\n" + tr("Click to open the character sheet"));
         charList_->addItem(it);
     }
-    wordLabel_->setText(tr("%n palavra(s)", "", editor_.wordCount()));
+    wordLabel_->setText(tr("%n word(s)", "", editor_.wordCount()));
     onCursorMoved();
 }
 
 
 void MainWindow::updateTitle() {
-    QString name = path_.isEmpty() ? tr("Sem título") : QFileInfo(path_).fileName();
+    QString name = path_.isEmpty() ? tr("Untitled") : QFileInfo(path_).fileName();
     std::string t = editor_.doc().titleValue("Title");
     QString full = name + "[*]";
     if (!t.empty()) full = q(t) + " (" + name + ")[*]";
@@ -790,3 +850,5 @@ void MainWindow::closeEvent(QCloseEvent* e) {
     s.setValue("zoom", view_->zoom());
     e->accept();
 }
+
+#include "mainwindow.moc"

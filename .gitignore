@@ -3,4 +3,4 @@ build-*/
 *.user
 .vscode/
 .idea/
-exemplos/*.pdf
+examples/*.pdf

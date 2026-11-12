@@ -26,6 +26,17 @@ struct SceneSummary {
     int eighths = 1;                   // tamanho em oitavos de página
 };
 
+// Números de uma personagem no roteiro.
+struct CharacterStats {
+    int speeches = 0;         // deixas
+    int words = 0;            // palavras faladas
+    std::vector<int> scenes;  // índices das cenas em que fala
+    int firstPara = -1;       // primeira deixa
+};
+
+// Convenções do texto do roteiro: (MORE)/(CONT'D), DAY/NIGHT, CUT TO:...
+enum class ScriptLanguage { English, Portuguese };
+
 // Modelo de edição do roteiro, independente de interface gráfica.
 class Editor {
 public:
@@ -42,6 +53,14 @@ public:
     void markSaved() { modified_ = false; }
     void setTitleValue(const std::string& key, const std::string& value);
     void setAvatar(const std::u32string& name, const std::string& base64);  // vazio remove
+    ScriptLanguage scriptLanguage() const { return lang_; }
+    void setScriptLanguage(ScriptLanguage lang);
+
+    // ---- personagens
+    // Grava a ficha. Se o nome mudou, renomeia as deixas (mantendo extensões como (V.O.)).
+    // Tudo num só passo de desfazer. Retorna quantas deixas foram renomeadas.
+    int setCharacter(const std::u32string& oldName, const CharacterInfo& info);
+    CharacterStats characterStats(const std::u32string& name) const;
 
     // ---- cursor e seleção
     Pos cursor() const { return cursor_; }
@@ -110,7 +129,7 @@ private:
     struct Snapshot {
         std::vector<Paragraph> paragraphs;
         std::vector<std::pair<std::string, std::string>> titlePage;
-        std::vector<std::pair<std::u32string, std::string>> avatars;
+        std::vector<CharacterInfo> cast;
         Pos cursor, anchor;
     };
 
@@ -129,6 +148,7 @@ private:
     mutable Layout layout_;
     mutable bool layoutDirty_ = true;
     LayoutOptions layoutOpt_;
+    ScriptLanguage lang_ = ScriptLanguage::English;
     int revision_ = 0;
     bool modified_ = false;
 

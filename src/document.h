@@ -16,7 +16,7 @@ enum class Element {
 
 constexpr int kElementCount = static_cast<int>(Element::Count);
 
-const char* elementName(Element e);       // nome em português para a UI
+const char* elementName(Element e);       // nome em inglês (a interface traduz)
 const char* elementFdxName(Element e);    // nome usado no formato .fdx
 bool elementIsUppercase(Element e);       // exibido/exportado em maiúsculas
 
@@ -30,15 +30,29 @@ struct Paragraph {
         : type(t), text(std::move(tx)), synopsis(std::move(syn)) {}
 };
 
+// Ficha de um personagem. O nome fica em maiúsculas e sem extensão, como nas deixas.
+struct CharacterInfo {
+    std::u32string name;
+    std::string photo;  // imagem em base64 (JPEG/PNG), vazia = iniciais
+    std::u32string age;
+    std::u32string occupation;
+    std::u32string role;      // protagonista, antagonista, coadjuvante...
+    std::u32string traits;    // características: aparência, personalidade
+    std::u32string synopsis;  // história e arco do personagem
+    bool blank() const;       // nada além do nome
+};
+
 struct Document {
     std::vector<Paragraph> paragraphs;
     // Página de rosto (chave/valor, no estilo Fountain: Title, Credit, Author, Contact...)
     std::vector<std::pair<std::string, std::string>> titlePage;
-    // Fotos dos personagens: nome (maiúsculas, sem extensão) -> imagem em base64 (JPEG/PNG).
-    std::vector<std::pair<std::u32string, std::string>> avatars;
+    // Fichas dos personagens (só os que têm algo preenchido).
+    std::vector<CharacterInfo> cast;
 
     std::string titleValue(const std::string& key) const;
     void setTitleValue(const std::string& key, const std::string& value);
+    const CharacterInfo* character(const std::u32string& name) const;
+    void setCharacter(const CharacterInfo& info);  // ficha em branco remove
     std::string avatar(const std::u32string& name) const;
     void setAvatar(const std::u32string& name, const std::string& base64);
     void ensureNotEmpty();

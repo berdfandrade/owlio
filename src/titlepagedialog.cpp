@@ -2,6 +2,7 @@
 
 #include <QComboBox>
 #include <QDate>
+#include <QLocale>
 #include <QDialogButtonBox>
 #include <QFormLayout>
 #include <QHBoxLayout>
@@ -13,10 +14,18 @@
 #include <QToolButton>
 #include <QVBoxLayout>
 
+#include "i18n.h"
 #include "theme.h"
 
 namespace {
 QString q(const std::string& s) { return QString::fromStdString(s); }
+
+bool ptScript() { return i18n::scriptLanguage() == ScriptLanguage::Portuguese; }
+QString defaultCredit() { return ptScript() ? QString::fromUtf8("Escrito por") : QString("Written by"); }
+QString todayText() {
+    const QDate d = QDate::currentDate();
+    return ptScript() ? d.toString("dd/MM/yyyy") : QLocale(QLocale::English).toString(d, "MMMM d, yyyy");
+}
 
 QLabel* sectionLabel(const QString& text) {
     auto* l = new QLabel(text.toUpper());
@@ -81,56 +90,60 @@ void TitlePagePreview::paintEvent(QPaintEvent*) {
         f.setPointSizeF(font().pointSizeF() * 0.95);
         p.setFont(f);
         p.drawText(page.adjusted(30, 30, -30, -30), Qt::AlignCenter | Qt::TextWordWrap,
-                   QObject::tr("Digite um título para criar a página de rosto."));
+                   tr("Type a title to create the title page."));
     }
 }
 
 // ------------------------------------------------------------ janela
 
 TitlePageDialog::TitlePageDialog(const Document& doc, QWidget* parent) : QDialog(parent), base_(doc) {
-    setWindowTitle(tr("Página de rosto"));
+    setWindowTitle(tr("Title Page"));
     setMinimumSize(860, 600);
 
     auto value = [&](const char* key) { return q(doc.titleValue(key)); };
+    const bool pt = i18n::scriptLanguage() == ScriptLanguage::Portuguese;
 
     // ---- Cabeçalho
-    auto* heading = new QLabel(tr("Página de rosto"));
+    auto* heading = new QLabel(tr("Title Page"));
     heading->setObjectName("tituloDialogo");
-    auto* sub = new QLabel(tr("É a primeira folha do PDF e da impressão. Ela só aparece quando o roteiro tem um título."));
+    auto* sub = new QLabel(tr("It is the first sheet of the PDF and of the printout. It only appears when the script has a title."));
     sub->setObjectName("subtituloDialogo");
     sub->setWordWrap(true);
 
     // ---- Campos
     title_ = new QLineEdit(value("Title"));
     title_->setObjectName("campoTitulo");
-    title_->setPlaceholderText(tr("Título do roteiro"));
+    title_->setPlaceholderText(tr("Script title"));
 
     credit_ = new QComboBox;
     credit_->setEditable(true);
-    credit_->addItems({tr("Escrito por"), tr("Roteiro de"), tr("Roteiro e argumento de"), tr("Argumento de"),
-                       "Written by", "Screenplay by", "Story by"});
-    credit_->setCurrentText(doc.titleValue("Credit").empty() ? tr("Escrito por") : value("Credit"));
+    // Os créditos são texto do roteiro: seguem o idioma do roteiro, não o da interface.
+    const QStringList enCredits = {"Written by", "Screenplay by", "Story by", "Screenplay and story by"};
+    const QStringList ptCredits = {QString::fromUtf8("Escrito por"), "Roteiro de", "Argumento de",
+                                   "Roteiro e argumento de"};
+    credit_->addItems(pt ? ptCredits + enCredits : enCredits + ptCredits);
+    credit_->setCurrentText(doc.titleValue("Credit").empty() ? defaultCredit() : value("Credit"));
 
-    authors_ = multiLine(value("Author"), 2, tr("Um nome por linha"));
+    authors_ = multiLine(value("Author"), 2, tr("One name per line"));
     source_ = new QLineEdit(value("Source"));
-    source_->setPlaceholderText(tr("Ex.: Baseado no romance de…"));
+    source_->setPlaceholderText(tr("E.g. Based on the novel by…"));
 
     revision_ = new QLineEdit(value("Revision"));
-    revision_->setPlaceholderText(tr("Ex.: 2º tratamento"));
+    revision_->setPlaceholderText(tr("E.g. Second draft"));
     draftDate_ = new QLineEdit(value("Draft date"));
-    draftDate_->setPlaceholderText(QDate::currentDate().toString("dd/MM/yyyy"));
+    draftDate_->setPlaceholderText(todayText());
     auto* today = new QToolButton;
-    today->setText(tr("Hoje"));
-    today->setToolTip(tr("Usar a data de hoje"));
+    today->setText(tr("Today"));
+    today->setToolTip(tr("Use today's date"));
     connect(today, &QToolButton::clicked, this,
-            [this] { draftDate_->setText(QDate::currentDate().toString("dd/MM/yyyy")); });
+            [this] { draftDate_->setText(todayText()); });
     auto* dateRow = new QHBoxLayout;
     dateRow->setContentsMargins(0, 0, 0, 0);
     dateRow->addWidget(draftDate_, 1);
     dateRow->addWidget(today);
 
-    contact_ = multiLine(value("Contact"), 3, tr("Nome\nTelefone\nE-mail"));
-    notes_ = multiLine(value("Notes"), 2, tr("Ex.: Registro na Biblioteca Nacional nº …"));
+    contact_ = multiLine(value("Contact"), 3, tr("Name\nPhone\nEmail"));
+    notes_ = multiLine(value("Notes"), 2, tr("E.g. WGA Registration No. …"));
 
     auto makeForm = [] {
         auto* f = new QFormLayout;
@@ -141,26 +154,26 @@ TitlePageDialog::TitlePageDialog(const Document& doc, QWidget* parent) : QDialog
         return f;
     };
     auto* f1 = makeForm();
-    f1->addRow(tr("Título"), title_);
-    f1->addRow(tr("Crédito"), credit_);
-    f1->addRow(tr("Autor(es)"), authors_);
-    f1->addRow(tr("Baseado em"), source_);
+    f1->addRow(tr("Title"), title_);
+    f1->addRow(tr("Credit"), credit_);
+    f1->addRow(tr("Author(s)"), authors_);
+    f1->addRow(tr("Source"), source_);
     auto* f2 = makeForm();
-    f2->addRow(tr("Versão"), revision_);
-    f2->addRow(tr("Data"), dateRow);
-    f2->addRow(tr("Observações"), notes_);
+    f2->addRow(tr("Revision"), revision_);
+    f2->addRow(tr("Draft date"), dateRow);
+    f2->addRow(tr("Notes"), notes_);
     auto* f3 = makeForm();
-    f3->addRow(tr("Contato"), contact_);
+    f3->addRow(tr("Contact"), contact_);
 
     auto* form = new QVBoxLayout;
     form->setSpacing(10);
-    form->addWidget(sectionLabel(tr("Créditos")));
+    form->addWidget(sectionLabel(tr("Credits")));
     form->addLayout(f1);
     form->addSpacing(8);
-    form->addWidget(sectionLabel(tr("Versão")));
+    form->addWidget(sectionLabel(tr("Revision")));
     form->addLayout(f2);
     form->addSpacing(8);
-    form->addWidget(sectionLabel(tr("Contato")));
+    form->addWidget(sectionLabel(tr("Contact")));
     form->addLayout(f3);
     form->addStretch(1);
 
@@ -172,20 +185,19 @@ TitlePageDialog::TitlePageDialog(const Document& doc, QWidget* parent) : QDialog
     columns->addWidget(preview_, 9);
 
     // ---- Botões
-    auto* clear = new QPushButton(tr("Remover página de rosto"));
+    auto* clear = new QPushButton(tr("Remove Title Page"));
     clear->setObjectName("perigo");
     connect(clear, &QPushButton::clicked, this, [this] {
         for (QLineEdit* e : {title_, source_, revision_, draftDate_}) e->clear();
         for (QPlainTextEdit* e : {authors_, contact_, notes_}) e->clear();
-        credit_->setCurrentText(tr("Escrito por"));
+        credit_->setCurrentText(defaultCredit());
     });
     auto* bb = new QDialogButtonBox(QDialogButtonBox::Save | QDialogButtonBox::Cancel);
-    bb->button(QDialogButtonBox::Save)->setText(tr("Salvar"));
-    bb->button(QDialogButtonBox::Save)->setDefault(true);
+    bb->button(QDialogButtonBox::Save)->setText(tr("Save"));
     bb->button(QDialogButtonBox::Save)->setObjectName("primarioBotao");
     bb->button(QDialogButtonBox::Save)->setIcon(QIcon());
     bb->button(QDialogButtonBox::Cancel)->setIcon(QIcon());
-    bb->button(QDialogButtonBox::Cancel)->setText(tr("Cancelar"));
+    bb->button(QDialogButtonBox::Cancel)->setText(tr("Cancel"));
     connect(bb, &QDialogButtonBox::accepted, this, &QDialog::accept);
     connect(bb, &QDialogButtonBox::rejected, this, &QDialog::reject);
     auto* buttons = new QHBoxLayout;
@@ -210,6 +222,8 @@ TitlePageDialog::TitlePageDialog(const Document& doc, QWidget* parent) : QDialog
     connect(credit_, &QComboBox::currentTextChanged, this, &TitlePageDialog::updatePreview);
     updatePreview();
     title_->setFocus();
+    // Só depois de estar na janela: antes disso o QDialog escolheria outro botão padrão.
+    bb->button(QDialogButtonBox::Save)->setDefault(true);
 }
 
 std::vector<std::pair<std::string, std::string>> TitlePageDialog::values() const {

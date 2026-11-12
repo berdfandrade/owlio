@@ -48,6 +48,9 @@ private slots:
     void refreshPanels();
     void editSynopsis(int sceneIndex);
     void chooseAvatar(const QString& characterName);
+    void editCharacter(const QString& characterName);
+    void gotoFirstLine(const QString& characterName);
+    void showSettings();
 
 private:
     void buildActions();

@@ -96,7 +96,7 @@ QString fileFilter() {
             continue;
         patterns << "*." + fmt;
     }
-    return QCoreApplication::translate("avatars", "Imagens (%1)").arg(patterns.join(' '));
+    return QCoreApplication::translate("avatars", "Images (%1)").arg(patterns.join(' '));
 }
 
 }  // namespace avatars

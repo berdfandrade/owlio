@@ -1,5 +1,7 @@
 #include "scriptview.h"
 
+#include "i18n.h"
+
 #include "theme.h"
 
 #include <QApplication>
@@ -376,14 +378,14 @@ void ScriptView::wheelEvent(QWheelEvent* e) {
 
 void ScriptView::contextMenuEvent(QContextMenuEvent* e) {
     QMenu menu(this);
-    menu.addAction(tr("Recortar"), this, &ScriptView::cut)->setEnabled(ed_->hasSelection());
-    menu.addAction(tr("Copiar"), this, &ScriptView::copy)->setEnabled(ed_->hasSelection());
-    menu.addAction(tr("Colar"), this, &ScriptView::paste);
+    menu.addAction(tr("Cut"), this, &ScriptView::cut)->setEnabled(ed_->hasSelection());
+    menu.addAction(tr("Copy"), this, &ScriptView::copy)->setEnabled(ed_->hasSelection());
+    menu.addAction(tr("Paste"), this, &ScriptView::paste);
     menu.addSeparator();
-    QMenu* el = menu.addMenu(tr("Elemento"));
+    QMenu* el = menu.addMenu(tr("Element"));
     for (int i = 0; i < kElementCount; ++i) {
         Element t = static_cast<Element>(i);
-        QAction* a = el->addAction(QString::fromUtf8(elementName(t)), this, [this, t] { setElement(t); });
+        QAction* a = el->addAction(i18n::elementLabel(t), this, [this, t] { setElement(t); });
         a->setCheckable(true);
         a->setChecked(ed_->currentElement() == t);
     }
