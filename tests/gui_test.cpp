@@ -701,9 +701,14 @@ int main(int argc, char* argv[]) {
             map->link(a, "BRUNA", RelationKind::Family, "siblings");
             CHECK(ed.doc().relations.link(a.toStdU32String(), U"BRUNA") != nullptr);
             // Arrastar do "+" de um personagem até outro abre a janela da ligação.
-            QTimer::singleShot(300, [] {
-                if (auto* d = qobject_cast<QDialog*>(QApplication::activeModalWidget())) d->accept();
+            auto* closer = new QTimer(&w);  // fecha a janela da ligação assim que ela abrir
+            QObject::connect(closer, &QTimer::timeout, closer, [closer] {
+                if (auto* d = qobject_cast<RelationDialog*>(QApplication::activeModalWidget())) {
+                    d->accept();
+                    closer->deleteLater();
+                }
             });
+            closer->start(50);
             const QPoint from = map->nodeCenter(third);
             QTest::mouseMove(map, from);
             QTest::mouseMove(map, map->handlePoint(third));

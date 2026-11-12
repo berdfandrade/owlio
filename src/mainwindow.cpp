@@ -602,11 +602,20 @@ void MainWindow::syncSidebarAction() {
 
 bool MainWindow::maybeSave() {
     if (!editor_.modified()) return true;
-    auto r = QMessageBox::warning(this, tr("Owlio"),
-                                  tr("The script has unsaved changes.\nDo you want to save them?"),
-                                  QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
-    if (r == QMessageBox::Save) return save();
-    return r == QMessageBox::Discard;
+    QMessageBox box(QMessageBox::Warning, tr("Owlio"), tr("The script has unsaved changes."), QMessageBox::NoButton,
+                    this);
+    box.setInformativeText(tr("Do you want to save them before closing?"));
+    QPushButton* discard = box.addButton(tr("Don't Save"), QMessageBox::DestructiveRole);
+    QPushButton* cancel = box.addButton(QMessageBox::Cancel);
+    QPushButton* saveBtn = box.addButton(QMessageBox::Save);
+    // Largura pelo texto: o estilo dos botões cortava "Close without Saving".
+    for (QPushButton* b : {discard, cancel, saveBtn})
+        b->setMinimumWidth(b->fontMetrics().horizontalAdvance(b->text()) + b->iconSize().width() + 56);
+    box.setDefaultButton(saveBtn);
+    box.setEscapeButton(cancel);
+    box.exec();
+    if (box.clickedButton() == saveBtn) return save();
+    return box.clickedButton() == discard;
 }
 
 void MainWindow::newFile() {
