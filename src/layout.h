@@ -37,8 +37,8 @@ struct LayoutLine {
 };
 
 struct LayoutOptions {
-    std::u32string moreText = U"(MAIS)";
-    std::u32string contdText = U"(CONT.)";
+    std::u32string moreText = U"(MORE)";
+    std::u32string contdText = U"(CONT'D)";
 };
 
 struct Layout {

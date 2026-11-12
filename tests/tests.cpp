@@ -1,4 +1,4 @@
-// Testes do núcleo (sem Qt). Rode: ./build/owlio_tests
+// Core tests (no Qt). Run: ./build/owlio_tests
 #include <cstdio>
 #include <cstdlib>
 
@@ -11,7 +11,7 @@ static int failures = 0;
 #define CHECK(cond)                                                       \
     do {                                                                  \
         if (!(cond)) {                                                    \
-            std::printf("FALHOU %s:%d  %s\n", __FILE__, __LINE__, #cond); \
+            std::printf("FAILED %s:%d  %s\n", __FILE__, __LINE__, #cond); \
             ++failures;                                                   \
         }                                                                 \
     } while (0)
@@ -93,7 +93,7 @@ static void testWrapAndLayout() {
     CHECK(starts.size() == 2 && starts[1] == 8);
     CHECK(wrapText(U"curto", 60).size() == 1);
 
-    // Diálogo longo cruzando a página gera (MAIS) e (CONT.).
+    // Diálogo longo cruzando a página gera (MORE) e (CONT'D); em português, (MAIS) e (CONT.).
     Document d;
     for (int i = 0; i < 25; ++i) d.paragraphs.push_back({Element::Action, U"Uma linha de ação."});
     d.paragraphs.push_back({Element::Character, U"JOÃO"});
@@ -104,11 +104,21 @@ static void testWrapAndLayout() {
     CHECK(L.pageCount == 2);
     bool hasMore = false, hasContd = false;
     for (size_t i = 0; i < L.lines.size(); ++i) {
-        if (L.lines[i].para < 0 && L.lines[i].virtText == U"(MAIS)") hasMore = true;
-        if (L.lines[i].para < 0 && L.lines[i].virtText == U"JOÃO (CONT.)") hasContd = true;
+        if (L.lines[i].para < 0 && L.lines[i].virtText == U"(MORE)") hasMore = true;
+        if (L.lines[i].para < 0 && L.lines[i].virtText == U"JOÃO (CONT'D)") hasContd = true;
     }
     CHECK(hasMore);
     CHECK(hasContd);
+    LayoutOptions pt;
+    pt.moreText = U"(MAIS)";
+    pt.contdText = U"(CONT.)";
+    Layout Lpt = computeLayout(d, pt);
+    bool ptMore = false, ptContd = false;
+    for (const auto& l : Lpt.lines) {
+        if (l.para < 0 && l.virtText == U"(MAIS)") ptMore = true;
+        if (l.para < 0 && l.virtText == U"JOÃO (CONT.)") ptContd = true;
+    }
+    CHECK(ptMore && ptContd);
     for (const auto& l : L.lines) CHECK(l.row >= 0 && l.row < page::kLinesPerPage);
     // Personagem nunca fica sozinho no fim da página.
     for (size_t i = 0; i + 1 < L.lines.size(); ++i)
@@ -179,10 +189,78 @@ static void testEditor() {
     for (size_t i = 0; i < e2.doc().paragraphs.size() && i < e.doc().paragraphs.size(); ++i)
         CHECK(e2.doc().paragraphs[i].type == e.doc().paragraphs[i].type);
 
-    // Cabeçalho autocompleta horário.
+    // Cabeçalho autocompleta horário, conforme o idioma do roteiro.
     Editor e3;
     e3.insertText(U"INT. QUARTO - N");
+    CHECK(e3.suggestion() == U"IGHT");
+    e3.setScriptLanguage(ScriptLanguage::Portuguese);
     CHECK(e3.suggestion() == U"OITE");
+    CHECK(e3.layoutOptions().moreText == U"(MAIS)");
+}
+
+static void testCharacters() {
+    Document d;
+    d.paragraphs = {{Element::SceneHeading, U"INT. A - DIA"},
+                    {Element::Character, U"ANA"},
+                    {Element::Dialogue, U"Oi, tudo bem?"},
+                    {Element::Character, U"BETO"},
+                    {Element::Dialogue, U"Tudo."},
+                    {Element::SceneHeading, U"EXT. B - NOITE"},
+                    {Element::Character, U"ANA (V.O.)"},
+                    {Element::Parenthetical, U"(rindo)"},
+                    {Element::Dialogue, U"Mentira."}};
+    Editor e;
+    e.setDocument(d);
+
+    CharacterStats st = e.characterStats(U"ANA");
+    CHECK(st.speeches == 2);
+    CHECK(st.words == 4);
+    CHECK(st.scenes == std::vector<int>({0, 1}));
+    CHECK(st.firstPara == 1);
+    CHECK(e.characterStats(U"BETO").scenes == std::vector<int>({0}));
+
+    // Ficha completa, com quebras de linha e "*/" que não podem fechar o comentário do Fountain.
+    CharacterInfo info;
+    info.name = U"ANA";
+    info.age = U"34";
+    info.occupation = U"Detetive";
+    info.role = U"Protagonist";
+    info.traits = U"Teimosa.\nUsa óculos */ redondos.";
+    info.synopsis = U"Volta à cidade natal\npara resolver um caso \\ antigo.";
+    info.photo = "aGVsbG8=";
+    CHECK(e.setCharacter(U"ANA", info) == 0);
+    const std::string text = writeFountain(e.doc());
+    Document back = parseFountain(text);
+    CHECK(back.paragraphs.size() == e.doc().paragraphs.size());
+    const CharacterInfo* c = back.character(U"ANA");
+    CHECK(c != nullptr);
+    if (c) {
+        CHECK(c->age == info.age && c->occupation == info.occupation && c->role == info.role);
+        CHECK(c->traits == info.traits);
+        CHECK(c->synopsis == info.synopsis);
+        CHECK(c->photo == info.photo);
+    }
+
+    // Renomear troca as deixas, mantém a extensão e leva a ficha junto, num só desfazer.
+    info.name = U"Ana Lúcia";
+    CHECK(e.setCharacter(U"ANA", info) == 2);
+    CHECK(e.doc().paragraphs[1].text == U"ANA LÚCIA");
+    CHECK(e.doc().paragraphs[6].text == U"ANA LÚCIA (V.O.)");
+    CHECK(e.doc().character(U"ANA") == nullptr);
+    CHECK(e.doc().character(U"ANA LÚCIA") && e.doc().character(U"ANA LÚCIA")->age == U"34");
+    e.undo();
+    CHECK(e.doc().paragraphs[6].text == U"ANA (V.O.)");
+    CHECK(e.doc().character(U"ANA") && e.doc().character(U"ANA")->photo == "aGVsbG8=");
+
+    // Ficha em branco some do arquivo.
+    CHECK(e.setCharacter(U"ANA", CharacterInfo{U"ANA", {}, {}, {}, {}, {}, {}}) == 0);
+    CHECK(e.doc().cast.empty());
+    CHECK(writeFountain(e.doc()).find("owlio-characters") == std::string::npos);
+
+    // Arquivos antigos, com o bloco só de fotos, continuam abrindo.
+    Document old = parseFountain("INT. A - DIA\n\nANA\nOi.\n\n/* owlio-avatars\nANA: aGVsbG8=\n*/\n");
+    CHECK(old.avatar(U"ANA") == "aGVsbG8=");
+    CHECK(old.paragraphs.size() == 3);
 }
 
 static void testScenes() {
@@ -266,6 +344,7 @@ int main() {
     testFdx();
     testWrapAndLayout();
     testEditor();
-    if (failures == 0) std::printf("Todos os testes passaram.\n");
+    testCharacters();
+    if (failures == 0) std::printf("All tests passed.\n");
     return failures == 0 ? 0 : 1;
 }

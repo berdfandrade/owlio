@@ -94,6 +94,75 @@ void Editor::setAvatar(const std::u32string& name, const std::string& base64) {
     changed();
 }
 
+void Editor::setScriptLanguage(ScriptLanguage lang) {
+    lang_ = lang;
+    LayoutOptions o;
+    if (lang == ScriptLanguage::Portuguese) {
+        o.moreText = U"(MAIS)";
+        o.contdText = U"(CONT.)";
+    }
+    setLayoutOptions(o);
+}
+
+int Editor::setCharacter(const std::u32string& oldName, const CharacterInfo& in) {
+    CharacterInfo info = in;
+    info.name = toUpper(trim(info.name));
+    if (info.name.empty()) info.name = oldName;
+    const bool rename = info.name != oldName;
+    const CharacterInfo* cur = doc_.character(oldName);
+    const CharacterInfo before = cur ? *cur : CharacterInfo{oldName, {}, {}, {}, {}, {}, {}};
+    if (!rename && before.photo == info.photo && before.age == info.age &&
+        before.occupation == info.occupation && before.role == info.role && before.traits == info.traits &&
+        before.synopsis == info.synopsis)
+        return 0;
+
+    beginEdit(EditKind::Other);
+    int renamed = 0;
+    if (rename) {
+        for (Paragraph& p : doc_.paragraphs) {
+            if (p.type != Element::Character) continue;
+            const std::u32string t = trim(p.text);
+            if (stripExtension(toUpper(t)) != oldName) continue;
+            const size_t paren = t.find(U'(');
+            p.text = paren == std::u32string::npos ? info.name : info.name + U" " + t.substr(paren);
+            ++renamed;
+        }
+        CharacterInfo gone;
+        gone.name = oldName;
+        doc_.setCharacter(gone);  // remove a ficha antiga
+    }
+    doc_.setCharacter(info);
+    changed();
+    return renamed;
+}
+
+CharacterStats Editor::characterStats(const std::u32string& name) const {
+    CharacterStats st;
+    int scene = -1;
+    bool speaking = false;
+    for (int i = 0; i < static_cast<int>(doc_.paragraphs.size()); ++i) {
+        const Paragraph& p = doc_.paragraphs[i];
+        if (p.type == Element::SceneHeading) ++scene;
+        if (p.type == Element::Character) {
+            speaking = stripExtension(toUpper(trim(p.text))) == name;
+            if (!speaking) continue;
+            ++st.speeches;
+            if (st.firstPara < 0) st.firstPara = i;
+            if (scene >= 0 && (st.scenes.empty() || st.scenes.back() != scene)) st.scenes.push_back(scene);
+        } else if (p.type == Element::Dialogue && speaking) {
+            bool in = false;
+            for (char32_t c : p.text) {
+                const bool w = isWordChar(c);
+                if (w && !in) ++st.words;
+                in = w;
+            }
+        } else if (p.type != Element::Parenthetical) {
+            speaking = false;
+        }
+    }
+    return st;
+}
+
 // ------------------------------------------------------------ undo
 
 void Editor::beginEdit(EditKind kind) {
@@ -101,7 +170,7 @@ void Editor::beginEdit(EditKind kind) {
     bool coalesce = kind != EditKind::Other && kind == lastKind_ &&
                     now - lastEditTime_ < std::chrono::milliseconds(1500) && !undo_.empty();
     if (!coalesce) {
-        undo_.push_back({doc_.paragraphs, doc_.titlePage, doc_.avatars, cursor_, anchor_});
+        undo_.push_back({doc_.paragraphs, doc_.titlePage, doc_.cast, cursor_, anchor_});
         if (undo_.size() > kMaxUndo) undo_.erase(undo_.begin());
     }
     redo_.clear();
@@ -119,12 +188,12 @@ void Editor::changed() {
 
 void Editor::undo() {
     if (undo_.empty()) return;
-    redo_.push_back({doc_.paragraphs, doc_.titlePage, doc_.avatars, cursor_, anchor_});
+    redo_.push_back({doc_.paragraphs, doc_.titlePage, doc_.cast, cursor_, anchor_});
     Snapshot s = std::move(undo_.back());
     undo_.pop_back();
     doc_.paragraphs = std::move(s.paragraphs);
     doc_.titlePage = std::move(s.titlePage);
-    doc_.avatars = std::move(s.avatars);
+    doc_.cast = std::move(s.cast);
     cursor_ = s.cursor;
     anchor_ = s.anchor;
     lastKind_ = EditKind::None;
@@ -133,12 +202,12 @@ void Editor::undo() {
 
 void Editor::redo() {
     if (redo_.empty()) return;
-    undo_.push_back({doc_.paragraphs, doc_.titlePage, doc_.avatars, cursor_, anchor_});
+    undo_.push_back({doc_.paragraphs, doc_.titlePage, doc_.cast, cursor_, anchor_});
     Snapshot s = std::move(redo_.back());
     redo_.pop_back();
     doc_.paragraphs = std::move(s.paragraphs);
     doc_.titlePage = std::move(s.titlePage);
-    doc_.avatars = std::move(s.avatars);
+    doc_.cast = std::move(s.cast);
     cursor_ = s.cursor;
     anchor_ = s.anchor;
     lastKind_ = EditKind::None;
@@ -591,7 +660,8 @@ std::vector<std::u32string> Editor::candidates() const {
         size_t paren = typed.find(U'(');
         if (paren != std::u32string::npos) {
             std::u32string base = typed.substr(0, paren);
-            for (const char32_t* ext : {U"(V.O.)", U"(O.S.)", U"(CONT.)", U"(O.C.)"})
+            const bool pt = lang_ == ScriptLanguage::Portuguese;
+            for (const char32_t* ext : {U"(V.O.)", U"(O.S.)", pt ? U"(CONT.)" : U"(CONT'D)", U"(O.C.)"})
                 addUnique(base + ext);
         }
     } else if (p.type == Element::SceneHeading) {
@@ -599,9 +669,13 @@ std::vector<std::u32string> Editor::candidates() const {
         size_t dash = typed.rfind(U" - ");
         if (dash != std::u32string::npos) {
             std::u32string base = typed.substr(0, dash + 3);
-            for (const char32_t* t : {U"DIA", U"NOITE", U"TARDE", U"MANHÃ", U"AMANHECER",
-                                      U"ANOITECER", U"CONTÍNUO", U"MAIS TARDE", U"MOMENTOS DEPOIS"})
-                addUnique(base + t);
+            static const std::vector<std::u32string> en = {
+                U"DAY", U"NIGHT", U"MORNING", U"AFTERNOON", U"EVENING", U"DAWN",
+                U"DUSK", U"CONTINUOUS", U"LATER", U"MOMENTS LATER"};
+            static const std::vector<std::u32string> pt = {
+                U"DIA", U"NOITE", U"TARDE", U"MANHÃ", U"AMANHECER",
+                U"ANOITECER", U"CONTÍNUO", U"MAIS TARDE", U"MOMENTOS DEPOIS"};
+            for (const auto& t : lang_ == ScriptLanguage::Portuguese ? pt : en) addUnique(base + t);
         } else {
             for (const char32_t* t : {U"INT. ", U"EXT. ", U"INT./EXT. "}) addUnique(t);
             for (size_t i = 0; i < doc_.paragraphs.size(); ++i) {
@@ -614,9 +688,13 @@ std::vector<std::u32string> Editor::candidates() const {
             }
         }
     } else if (p.type == Element::Transition) {
-        for (const char32_t* t : {U"CORTA PARA:", U"CORTE SECO PARA:", U"FUSÃO PARA:", U"FADE IN:",
-                                  U"FADE OUT.", U"FADE PARA PRETO.", U"CUT TO:", U"DISSOLVE TO:"})
-            addUnique(t);
+        static const std::vector<std::u32string> en = {
+            U"CUT TO:", U"SMASH CUT TO:", U"DISSOLVE TO:", U"MATCH CUT TO:",
+            U"FADE IN:", U"FADE OUT.", U"FADE TO BLACK."};
+        static const std::vector<std::u32string> pt = {
+            U"CORTA PARA:", U"CORTE SECO PARA:", U"FUSÃO PARA:", U"FADE IN:",
+            U"FADE OUT.", U"FADE PARA PRETO.", U"CUT TO:", U"DISSOLVE TO:"};
+        for (const auto& t : lang_ == ScriptLanguage::Portuguese ? pt : en) addUnique(t);
     }
     return out;
 }

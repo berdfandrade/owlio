@@ -272,11 +272,11 @@ void SceneBoard::paintCard(QPainter& p, const QRectF& r, int index, bool selecte
     p.setFont(small);
     p.setPen(tc.muted);
     p.drawText(QRectF(in.left(), y, in.width(), badge.height()), Qt::AlignRight | Qt::AlignVCenter,
-               tr("pág. %1").arg(s.page + 1));
+               tr("p. %1").arg(s.page + 1));
     y = badge.bottom() + 10;
 
     // Local (até 2 linhas) e horário.
-    const QString loc = h.location.isEmpty() ? (s.heading.empty() ? tr("(cena sem cabeçalho)") : q(s.heading))
+    const QString loc = h.location.isEmpty() ? (s.heading.empty() ? tr("(scene without a heading)") : q(s.heading))
                                              : h.location;
     y += drawWrapped(p, QRectF(in.left(), y, in.width(), tfm.lineSpacing() * 2), loc, title, tc.text, 2);
     if (!h.time.isEmpty()) {
@@ -296,7 +296,7 @@ void SceneBoard::paintCard(QPainter& p, const QRectF& r, int index, bool selecte
     const QRectF foot(in.left(), in.bottom() - footH, in.width(), footH);
     p.setPen(QPen(tc.border, 1));
     p.drawLine(QPointF(in.left(), foot.top() - 8), QPointF(in.right(), foot.top() - 8));
-    const QString len = eighthsText(s.eighths) + " " + tr("pág.");
+    const QString len = eighthsText(s.eighths) + " " + tr("pg.");
     p.setFont(small);
     p.setPen(tc.muted);
     p.drawText(foot, Qt::AlignRight | Qt::AlignVCenter, len);
@@ -330,7 +330,7 @@ void SceneBoard::paintCard(QPainter& p, const QRectF& r, int index, bool selecte
         it.setItalic(true);
         drawWrapped(p, body, q(s.preview), it, tc.muted, 6);
     } else {
-        drawWrapped(p, body, tr("Sem ação ainda. F2 para escrever uma sinopse."), small, tc.muted, 2);
+        drawWrapped(p, body, tr("No action yet. Press F2 to write a synopsis."), small, tc.muted, 2);
     }
 
     // Seleção.
@@ -360,15 +360,15 @@ void SceneBoard::paintEvent(QPaintEvent*) {
     p.setFont(h1);
     p.setPen(tc.text);
     QFontMetricsF hfm(h1);
-    p.drawText(QPointF(kMargin, top + hfm.ascent()), tr("Cartões"));
+    p.drawText(QPointF(kMargin, top + hfm.ascent()), tr("Index Cards"));
     QFont sub = font();
     sub.setPointSizeF(font().pointSizeF() * 0.92);
     p.setFont(sub);
     p.setPen(tc.muted);
-    const QString info = tr("%n cena(s)", "", static_cast<int>(cards_.size())) + "  ·  " +
-                         tr("%n página(s)", "", pages_) + "  ·  " +
-                         tr("arraste para reordenar, duplo clique para abrir, F2 para a sinopse");
-    p.drawText(QRectF(kMargin + hfm.horizontalAdvance(tr("Cartões")) + 16, top, viewport()->width(), hfm.height()),
+    const QString info = tr("%n scene(s)", "", static_cast<int>(cards_.size())) + "  ·  " +
+                         tr("%n page(s)", "", pages_) + "  ·  " +
+                         tr("drag to reorder, double-click to open, F2 for the synopsis");
+    p.drawText(QRectF(kMargin + hfm.horizontalAdvance(tr("Index Cards")) + 16, top, viewport()->width(), hfm.height()),
                Qt::AlignLeft | Qt::AlignBottom, info);
 
     if (cards_.empty()) {
@@ -377,7 +377,7 @@ void SceneBoard::paintEvent(QPaintEvent*) {
         p.setFont(f);
         p.setPen(tc.muted);
         p.drawText(viewport()->rect().adjusted(40, 40, -40, -40), Qt::AlignCenter | Qt::TextWordWrap,
-                   tr("Nenhuma cena ainda.\nEscreva um cabeçalho (INT. ou EXT.) no roteiro e ele aparece aqui como cartão."));
+                   tr("No scenes yet.\nWrite a scene heading (INT. or EXT.) in the script and it shows up here as a card."));
         return;
     }
 
@@ -518,12 +518,12 @@ void SceneBoard::contextMenuEvent(QContextMenuEvent* e) {
     if (i < 0) return;
     selectScene(i, false);
     QMenu menu(this);
-    menu.addAction(tr("Abrir no roteiro"), this, [this, i] { emit openScene(cards_[i].para); });
-    menu.addAction(tr("Editar sinopse...") + "\tF2", this, [this, i] { emit editSynopsisRequested(i); });
+    menu.addAction(tr("Open in Script"), this, [this, i] { emit openScene(cards_[i].para); });
+    menu.addAction(tr("Edit Synopsis...") + "\tF2", this, [this, i] { emit editSynopsisRequested(i); });
     menu.addSeparator();
-    QAction* first = menu.addAction(tr("Mover para o início"), this, [this, i] { requestMove(i, 0); });
+    QAction* first = menu.addAction(tr("Move to Start"), this, [this, i] { requestMove(i, 0); });
     first->setEnabled(i > 0);
-    QAction* last = menu.addAction(tr("Mover para o fim"), this,
+    QAction* last = menu.addAction(tr("Move to End"), this,
                                    [this, i] { requestMove(i, static_cast<int>(cards_.size())); });
     last->setEnabled(i + 1 < static_cast<int>(cards_.size()));
     menu.exec(e->globalPos());

@@ -1,5 +1,5 @@
-// Teste de interface: digita uma cena na janela real usando eventos de teclado do Qt.
-// Uso: owlio_gui_test [captura.png]
+// UI test: types a scene into the real window using Qt keyboard and mouse events.
+// Usage: owlio_gui_test [script.png] [menu.png] [cards.png] [title.png] [print.png] [character.png] [settings.png]
 #include <QApplication>
 #include <QIcon>
 #include <QKeyEvent>
@@ -18,8 +18,18 @@
 #include <QPainter>
 #include <QTemporaryDir>
 
+#include <QDockWidget>
+#include <QListWidget>
+#include <QPlainTextEdit>
+#include <QPushButton>
+#include <QTimer>
+#include <QTranslator>
+
 #include "avatars.h"
+#include "characterdialog.h"
 #include "fountain.h"
+#include "i18n.h"
+#include "settingsdialog.h"
 #include "printdialog.h"
 #include "sceneboard.h"
 #include "titlepagedialog.h"
@@ -43,7 +53,7 @@ static void type(QWidget* w, const QString& text) {
 #define CHECK(cond)                                                \
     do {                                                           \
         if (!(cond)) {                                             \
-            std::printf("FALHOU linha %d: %s\n", __LINE__, #cond); \
+            std::printf("FAILED line %d: %s\n", __LINE__, #cond); \
             ++failures;                                            \
         }                                                          \
     } while (0)
@@ -55,44 +65,60 @@ int main(int argc, char* argv[]) {
     QApplication::setStyle(QStyleFactory::create("Fusion"));
     QApplication::setWindowIcon(QIcon(":/owlio.png"));
     ThemeManager::instance().init();
+    i18n::install(app, "en");
+
+    // Inglês é o padrão; o arquivo owlio_en só traz os plurais.
+    CHECK(QCoreApplication::translate("MainWindow", "%n scene(s)", nullptr, 1) == "1 scene");
+    CHECK(QCoreApplication::translate("MainWindow", "%n scene(s)", nullptr, 3) == "3 scenes");
+    {
+        QTranslator pt;
+        CHECK(pt.load(":/i18n/owlio_pt_BR.qm"));
+        QCoreApplication::installTranslator(&pt);
+        CHECK(QCoreApplication::translate("MainWindow", "&File") == QString::fromUtf8("&Arquivo"));
+        CHECK(QCoreApplication::translate("MainWindow", "%n scene(s)", nullptr, 2) == "2 cenas");
+        CHECK(QCoreApplication::translate("CharacterDialog", "Synopsis") == "Sinopse");
+        CHECK(i18n::elementLabel(Element::Parenthetical) == QString::fromUtf8("Parentético"));
+        QCoreApplication::removeTranslator(&pt);
+    }
+    CHECK(i18n::elementLabel(Element::Parenthetical) == "Parenthetical");
 
     MainWindow w;
     w.resize(1280, 900);
     w.show();
-    if (!QTest::qWaitForWindowExposed(&w)) std::printf("janela não exposta\n");
+    if (!QTest::qWaitForWindowExposed(&w)) std::printf("window not exposed\n");
     ScriptView* v = w.view();
     v->setFocus();
     const Editor& ed = w.editor();
     auto para = [&](int i) { return ed.doc().paragraphs.at(i); };
 
-    type(v, QString::fromUtf8("int. apartamento de ana - noite"));
+    type(v, QString::fromUtf8("int. ana's apartment - night"));
     QTest::keyClick(v, Qt::Key_Return);
-    type(v, QString::fromUtf8("Ana abre a janela. A cidade inteira está sem luz."));
+    type(v, QString::fromUtf8("Ana opens the window. The whole city is dark. Café closed, señor."));
     QTest::keyClick(v, Qt::Key_Return);
     QTest::keyClick(v, Qt::Key_Tab);  // Ação vazia -> Personagem
     type(v, QString::fromUtf8("ana"));
     QTest::keyClick(v, Qt::Key_Return);  // -> Diálogo
     QTest::keyClick(v, Qt::Key_Tab);     // -> Parentético "()"
-    type(v, QString::fromUtf8("para si mesma"));
+    type(v, QString::fromUtf8("to herself"));
     QTest::keyClick(v, Qt::Key_Return);  // -> Diálogo
-    type(v, QString::fromUtf8("Finalmente dá pra ver as estrelas."));
+    type(v, QString::fromUtf8("Finally you can see the stars."));
     QTest::keyClick(v, Qt::Key_Return);  // -> Personagem
     type(v, QString::fromUtf8("bruno (o.s.)"));
     QTest::keyClick(v, Qt::Key_Return);
-    type(v, QString::fromUtf8("Ana? Cadê a lanterna?"));
+    type(v, QString::fromUtf8("Ana? Where's the flashlight?"));
     QTest::keyClick(v, Qt::Key_Return);  // -> Personagem
     type(v, QString::fromUtf8("a"));  // autocompletar sugere "NA"
     CHECK(ed.suggestion() == U"NA");
     QTest::keyClick(v, Qt::Key_Return);  // aceita e vai para Diálogo
-    type(v, QString::fromUtf8("Deixa apagada."));
+    type(v, QString::fromUtf8("Leave it off."));
     QTest::keyClick(v, Qt::Key_Return);
     QTest::keyClick(v, Qt::Key_Return);  // Personagem vazio -> Ação
     QTest::keyClick(v, Qt::Key_Tab);     // Ação vazia -> Personagem
     QTest::keyClick(v, Qt::Key_Tab);     // -> Transição
-    type(v, QString::fromUtf8("cor"));
-    QTest::keyClick(v, Qt::Key_Return);  // aceita "CORTA PARA:" e vai para Cabeçalho
-    type(v, QString::fromUtf8("ext. telhado - n"));
-    QTest::keyClick(v, Qt::Key_Tab);  // aceita "OITE"
+    type(v, QString::fromUtf8("cu"));
+    QTest::keyClick(v, Qt::Key_Return);  // aceita "CUT TO:" e vai para Cabeçalho
+    type(v, QString::fromUtf8("ext. rooftop - n"));
+    QTest::keyClick(v, Qt::Key_Tab);  // aceita "IGHT"
 
     const Element expected[] = {Element::SceneHeading, Element::Action,   Element::Character,
                                 Element::Parenthetical, Element::Dialogue, Element::Character,
@@ -101,18 +127,18 @@ int main(int argc, char* argv[]) {
     CHECK(ed.doc().paragraphs.size() == std::size(expected));
     for (size_t i = 0; i < std::size(expected) && i < ed.doc().paragraphs.size(); ++i) {
         if (para(i).type != expected[i])
-            std::printf("  parágrafo %zu: tipo %s\n", i, elementName(para(i).type));
+            std::printf("  paragraph %zu: type %s\n", i, elementName(para(i).type));
         CHECK(para(i).type == expected[i]);
     }
-    CHECK(para(3).text == U"(para si mesma)");
+    CHECK(para(3).text == U"(to herself)");
     CHECK(para(7).text == U"aNA");
-    CHECK(toUpper(para(9).text) == U"CORTA PARA:");
-    CHECK(toUpper(para(10).text) == U"EXT. TELHADO - NOITE");
+    CHECK(toUpper(para(9).text) == U"CUT TO:");
+    CHECK(toUpper(para(10).text) == U"EXT. ROOFTOP - NIGHT");
 
     // Desfazer pelo atalho da janela.
     type(v, QString::fromUtf8(" xyz"));
     QTest::keyClick(v, Qt::Key_Z, Qt::ControlModifier);
-    CHECK(toUpper(para(10).text) == U"EXT. TELHADO - NOITE");
+    CHECK(toUpper(para(10).text) == U"EXT. ROOFTOP - NIGHT");
 
     // Ctrl+2 transforma em Ação; Ctrl+1 volta.
     QTest::keyClick(v, Qt::Key_2, Qt::ControlModifier);
@@ -130,7 +156,7 @@ int main(int argc, char* argv[]) {
 
     QTest::keyClick(v, Qt::Key_End, Qt::ControlModifier);
     QTest::keyClick(v, Qt::Key_Return);
-    type(v, QString::fromUtf8("Ana sobe a escada de incêndio. Lá em cima, Bruno já está esperando com duas cervejas."));
+    type(v, QString::fromUtf8("Ana climbs the fire escape. Up top, Bruno is already waiting with two beers."));
     QTest::qWait(200);
 
     // Modo foco ligado pelo atalho.
@@ -150,7 +176,7 @@ int main(int argc, char* argv[]) {
     QTest::keyClick(b, Qt::Key_Home);
     CHECK(b->selectedScene() == 0);
     QTest::keyClick(b, Qt::Key_Right, Qt::AltModifier);  // move a cena 1 para depois da 2
-    CHECK(heading(0) == U"EXT. TELHADO - NOITE");
+    CHECK(heading(0) == U"EXT. ROOFTOP - NIGHT");
     CHECK(b->selectedScene() == 1);
 
     // Arrastar o cartão 2 de volta para antes do 1, com eventos reais de mouse.
@@ -164,14 +190,14 @@ int main(int argc, char* argv[]) {
     mouse(QEvent::MouseMove, c1.center() + QPointF(-30, 5), Qt::LeftButton);
     mouse(QEvent::MouseMove, QPointF(c0.left() + 20, c0.center().y()), Qt::LeftButton);
     mouse(QEvent::MouseButtonRelease, QPointF(c0.left() + 20, c0.center().y()), Qt::NoButton);
-    CHECK(heading(0) == U"INT. APARTAMENTO DE ANA - NOITE");
+    CHECK(heading(0) == U"INT. ANA'S APARTMENT - NIGHT");
     CHECK(b->selectedScene() == 0);
 
     // Desfazer pelo atalho da janela, com o quadro em foco.
     QTest::keyClick(b, Qt::Key_Z, Qt::ControlModifier);
-    CHECK(heading(0) == U"EXT. TELHADO - NOITE");
+    CHECK(heading(0) == U"EXT. ROOFTOP - NIGHT");
     QTest::keyClick(b, Qt::Key_Z, Qt::ControlModifier | Qt::ShiftModifier);
-    CHECK(heading(0) == U"INT. APARTAMENTO DE ANA - NOITE");
+    CHECK(heading(0) == U"INT. ANA'S APARTMENT - NIGHT");
 
     // Enter abre a cena selecionada no roteiro.
     QTest::keyClick(b, Qt::Key_End);
@@ -183,12 +209,12 @@ int main(int argc, char* argv[]) {
 
     if (argc > 1) {
         w.grab().save(QString::fromLocal8Bit(argv[1]));
-        std::printf("Captura salva em %s\n", argv[1]);
+        std::printf("Screenshot saved to %s\n", argv[1]);
     }
     if (argc > 2) {
-        // Captura de um menu aberto (Exibir).
+        // Captura de um menu aberto (View).
         for (QAction* a : w.menuBar()->actions()) {
-            if (a->text().contains("xibir")) {
+            if (a->text().contains("View")) {
                 QMenu* m = a->menu();
                 m->popup(w.mapToGlobal(QPoint(300, 40)));
                 QTest::qWait(300);
@@ -199,7 +225,7 @@ int main(int argc, char* argv[]) {
     }
     // ---- Fotos dos personagens, página de rosto e impressão (com capturas opcionais)
     {
-        QFile f("exemplos/a_ultima_sessao.fountain");
+        QFile f("examples/the_last_show.fountain");
         if (f.open(QIODevice::ReadOnly)) {
             Document sample = parseFountain(f.readAll().toStdString());
             QString err;
@@ -224,7 +250,7 @@ int main(int argc, char* argv[]) {
             img.save(tmp.filePath("tomas.png"));
             const std::string tomas = avatars::fromImageFile(tmp.filePath("tomas.png"), &err);
             CHECK(!tomas.empty());
-            sample.setAvatar(U"TOMÁS", tomas);
+            sample.setAvatar(U"TOMAS", tomas);
             QFile out(tmp.filePath("com_fotos.fountain"));
             if (out.open(QIODevice::WriteOnly)) {
                 out.write(QByteArray::fromStdString(writeFountain(sample)));
@@ -244,6 +270,9 @@ int main(int argc, char* argv[]) {
             title.show();
             QTest::qWait(250);
             CHECK(!title.values().empty() && title.values()[0].second == ed.doc().titleValue("Title"));
+            // Enter num campo salva; não pode acionar "Remove Title Page".
+            for (QPushButton* pb : title.findChildren<QPushButton*>())
+                CHECK(pb->isDefault() == (pb->text() == "Save"));
             if (argc > 4) title.grab().save(QString::fromLocal8Bit(argv[4]));
             title.reject();
 
@@ -253,14 +282,77 @@ int main(int argc, char* argv[]) {
             QTest::qWait(250);
             CHECK(print.options().titlePage);
             CHECK(print.options().sceneNumbers);
-            if (auto* wm = print.findChild<QLineEdit*>()) wm->setText("rascunho");
+            if (auto* wm = print.findChild<QLineEdit*>()) wm->setText("draft");
             QTest::qWait(150);
-            CHECK(print.options().watermark == "rascunho");
+            CHECK(print.options().watermark == "draft");
             if (argc > 5) print.grab().save(QString::fromLocal8Bit(argv[5]));
             print.reject();
+
+            // ---- Ficha do personagem: clicar no painel abre a janela; renomear troca as deixas.
+            CHECK(ed.doc().character(U"HELENA") && ed.doc().character(U"HELENA")->role == U"Protagonist");
+            const int helenaCues = ed.characterStats(U"HELENA").speeches;
+            CHECK(helenaCues == 6);
+            CHECK(ed.characterStats(U"HELENA").scenes.size() == 3);
+            auto* dock = w.findChild<QDockWidget*>("characters");
+            auto* list = dock ? qobject_cast<QListWidget*>(dock->widget()) : nullptr;
+            CHECK(list != nullptr);
+            QListWidgetItem* helena = nullptr;
+            for (int i = 0; list && i < list->count(); ++i)
+                if (list->item(i)->data(Qt::UserRole).toString() == "HELENA") helena = list->item(i);
+            CHECK(helena != nullptr);
+            bool sawDialog = false;
+            QTimer::singleShot(400, &w, [&] {
+                auto* dlg = qobject_cast<CharacterDialog*>(QApplication::activeModalWidget());
+                if (!dlg) return;
+                sawDialog = true;
+                auto edits = dlg->findChildren<QLineEdit*>();
+                QLineEdit* nameEdit = nullptr;
+                for (QLineEdit* e : edits)
+                    if (e->text() == "HELENA") nameEdit = e;
+                CHECK(nameEdit != nullptr);
+                QPlainTextEdit* synopsis = nullptr;
+                for (QPlainTextEdit* e : dlg->findChildren<QPlainTextEdit*>())
+                    if (e->toPlainText().startsWith("Has come")) synopsis = e;
+                CHECK(synopsis != nullptr);
+                CHECK(dlg->findChild<QListWidget*>()->count() == 3);  // cenas em que fala
+                for (QPushButton* pb : dlg->findChildren<QPushButton*>())
+                    CHECK(pb->isDefault() == (pb->text() == "Save"));
+                if (argc > 6) dlg->grab().save(QString::fromLocal8Bit(argv[6]));
+                if (synopsis) synopsis->setPlainText("Wants to see the sea.");
+                if (nameEdit) {
+                    nameEdit->selectAll();
+                    nameEdit->setFocus();
+                    type(nameEdit, QString::fromUtf8("Helena Sá"));
+                }
+                CHECK(dlg->info().name == U"HELENA SÁ");
+                for (QPushButton* b : dlg->findChildren<QPushButton*>())
+                    if (b->text() == "Save") QTest::mouseClick(b, Qt::LeftButton);
+            });
+            if (list && helena)
+                QTest::mouseClick(list->viewport(), Qt::LeftButton, Qt::NoModifier,
+                                  list->visualItemRect(helena).center());
+            CHECK(sawDialog);
+            CHECK(ed.doc().character(U"HELENA") == nullptr);
+            const CharacterInfo* renamed = ed.doc().character(U"HELENA SÁ");
+            CHECK(renamed && renamed->synopsis == U"Wants to see the sea." && renamed->photo == owl);
+            CHECK(ed.characterStats(U"HELENA SÁ").speeches == helenaCues);
+            CHECK(ed.characterStats(U"HELENA").speeches == 0);
+            for (QAction* a : w.findChildren<QAction*>())
+                if (a->shortcut() == QKeySequence(QKeySequence::Undo)) a->trigger();
+            CHECK(ed.characterStats(U"HELENA").speeches == helenaCues);
+            CHECK(ed.doc().character(U"HELENA") && ed.doc().character(U"HELENA")->photo == owl);
+
+            // ---- Configurações
+            SettingsDialog settings(&w);
+            settings.show();
+            QTest::qWait(200);
+            CHECK(settings.uiLanguage() == "en");
+            CHECK(settings.scriptLanguage() == ScriptLanguage::English);
+            if (argc > 7) settings.grab().save(QString::fromLocal8Bit(argv[7]));
+            settings.reject();
         }
     }
 
-    std::printf(failures == 0 ? "Teste de interface passou.\n" : "%d falha(s).\n", failures);
+    std::printf(failures == 0 ? "UI test passed.\n" : "%d failure(s).\n", failures);
     return failures == 0 ? 0 : 1;
 }

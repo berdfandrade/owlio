@@ -1,5 +1,6 @@
 #include "fountain.h"
 
+#include <algorithm>
 #include <cstring>
 #include <sstream>
 #include <vector>
@@ -97,34 +98,99 @@ bool looksLikeSceneHeading(const std::u32string& line) {
 }
 
 namespace {
-const char* const kAvatarBlock = "/* owlio-avatars";
+// Fichas dos personagens num comentário que outros apps Fountain ignoram.
+const char* const kCastBlock = "/* owlio-characters";
+const char* const kAvatarBlock = "/* owlio-avatars";  // formato antigo: só fotos
 
-// Lê o bloco de fotos dos personagens (comentário que outros apps Fountain ignoram).
-std::vector<std::pair<std::u32string, std::string>> readAvatars(const std::string& src) {
-    std::vector<std::pair<std::u32string, std::string>> out;
-    size_t start = src.find(kAvatarBlock);
-    if (start == std::string::npos) return out;
+// Valores numa linha só: \ vira \\, quebra de linha vira \n e "*/" não pode fechar o comentário.
+std::string escapeValue(const std::u32string& v) {
+    std::string out;
+    for (char c : u32ToUtf8(v)) {
+        if (c == '\\') out += "\\\\";
+        else if (c == '\n') out += "\\n";
+        else if (c == '\r') continue;
+        else if (c == '/' && !out.empty() && out.back() == '*') out += "\\/";
+        else out += c;
+    }
+    return out;
+}
+
+std::u32string unescapeValue(const std::string& v) {
+    std::string out;
+    for (size_t i = 0; i < v.size(); ++i) {
+        if (v[i] == '\\' && i + 1 < v.size()) {
+            const char n = v[++i];
+            out += n == 'n' ? '\n' : n;
+        } else {
+            out += v[i];
+        }
+    }
+    return utf8ToU32(out);
+}
+
+std::vector<std::string> blockLines(const std::string& src, const char* tag) {
+    std::vector<std::string> lines;
+    size_t start = src.find(tag);
+    if (start == std::string::npos) return lines;
     size_t end = src.find("*/", start);
-    if (end == std::string::npos) return out;
-    std::string body = src.substr(start + strlen(kAvatarBlock), end - start - strlen(kAvatarBlock));
+    if (end == std::string::npos) return lines;
+    std::string body = src.substr(start + strlen(tag), end - start - strlen(tag));
     size_t pos = 0;
     while (pos < body.size()) {
         size_t nl = body.find('\n', pos);
         std::string line = body.substr(pos, nl == std::string::npos ? std::string::npos : nl - pos);
         pos = nl == std::string::npos ? body.size() : nl + 1;
+        while (!line.empty() && (line.back() == '\r' || line.back() == ' ')) line.pop_back();
+        if (!line.empty()) lines.push_back(line);
+    }
+    return lines;
+}
+
+std::vector<CharacterInfo> readCast(const std::string& src) {
+    std::vector<CharacterInfo> out;
+    for (const std::string& line : blockLines(src, kCastBlock)) {
+        size_t colon = line.find(':');
+        if (colon == std::string::npos) continue;
+        const std::string key = line.substr(0, colon);
+        std::string raw = line.substr(colon + 1);
+        if (!raw.empty() && raw[0] == ' ') raw.erase(0, 1);
+        if (key == "name") {
+            out.emplace_back();
+            out.back().name = toUpper(trim(unescapeValue(raw)));
+            continue;
+        }
+        if (out.empty()) continue;
+        CharacterInfo& c = out.back();
+        if (key == "photo") c.photo = raw;
+        else if (key == "age") c.age = unescapeValue(raw);
+        else if (key == "occupation") c.occupation = unescapeValue(raw);
+        else if (key == "role") c.role = unescapeValue(raw);
+        else if (key == "traits") c.traits = unescapeValue(raw);
+        else if (key == "synopsis") c.synopsis = unescapeValue(raw);
+    }
+    // Arquivos antigos: "NOME: base64".
+    for (const std::string& line : blockLines(src, kAvatarBlock)) {
         size_t colon = line.rfind(": ");
         if (colon == std::string::npos) continue;
         std::u32string name = trim(utf8ToU32(line.substr(0, colon)));
-        std::string data = line.substr(colon + 2);
-        while (!data.empty() && (data.back() == '\r' || data.back() == ' ')) data.pop_back();
-        if (!name.empty() && !data.empty()) out.emplace_back(name, data);
+        if (name.empty()) continue;
+        auto it = std::find_if(out.begin(), out.end(), [&](const CharacterInfo& c) { return c.name == name; });
+        if (it == out.end()) {
+            out.emplace_back();
+            out.back().name = name;
+            it = out.end() - 1;
+        }
+        if (it->photo.empty()) it->photo = line.substr(colon + 2);
     }
+    out.erase(std::remove_if(out.begin(), out.end(),
+                             [](const CharacterInfo& c) { return c.name.empty() || c.blank(); }),
+              out.end());
     return out;
 }
 }  // namespace
 
 Document parseFountain(const std::string& utf8In, bool parseTitlePage) {
-    auto avatars = readAvatars(utf8In);
+    auto cast = readCast(utf8In);
     std::string src = removeComments(utf8In);
     // Normaliza fins de linha e remove BOM.
     if (src.size() >= 3 && static_cast<unsigned char>(src[0]) == 0xEF &&
@@ -265,7 +331,7 @@ Document parseFountain(const std::string& utf8In, bool parseTitlePage) {
         doc.paragraphs.push_back({Element::Action, l});
     }
 
-    doc.avatars = std::move(avatars);
+    doc.cast = std::move(cast);
     doc.ensureNotEmpty();
     return doc;
 }
@@ -337,9 +403,18 @@ std::string writeFountain(const Document& doc, bool writeTitlePage) {
         first = false;
     }
     out << "\n";
-    if (!doc.avatars.empty()) {
-        out << "\n" << kAvatarBlock << "\n";
-        for (const auto& [name, data] : doc.avatars) out << u32ToUtf8(name) << ": " << data << "\n";
+    if (!doc.cast.empty()) {
+        out << "\n" << kCastBlock << "\n";
+        for (const CharacterInfo& c : doc.cast) {
+            out << "name: " << escapeValue(c.name) << "\n";
+            const std::pair<const char*, const std::u32string*> fields[] = {
+                {"age", &c.age}, {"occupation", &c.occupation}, {"role", &c.role},
+                {"traits", &c.traits}, {"synopsis", &c.synopsis}};
+            for (const auto& [key, value] : fields)
+                if (!value->empty()) out << key << ": " << escapeValue(*value) << "\n";
+            if (!c.photo.empty()) out << "photo: " << c.photo << "\n";
+            out << "\n";
+        }
         out << "*/\n";
     }
     return out.str();

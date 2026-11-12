@@ -22,7 +22,7 @@ add_executable(owlio_tests tests/tests.cpp)
 target_link_libraries(owlio_tests PRIVATE owlio_core)
 
 # Interface gráfica em Qt 6.
-find_package(Qt6 REQUIRED COMPONENTS Widgets PrintSupport Svg)
+find_package(Qt6 REQUIRED COMPONENTS Widgets PrintSupport Svg LinguistTools)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
@@ -36,6 +36,9 @@ set(UI_SOURCES
   src/avatars.cpp src/avatars.h
   src/titlepagedialog.cpp src/titlepagedialog.h
   src/printdialog.cpp src/printdialog.h
+  src/characterdialog.cpp src/characterdialog.h
+  src/settingsdialog.cpp src/settingsdialog.h
+  src/i18n.cpp src/i18n.h
   resources/owlio.qrc
 )
 set(UI_LIBS owlio_core Qt6::Widgets Qt6::PrintSupport Qt6::Svg)
@@ -48,3 +51,12 @@ target_compile_options(owlio PRIVATE -Wall -Wextra)
 find_package(Qt6 REQUIRED COMPONENTS Test)
 add_executable(owlio_gui_test tests/gui_test.cpp ${UI_SOURCES})
 target_link_libraries(owlio_gui_test PRIVATE ${UI_LIBS} Qt6::Test)
+
+# Traduções. O inglês é o idioma do código; owlio_en.ts só guarda as formas de plural.
+# Depois de mudar textos da interface: cmake --build build --target update_translations
+qt_add_translations(TARGETS owlio owlio_gui_test
+  TS_FILES translations/owlio_pt_BR.ts
+  PLURALS_TS_FILE translations/owlio_en.ts
+  RESOURCE_PREFIX "/i18n"
+  LUPDATE_OPTIONS -no-obsolete -locations none
+)

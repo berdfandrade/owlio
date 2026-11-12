@@ -11,6 +11,7 @@ class QPlainTextEdit;
 
 // Miniatura de uma página de rosto, redesenhada a cada alteração.
 class TitlePagePreview : public QWidget {
+    Q_OBJECT
 public:
     explicit TitlePagePreview(QWidget* parent = nullptr);
     void setDocument(const Document& doc);
@@ -28,6 +29,7 @@ private:
 
 // Janela para editar a página de rosto (título, crédito, autores, contato...).
 class TitlePageDialog : public QDialog {
+    Q_OBJECT
 public:
     TitlePageDialog(const Document& doc, QWidget* parent = nullptr);
     // Pares chave/valor no formato Fountain (Title, Credit, Author, ...).

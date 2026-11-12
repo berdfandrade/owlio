@@ -8,7 +8,7 @@
 
 QSize CardDelegate::sizeHint(const QStyleOptionViewItem& opt, const QModelIndex&) const {
     const int h = opt.fontMetrics.height();
-    return QSize(200, kind_ == Scene ? 2 * h + 18 : h + 20);
+    return QSize(200, kind_ == Scene ? 2 * h + 18 : h + 24);
 }
 
 void CardDelegate::paint(QPainter* p, const QStyleOptionViewItem& opt, const QModelIndex& idx) const {
@@ -77,8 +77,19 @@ void CardDelegate::paint(QPainter* p, const QStyleOptionViewItem& opt, const QMo
         QFontMetricsF tm(bold);
         p->setFont(bold);
         p->setPen(c.text);
-        p->drawText(QRectF(x, card.top(), w, card.height()), Qt::AlignLeft | Qt::AlignVCenter,
-                    tm.elidedText(title, Qt::ElideRight, w));
+        if (subtitle.isEmpty()) {
+            p->drawText(QRectF(x, card.top(), w, card.height()), Qt::AlignLeft | Qt::AlignVCenter,
+                        tm.elidedText(title, Qt::ElideRight, w));
+        } else {
+            // Nome e, embaixo, o papel do personagem (da ficha).
+            const double top = card.center().y() - (tm.height() + sm.height()) / 2;
+            p->drawText(QRectF(x, top, w, tm.height()), Qt::AlignLeft | Qt::AlignVCenter,
+                        tm.elidedText(title, Qt::ElideRight, w));
+            p->setFont(small);
+            p->setPen(c.muted);
+            p->drawText(QRectF(x, top + tm.height(), w, sm.height()), Qt::AlignLeft | Qt::AlignVCenter,
+                        sm.elidedText(subtitle, Qt::ElideRight, w));
+        }
         p->setFont(small);
         p->setPen(c.muted);
         p->drawText(QRectF(card.right() - 12 - bw, card.top(), bw, card.height()),

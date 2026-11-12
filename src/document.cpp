@@ -4,12 +4,12 @@
 
 const char* elementName(Element e) {
     switch (e) {
-        case Element::SceneHeading: return "Cabeçalho";
-        case Element::Action: return "Ação";
-        case Element::Character: return "Personagem";
-        case Element::Parenthetical: return "Parentético";
-        case Element::Dialogue: return "Diálogo";
-        case Element::Transition: return "Transição";
+        case Element::SceneHeading: return "Scene Heading";
+        case Element::Action: return "Action";
+        case Element::Character: return "Character";
+        case Element::Parenthetical: return "Parenthetical";
+        case Element::Dialogue: return "Dialogue";
+        case Element::Transition: return "Transition";
         default: return "?";
     }
 }
@@ -47,21 +47,39 @@ void Document::setTitleValue(const std::string& key, const std::string& value) {
     if (!value.empty()) titlePage.emplace_back(key, value);
 }
 
-std::string Document::avatar(const std::u32string& name) const {
-    for (auto& kv : avatars)
-        if (kv.first == name) return kv.second;
-    return {};
+bool CharacterInfo::blank() const {
+    return photo.empty() && age.empty() && occupation.empty() && role.empty() && traits.empty() &&
+           synopsis.empty();
 }
 
-void Document::setAvatar(const std::u32string& name, const std::string& base64) {
-    for (auto it = avatars.begin(); it != avatars.end(); ++it) {
-        if (it->first == name) {
-            if (base64.empty()) avatars.erase(it);
-            else it->second = base64;
+const CharacterInfo* Document::character(const std::u32string& name) const {
+    for (const auto& c : cast)
+        if (c.name == name) return &c;
+    return nullptr;
+}
+
+void Document::setCharacter(const CharacterInfo& info) {
+    for (auto it = cast.begin(); it != cast.end(); ++it) {
+        if (it->name == info.name) {
+            if (info.blank()) cast.erase(it);
+            else *it = info;
             return;
         }
     }
-    if (!base64.empty()) avatars.emplace_back(name, base64);
+    if (!info.blank() && !info.name.empty()) cast.push_back(info);
+}
+
+std::string Document::avatar(const std::u32string& name) const {
+    const CharacterInfo* c = character(name);
+    return c ? c->photo : std::string();
+}
+
+void Document::setAvatar(const std::u32string& name, const std::string& base64) {
+    CharacterInfo c;
+    if (const CharacterInfo* old = character(name)) c = *old;
+    c.name = name;
+    c.photo = base64;
+    setCharacter(c);
 }
 
 void Document::ensureNotEmpty() {

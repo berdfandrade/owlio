@@ -111,11 +111,11 @@ void SheetPreview::paintEvent(QPaintEvent*) {
         p.setFont(small);
         p.setPen(tc.muted);
         p.drawText(QRectF(r.left(), r.bottom() + 6, r.width(), labelH - 6), Qt::AlignHCenter | Qt::AlignTop,
-                   list[k] < 0 ? QObject::tr("Página de rosto") : QObject::tr("Página %1").arg(list[k] + 1));
+                   list[k] < 0 ? tr("Title page") : tr("Page %1").arg(list[k] + 1));
     }
     if (list.empty()) {
         p.setPen(tc.muted);
-        p.drawText(viewport()->rect(), Qt::AlignCenter, QObject::tr("Nada para imprimir."));
+        p.drawText(viewport()->rect(), Qt::AlignCenter, tr("Nothing to print."));
     }
 }
 
@@ -124,7 +124,7 @@ void SheetPreview::paintEvent(QPaintEvent*) {
 PrintDialog::PrintDialog(const Editor& ed, Target target, const QString& suggestedPdfPath, bool sceneNumbers,
                          QWidget* parent)
     : QDialog(parent), ed_(ed), target_(target), pdfPath_(suggestedPdfPath) {
-    setWindowTitle(tr("Imprimir e exportar"));
+    setWindowTitle(tr("Print and Export"));
     setMinimumSize(980, 640);
     const int pages = ed.layout().pageCount;
     PagePainter probe(ed);
@@ -139,7 +139,7 @@ PrintDialog::PrintDialog(const Editor& ed, Target target, const QString& suggest
 
     auto& tm = ThemeManager::instance();
     toPrinter_ = new QToolButton;
-    toPrinter_->setText(tr("Impressora"));
+    toPrinter_->setText(tr("Printer"));
     toPrinter_->setIcon(tm.icon("imprimir"));
     toPdf_ = new QToolButton;
     toPdf_->setText(tr("PDF"));
@@ -163,7 +163,7 @@ PrintDialog::PrintDialog(const Editor& ed, Target target, const QString& suggest
     const QString def = QPrinterInfo::defaultPrinterName();
     for (const QString& n : printers) printer_->addItem(n);
     if (printers.isEmpty()) {
-        printer_->addItem(tr("Nenhuma impressora encontrada"));
+        printer_->addItem(tr("No printers found"));
         printer_->setEnabled(false);
     } else if (!def.isEmpty()) {
         printer_->setCurrentText(def);
@@ -174,11 +174,11 @@ PrintDialog::PrintDialog(const Editor& ed, Target target, const QString& suggest
     auto* pf = new QFormLayout(printerBox_);
     pf->setContentsMargins(0, 0, 0, 0);
     pf->setVerticalSpacing(10);
-    pf->addRow(tr("Impressora"), printer_);
-    pf->addRow(tr("Cópias"), copies_);
+    pf->addRow(tr("Printer"), printer_);
+    pf->addRow(tr("Copies"), copies_);
 
     range_ = new QComboBox;
-    range_->addItems({tr("Todas (%n)", "", pages), tr("Intervalo")});
+    range_->addItems({tr("All (%n)", "", pages), tr("Range")});
     from_ = new QSpinBox;
     to_ = new QSpinBox;
     for (QSpinBox* sb : {from_, to_}) sb->setRange(1, pages);
@@ -186,26 +186,26 @@ PrintDialog::PrintDialog(const Editor& ed, Target target, const QString& suggest
     rangeRow_ = new QWidget;
     auto* rr = new QHBoxLayout(rangeRow_);
     rr->setContentsMargins(0, 0, 0, 0);
-    rr->addWidget(new QLabel(tr("de")));
+    rr->addWidget(new QLabel(tr("from")));
     rr->addWidget(from_, 1);
-    rr->addWidget(new QLabel(tr("até")));
+    rr->addWidget(new QLabel(tr("to")));
     rr->addWidget(to_, 1);
 
-    titlePage_ = new QCheckBox(tr("Incluir página de rosto"));
+    titlePage_ = new QCheckBox(tr("Include title page"));
     titlePage_->setChecked(probe.hasTitlePage());
     titlePage_->setEnabled(probe.hasTitlePage());
-    if (!probe.hasTitlePage()) titlePage_->setToolTip(tr("O roteiro ainda não tem título (Documento → Página de rosto)."));
-    sceneNumbers_ = new QCheckBox(tr("Numerar cenas"));
+    if (!probe.hasTitlePage()) titlePage_->setToolTip(tr("The script has no title yet (Document → Title Page)."));
+    sceneNumbers_ = new QCheckBox(tr("Number scenes"));
     sceneNumbers_->setChecked(sceneNumbers);
     watermark_ = new QLineEdit;
-    watermark_->setPlaceholderText(tr("Ex.: RASCUNHO ou o nome de quem recebe"));
+    watermark_->setPlaceholderText(tr("E.g. DRAFT, or the name of the recipient"));
     watermark_->setClearButtonEnabled(true);
 
     auto* contentForm = new QFormLayout;
     contentForm->setVerticalSpacing(10);
-    contentForm->addRow(tr("Páginas"), range_);
+    contentForm->addRow(tr("Pages"), range_);
     contentForm->addRow(QString(), rangeRow_);
-    contentForm->addRow(tr("Marca d'água"), watermark_);
+    contentForm->addRow(tr("Watermark"), watermark_);
 
     auto section = [](const QString& t) {
         auto* l = new QLabel(t.toUpper());
@@ -214,12 +214,11 @@ PrintDialog::PrintDialog(const Editor& ed, Target target, const QString& suggest
     };
 
     go_ = new QPushButton;
-    go_->setDefault(true);
     go_->setObjectName("primarioBotao");
-    auto* cancel = new QPushButton(tr("Cancelar"));
+    auto* cancel = new QPushButton(tr("Cancel"));
     connect(cancel, &QPushButton::clicked, this, &QDialog::reject);
     connect(go_, &QPushButton::clicked, this, [this] { run(false); });
-    advanced_ = new QPushButton(tr("Opções da impressora…"));
+    advanced_ = new QPushButton(tr("Printer Options…"));
     advanced_->setObjectName("link");
     advanced_->setFlat(true);
     advanced_->setCursor(Qt::PointingHandCursor);
@@ -234,11 +233,11 @@ PrintDialog::PrintDialog(const Editor& ed, Target target, const QString& suggest
     sl->addWidget(heading_);
     sl->addWidget(summary_);
     sl->addSpacing(12);
-    sl->addWidget(section(tr("Destino")));
+    sl->addWidget(section(tr("Destination")));
     sl->addLayout(targetRow);
     sl->addWidget(printerBox_);
     sl->addSpacing(10);
-    sl->addWidget(section(tr("Conteúdo")));
+    sl->addWidget(section(tr("Content")));
     sl->addLayout(contentForm);
     sl->addWidget(titlePage_);
     sl->addWidget(sceneNumbers_);
@@ -269,6 +268,7 @@ PrintDialog::PrintDialog(const Editor& ed, Target target, const QString& suggest
     connect(watermark_, &QLineEdit::textChanged, this, &PrintDialog::refresh);
 
     setTarget(target);
+    go_->setDefault(true);  // depois de estar na janela, senão o QDialog escolhe outro
 }
 
 PrintOptions PrintDialog::options() const {
@@ -301,18 +301,18 @@ void PrintDialog::refresh() {
     const int from = std::clamp(o.fromPage, 1, pages), to = std::clamp(o.toPage, from, pages);
     const int sheets = (to - from + 1) + (o.titlePage && titlePage_->isEnabled() ? 1 : 0);
     const bool printer = target_ == Target::Printer;
-    heading_->setText(printer ? tr("Imprimir") : tr("Exportar PDF"));
-    QString info = tr("%n folha(s)", "", sheets) + "  ·  " + tr("Carta (US Letter)");
-    if (printer && copies_->value() > 1) info += "  ·  " + tr("%n cópia(s)", "", copies_->value());
+    heading_->setText(printer ? tr("Print") : tr("Export PDF"));
+    QString info = tr("%n sheet(s)", "", sheets) + "  ·  " + tr("US Letter");
+    if (printer && copies_->value() > 1) info += "  ·  " + tr("%n copies", "", copies_->value());
     summary_->setText(info);
-    go_->setText(printer ? tr("Imprimir") : tr("Salvar PDF…"));
+    go_->setText(printer ? tr("Print") : tr("Save PDF…"));
     go_->setEnabled(!printer || printer_->isEnabled());
 }
 
 void PrintDialog::run(bool advanced) {
     const PrintOptions o = options();
     if (target_ == Target::Pdf) {
-        QString path = QFileDialog::getSaveFileName(this, tr("Exportar PDF"), pdfPath_, tr("PDF (*.pdf)"));
+        QString path = QFileDialog::getSaveFileName(this, tr("Export PDF"), pdfPath_, tr("PDF (*.pdf)"));
         if (path.isEmpty()) return;
         if (!path.endsWith(".pdf", Qt::CaseInsensitive)) path += ".pdf";
         QPdfWriter w(path);
@@ -322,7 +322,7 @@ void PrintDialog::run(bool advanced) {
         w.setCreator("Owlio");
         renderScript(w, w.resolution(), ed_, o);
         if (QFileInfo(path).size() <= 0) {
-            QMessageBox::warning(this, tr("Exportar PDF"), tr("Não foi possível gravar %1.").arg(path));
+            QMessageBox::warning(this, tr("Export PDF"), tr("Could not write %1.").arg(path));
             return;
         }
         exported_ = path;

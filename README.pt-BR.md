@@ -6,13 +6,16 @@
 
 Editor de roteiros no estilo Final Draft, em C++17 e Qt 6.
 
+O idioma oficial do Owlio é o inglês. A interface em **português do Brasil** está em **Editar → Configurações** (Ctrl+,): escolha o idioma e o Owlio reinicia já traduzido. Para uma execução só: `./run.sh --language pt_BR`.
+
 ## Recursos
 
 - **Páginas reais na tela**: Courier 12, US Letter, margens no padrão da indústria (1,5" à esquerda, 1" nas outras). O que você vê é exatamente o que sai no PDF.
 - **6 elementos**: Cabeçalho, Ação, Personagem, Parentético, Diálogo, Transição.
 - **Fluxo do Final Draft**: Enter e Tab escolhem o próximo elemento sozinhos; Ctrl+1…6 define o elemento.
-- **Autocompletar (SmartType)**: nomes de personagens, locações, horários (DIA, NOITE, …), extensões (V.O., O.S.) e transições.
-- **Paginação profissional**: cabeçalho e personagem nunca ficam sozinhos no pé da página, falas quebradas recebem (MAIS) / NOME (CONT.) (há opção para MORE/CONT'D), e as páginas são numeradas.
+- **Autocompletar (SmartType)**: nomes de personagens, locações, horários, extensões (V.O., O.S.) e transições.
+- **Paginação profissional**: cabeçalho e personagem nunca ficam sozinhos no pé da página, falas quebradas recebem (MORE) / NOME (CONT'D), e as páginas são numeradas.
+- **Convenções do roteiro** (Configurações): inglês, com (MORE)/(CONT'D), DAY, NIGHT e CUT TO:, ou português, com (MAIS)/(CONT.), DIA, NOITE e CORTA PARA:. Valem para a paginação e para as sugestões do autocompletar, independente do idioma da interface.
 - **Arquivos**: Fountain (`.fountain`, formato nativo, texto puro) e Final Draft (`.fdx`, abrir e salvar).
 - **Página de rosto** editada numa janela com prévia ao vivo: título, crédito, autores, fonte, versão, data, observações e contato.
 - **Janela de impressão e PDF** com miniaturas das folhas: impressora, cópias, intervalo de páginas, página de rosto, numeração de cenas e **marca d'água** opcional (por exemplo "RASCUNHO" ou o nome de quem recebe a cópia).
@@ -29,11 +32,19 @@ Editor de roteiros no estilo Final Draft, em C++17 e Qt 6.
 
 ## Visual e temas
 
-- Tema **claro** e **escuro**, seguindo o sistema por padrão (Exibir → Tema).
+- Tema **claro** e **escuro**, seguindo o sistema por padrão (Exibir → Tema, ou Configurações).
 - Ícones SVG próprios (`resources/icons`), recoloridos automaticamente para cada tema.
 - Painéis em cartões: cenas com número, página e quem fala, e personagens com avatar.
 - **Modo foco** (Ctrl+Shift+F): esmaece tudo menos o trecho atual. Numa fala, o personagem, os parentéticos e o diálogo ficam em destaque juntos.
-- **Fotos dos personagens**: duplo clique num personagem (ou clique direito → Escolher foto). A foto aparece no painel e nos cartões, e fica guardada dentro do próprio `.fountain`, num bloco de comentário que outros apps Fountain ignoram.
+
+## Fichas dos personagens
+
+Clique num personagem no painel lateral para abrir a ficha dele:
+
+- **Foto, nome, papel** (protagonista, antagonista, coadjuvante…), **idade, ocupação, características** e **sinopse**.
+- Quantas falas, cenas e palavras ele tem, onde aparece pela primeira vez e a lista das cenas em que fala. Duplo clique numa cena leva até ela.
+- **Trocar o nome** na ficha renomeia todas as deixas do roteiro, mantendo extensões como (V.O.). Um Ctrl+Z desfaz.
+- A foto aparece no painel e nos cartões. Fichas e fotos ficam guardadas dentro do próprio `.fountain`, num bloco de comentário que outros apps Fountain ignoram.
 
 O estilo fica em [`resources/themes/estilo.qss`](resources/themes/estilo.qss). É CSS do Qt com variáveis de cor (`@accent`, `@surface`, …), definidas em `src/theme.cpp`. Para editar e ver o resultado ao salvar, sem recompilar:
 
@@ -41,7 +52,7 @@ O estilo fica em [`resources/themes/estilo.qss`](resources/themes/estilo.qss). �
 OWLIO_QSS=resources/themes/estilo.qss ./run.sh
 ```
 
-Para forçar um tema numa execução: `./run.sh --tema escuro`.
+Para forçar um tema numa execução: `./run.sh --theme dark`.
 
 ## Compilar
 
@@ -57,7 +68,7 @@ Com o Qt instalado pelo sistema (`sudo apt install qt6-base-dev libxcb-cursor0`)
 ## Executar
 
 ```bash
-./run.sh exemplos/a_ultima_sessao.fountain
+./run.sh examples/a_ultima_sessao.fountain   # ou examples/the_last_show.fountain, em inglês
 ```
 
 O `run.sh` aponta para o Qt baixado em `~/Qt` e para a `libxcb-cursor0` extraída localmente.
@@ -71,7 +82,7 @@ Linha de comando:
 ## Testes
 
 ```bash
-./build/owlio_tests          # núcleo: Fountain, FDX, paginação, edição
+./build/owlio_tests          # núcleo: Fountain, FDX, paginação, edição, fichas
 ./run.sh --help
 LD_LIBRARY_PATH=$HOME/Qt/6.8.3/gcc_64/lib:$HOME/Qt/extra/usr/lib/x86_64-linux-gnu ./build/owlio_gui_test
 ```
@@ -88,9 +99,21 @@ LD_LIBRARY_PATH=$HOME/Qt/6.8.3/gcc_64/lib:$HOME/Qt/extra/usr/lib/x86_64-linux-gn
 | `src/scriptview.*` | Widget de edição (teclado, mouse, método de entrada, rolagem) |
 | `src/mainwindow.*` | Menus, barra de ferramentas, painéis |
 | `src/titlepagedialog.*`, `src/printdialog.*` | Janelas de página de rosto e de impressão/PDF, com prévia |
+| `src/characterdialog.*` | Janela da ficha do personagem |
+| `src/settingsdialog.*`, `src/i18n.*` | Configurações, idioma da interface e carregamento das traduções |
 | `src/avatars.*` | Fotos dos personagens: importação, recorte, cache e desenho em círculo |
 | `src/theme.*` | Paleta, QSS com variáveis, ícones SVG recoloridos, claro/escuro |
 | `src/carddelegate.*` | Cartões dos painéis de cenas e personagens |
 | `src/sceneboard.*` | Tela de cartões (quadro de cenas com arrastar e soltar) |
+| `translations/` | Traduções do Qt: `owlio_pt_BR.ts` (português) e `owlio_en.ts` (plurais em inglês) |
 
 O núcleo (`document`, `layout`, `editor`, `fountain`, `fdx`) não depende do Qt.
+
+## Traduções
+
+Todos os textos do código estão em inglês; o português vem de `translations/owlio_pt_BR.ts`. Depois de mudar textos da interface, atualize o arquivo e traduza as entradas novas no Qt Linguist:
+
+```bash
+cmake --build build --target update_translations
+~/Qt/6.8.3/gcc_64/bin/linguist translations/owlio_pt_BR.ts
+```
