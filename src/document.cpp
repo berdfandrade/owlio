@@ -222,3 +222,56 @@ bool startsWithNoCase(const std::u32string& s, const std::u32string& prefix) {
 std::u32string displayText(const Paragraph& p) {
     return elementIsUppercase(p.type) ? toUpper(p.text) : p.text;
 }
+
+// ---- mapa de relações
+
+namespace {
+const char* const kRelationKeys[] = {"family", "love", "friendship", "rivalry", "work", "other"};
+}
+
+const char* relationKindKey(RelationKind k) {
+    const int i = static_cast<int>(k);
+    return i >= 0 && i < static_cast<int>(RelationKind::Count) ? kRelationKeys[i] : "other";
+}
+
+RelationKind relationKindFromKey(const std::string& key) {
+    for (int i = 0; i < static_cast<int>(RelationKind::Count); ++i)
+        if (key == kRelationKeys[i]) return static_cast<RelationKind>(i);
+    return RelationKind::Other;
+}
+
+const CharacterNode* RelationMap::node(const std::u32string& name) const {
+    for (const CharacterNode& n : nodes)
+        if (n.name == name) return &n;
+    return nullptr;
+}
+
+const Relationship* RelationMap::link(const std::u32string& a, const std::u32string& b) const {
+    for (const Relationship& r : links)
+        if (r.links(a, b)) return &r;
+    return nullptr;
+}
+
+void RelationMap::rename(const std::u32string& from, const std::u32string& to) {
+    if (from == to) return;
+    // Se o novo nome já tinha lugar no quadro, fica a posição dele.
+    const bool taken = node(to) != nullptr;
+    nodes.erase(std::remove_if(nodes.begin(), nodes.end(),
+                               [&](const CharacterNode& n) { return taken && n.name == from; }),
+                nodes.end());
+    for (CharacterNode& n : nodes)
+        if (n.name == from) n.name = to;
+    for (Relationship& r : links) {
+        if (r.a == from) r.a = to;
+        if (r.b == from) r.b = to;
+    }
+    // Sem ligações de alguém consigo mesmo nem repetidas.
+    std::vector<Relationship> kept;
+    for (const Relationship& r : links) {
+        if (r.a == r.b) continue;
+        bool dup = false;
+        for (const Relationship& k : kept) dup = dup || k.links(r.a, r.b);
+        if (!dup) kept.push_back(r);
+    }
+    links = std::move(kept);
+}

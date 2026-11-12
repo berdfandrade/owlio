@@ -15,6 +15,8 @@ class QPagedPaintDevice;
 class ScriptView;
 class SceneBoard;
 class BeatBoardView;
+class RelationMapView;
+class TimelineView;
 class QStackedWidget;
 class FindDialog;
 
@@ -26,12 +28,14 @@ public:
     bool exportPdfTo(const QString& path);
     ScriptView* view() const { return view_; }
     SceneBoard* board() const { return board_; }
-    enum class ViewMode { Script, Cards, Beats };
+    enum class ViewMode { Script, Cards, Beats, Relations, Timeline };
     ViewMode viewMode() const;
     void setViewMode(ViewMode mode);
     bool cardsMode() const { return viewMode() == ViewMode::Cards; }
     void setCardsMode(bool cards) { setViewMode(cards ? ViewMode::Cards : ViewMode::Script); }
     BeatBoardView* beatBoard() const { return beats_; }
+    RelationMapView* relationMap() const { return relations_; }
+    TimelineView* timeline() const { return timeline_; }
     const Editor& editor() const { return editor_; }
     // Oferece as cópias de recuperação deixadas por execuções que não fecharam direito.
     void offerRecovery();
@@ -67,6 +71,7 @@ private slots:
     void gotoFirstLine(const QString& characterName);
     void showSettings();
     void browseBackups();
+    void showCast();
 
 private:
     void buildActions();
@@ -92,6 +97,10 @@ private:
     QAction* cardsModeAct_ = nullptr;
     QAction* beatsModeAct_ = nullptr;
     BeatBoardView* beats_ = nullptr;
+    RelationMapView* relations_ = nullptr;
+    TimelineView* timeline_ = nullptr;
+    QAction* relationsModeAct_ = nullptr;
+    QAction* timelineModeAct_ = nullptr;
     QAction* elementComboAct_ = nullptr;
     QString path_;
     QTimer panelTimer_;

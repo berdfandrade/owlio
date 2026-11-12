@@ -69,6 +69,34 @@ struct BeatBoard {
     int nextId() const;  // maior id + 1
 };
 
+// Mapa de relações: onde cada personagem fica no quadro e as ligações entre eles.
+enum class RelationKind { Family = 0, Love, Friendship, Rivalry, Work, Other, Count };
+const char* relationKindKey(RelationKind k);       // "family", "love"... (no arquivo)
+RelationKind relationKindFromKey(const std::string& key);
+
+struct Relationship {
+    std::u32string a, b;  // nomes em maiúsculas; a ordem não importa
+    RelationKind kind = RelationKind::Other;
+    std::u32string label;  // "irmã", "ex-marido"...
+    bool links(const std::u32string& x, const std::u32string& y) const {
+        return (a == x && b == y) || (a == y && b == x);
+    }
+};
+
+struct CharacterNode {
+    std::u32string name;
+    double x = 0, y = 0;  // centro, em pixels do quadro
+};
+
+struct RelationMap {
+    std::vector<CharacterNode> nodes;
+    std::vector<Relationship> links;
+    bool empty() const { return nodes.empty() && links.empty(); }
+    const CharacterNode* node(const std::u32string& name) const;
+    const Relationship* link(const std::u32string& a, const std::u32string& b) const;
+    void rename(const std::u32string& from, const std::u32string& to);
+};
+
 struct Document {
     std::vector<Paragraph> paragraphs;
     // Página de rosto (chave/valor, no estilo Fountain: Title, Credit, Author, Contact...)
@@ -76,6 +104,7 @@ struct Document {
     // Fichas dos personagens (só os que têm algo preenchido).
     std::vector<CharacterInfo> cast;
     BeatBoard board;
+    RelationMap relations;
 
     std::string titleValue(const std::string& key) const;
     void setTitleValue(const std::string& key, const std::string& value);

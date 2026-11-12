@@ -70,6 +70,9 @@ public:
     bool addFlow(int from, int to);                     // false se repetida, invertida ou para si mesmo
     void removeFlows(const std::vector<FlowLine>& flows);
 
+    // ---- mapa de relações (um passo de desfazer; nada muda se for igual)
+    void setRelations(const RelationMap& map);
+
     // ---- cursor e seleção
     Pos cursor() const { return cursor_; }
     Pos anchor() const { return anchor_; }
@@ -143,6 +146,7 @@ private:
         std::vector<std::pair<std::string, std::string>> titlePage;
         std::vector<CharacterInfo> cast;
         BeatBoard board;
+        RelationMap relations;
         Pos cursor, anchor;
     };
 

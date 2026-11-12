@@ -103,6 +103,7 @@ namespace {
 const char* const kCastBlock = "/* owlio-characters";
 const char* const kAvatarBlock = "/* owlio-avatars";  // formato antigo: só fotos
 const char* const kBoardBlock = "/* owlio-beatboard";  // Beat Board: beats e linhas de fluxo
+const char* const kRelationsBlock = "/* owlio-relations";  // mapa de relações entre personagens
 
 // Valores numa linha só: \ vira \\, quebra de linha vira \n e "*/" não pode fechar o comentário.
 std::string escapeValue(const std::u32string& v) {
@@ -189,6 +190,42 @@ std::vector<CharacterInfo> readCast(const std::string& src) {
               out.end());
     return out;
 }
+RelationMap readRelations(const std::string& src) {
+    RelationMap m;
+    for (const std::string& line : blockLines(src, kRelationsBlock)) {
+        size_t colon = line.find(':');
+        if (colon == std::string::npos) continue;
+        const std::string key = line.substr(0, colon);
+        std::string raw = line.substr(colon + 1);
+        if (!raw.empty() && raw[0] == ' ') raw.erase(0, 1);
+        if (key == "node") {  // node: x y NOME
+            std::istringstream in(raw);
+            CharacterNode n;
+            if (!(in >> n.x >> n.y)) continue;
+            std::string rest;
+            std::getline(in, rest);
+            n.name = toUpper(trim(unescapeValue(rest)));
+            if (!n.name.empty() && !m.node(n.name)) m.nodes.push_back(n);
+        } else if (key == "link") {
+            m.links.emplace_back();
+            m.links.back().a = toUpper(trim(unescapeValue(raw)));
+        } else if (!m.links.empty()) {
+            Relationship& r = m.links.back();
+            if (key == "with") r.b = toUpper(trim(unescapeValue(raw)));
+            else if (key == "kind") r.kind = relationKindFromKey(raw);
+            else if (key == "label") r.label = unescapeValue(raw);
+        }
+    }
+    std::vector<Relationship> kept;
+    for (const Relationship& r : m.links)
+        if (!r.a.empty() && !r.b.empty() && r.a != r.b && !std::any_of(kept.begin(), kept.end(), [&](const Relationship& k) {
+                return k.links(r.a, r.b);
+            }))
+            kept.push_back(r);
+    m.links = std::move(kept);
+    return m;
+}
+
 BeatBoard readBoard(const std::string& src) {
     BeatBoard bb;
     for (const std::string& line : blockLines(src, kBoardBlock)) {
@@ -243,6 +280,7 @@ BeatBoard readBoard(const std::string& src) {
 Document parseFountain(const std::string& utf8In, bool parseTitlePage) {
     auto cast = readCast(utf8In);
     BeatBoard board = parseTitlePage ? readBoard(utf8In) : BeatBoard{};
+    RelationMap relations = parseTitlePage ? readRelations(utf8In) : RelationMap{};
     std::string src = removeComments(utf8In);
     // Normaliza fins de linha e remove BOM.
     if (src.size() >= 3 && static_cast<unsigned char>(src[0]) == 0xEF &&
@@ -389,6 +427,7 @@ Document parseFountain(const std::string& utf8In, bool parseTitlePage) {
 
     doc.cast = std::move(cast);
     doc.board = std::move(board);
+    doc.relations = std::move(relations);
     doc.ensureNotEmpty();
     return doc;
 }
@@ -489,6 +528,17 @@ std::string writeFountain(const Document& doc, bool writeTitlePage) {
             out << "\n";
         }
         for (const FlowLine& f : doc.board.flows) out << "flow: " << f.from << " " << f.to << "\n";
+        out << "*/\n";
+    }
+    if (writeTitlePage && !doc.relations.empty()) {
+        out << "\n" << kRelationsBlock << "\n";
+        for (const CharacterNode& n : doc.relations.nodes)
+            out << "node: " << n.x << " " << n.y << " " << escapeValue(n.name) << "\n";
+        for (const Relationship& r : doc.relations.links) {
+            out << "\nlink: " << escapeValue(r.a) << "\nwith: " << escapeValue(r.b) << "\nkind: "
+                << relationKindKey(r.kind) << "\n";
+            if (!r.label.empty()) out << "label: " << escapeValue(r.label) << "\n";
+        }
         out << "*/\n";
     }
     return out.str();

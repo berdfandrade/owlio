@@ -26,6 +26,30 @@
     </message>
 </context>
 <context>
+    <name>CastDialog</name>
+    <message numerus="yes">
+        <source>%n character(s)</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>%n speech(es)</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>%1 renamed to %2 in %n cue(s).</source>
+        <translation type="unfinished">
+            <numerusform>%1 renamed to %2 in %n cue.</numerusform>
+            <numerusform>%1 renamed to %2 in %n cues.</numerusform>
+        </translation>
+    </message>
+</context>
+<context>
     <name>CharacterDialog</name>
     <message numerus="yes">
         <source>line(s)</source>
@@ -115,6 +139,16 @@
     </message>
 </context>
 <context>
+    <name>RelationMapView</name>
+    <message numerus="yes">
+        <source>%n speech(es)</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
+</context>
+<context>
     <name>SceneBoard</name>
     <message numerus="yes">
         <source>%n scene(s)</source>
@@ -128,6 +162,37 @@
         <translation>
             <numerusform>%n page</numerusform>
             <numerusform>%n pages</numerusform>
+        </translation>
+    </message>
+</context>
+<context>
+    <name>TimelineView</name>
+    <message numerus="yes">
+        <source>Written: %n page(s)</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>%n page(s)</source>
+        <translation type="unfinished">
+            <numerusform>%n page</numerusform>
+            <numerusform>%n pages</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>about %n minute(s)</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>%n scene(s)</source>
+        <translation type="unfinished">
+            <numerusform>%n scene</numerusform>
+            <numerusform>%n scenes</numerusform>
         </translation>
     </message>
 </context>
