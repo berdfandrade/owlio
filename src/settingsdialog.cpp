@@ -72,7 +72,6 @@ SettingsDialog::SettingsDialog(QWidget* parent) : QDialog(parent) {
             [this] { restartNote_->setVisible(uiLanguage() != i18n::activeLanguage()); });
     auto* langForm = makeForm();
     langForm->addRow(tr("Interface language"), language_);
-    langForm->addRow(QString(), restartNote_);
 
     reopen_ = new QCheckBox(tr("Reopen the last script when Owlio starts"));
     reopen_->setChecked(settings.value("reopenLast", false).toBool());
@@ -196,9 +195,12 @@ SettingsDialog::SettingsDialog(QWidget* parent) : QDialog(parent) {
             }
 
     // ================= Páginas
+    // O aviso de reinício fica abaixo do campo, como as outras dicas (no formulário ele ficava espremido).
+    QWidget* languageSection = section(tr("Language"), langForm);
+    languageSection->layout()->addWidget(restartNote_);
     pages_ = new QStackedWidget;
     pages_->addWidget(page(tr("General"), tr("Language and startup."),
-                           {section(tr("Language"), langForm), section(tr("Startup"), startForm)}));
+                           {languageSection, section(tr("Startup"), startForm)}));
     pages_->addWidget(page(tr("Appearance"), tr("Theme and the font of menus, panels and dialogs."),
                            {section(tr("Theme"), themeForm),
                             section(tr("Font"), fontForm,

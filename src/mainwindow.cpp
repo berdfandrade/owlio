@@ -13,6 +13,8 @@
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QFormLayout>
+#include <QGridLayout>
+#include <QRegularExpression>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
@@ -806,38 +808,99 @@ void MainWindow::showFind() {
     findDialog_->activate();
 }
 
-void MainWindow::showShortcuts() {
-    auto row = [](const QString& keys, const QString& what) {
-        return QString("<tr><td><b>%1</b></td><td>%2</td></tr>").arg(keys, what);
+namespace {
+// "Ctrl+Shift+S / Ctrl+S" vira teclas desenhadas; trechos com espaço ("on an empty line") ficam como texto.
+QWidget* keysWidget(const QString& keys) {
+    auto* w = new QWidget;
+    auto* lay = new QHBoxLayout(w);
+    lay->setContentsMargins(0, 0, 0, 0);
+    lay->setSpacing(4);
+    auto text = [&](const QString& t) {
+        auto* l = new QLabel(t);
+        l->setObjectName("teclaSep");
+        lay->addWidget(l);
     };
-    QString html = "<h3>" + tr("Writing flow") + "</h3><table cellpadding=3>";
-    html += row(tr("Enter"), tr("Next element: Scene Heading → Action, Character → Dialogue, "
-                                "Dialogue → Character, Transition → Scene Heading"));
-    html += row(tr("Tab"), tr("Action → Character → Transition → Scene Heading; Dialogue ↔ Parenthetical. "
-                              "At the end of a speech, inserts a parenthetical."));
-    html += row(tr("Shift+Tab"), tr("Previous element"));
-    html += row(tr("Enter on an empty line"), tr("Switches to Action (or Scene Heading)"));
-    html += row("Ctrl+1 … Ctrl+6", tr("Scene Heading, Action, Character, Parenthetical, Dialogue, Transition"));
-    html += row(tr("Tab / Enter / →"),
-                tr("Accepts the grey suggestion (characters, locations, times of day, transitions)"));
-    html += "</table><h3>" + tr("General") + "</h3><table cellpadding=3>";
-    html += row("Ctrl+S / Ctrl+Shift+S", tr("Save / Save As (.fountain or .fdx)"));
-    html += row("Ctrl+Shift+E", tr("Export PDF"));
-    html += row("Ctrl+F", tr("Find and replace"));
-    html += row("Ctrl+Shift+C / Ctrl+Shift+R", tr("Index cards / script"));
-    html += row("Ctrl+Shift+F", tr("Focus mode"));
-    html += row("Ctrl+,", tr("Settings"));
-    html += row("Ctrl+\\", tr("Show or hide the sidebar"));
-    html += row(tr("Ctrl+wheel / Ctrl+= / Ctrl+-"), tr("Zoom"));
-    html += "</table><h3>" + tr("Index cards") + "</h3><table cellpadding=3>";
-    html += row(tr("Drag"), tr("Reorders scenes (the whole scene text moves with the card)"));
-    html += row(tr("Alt+arrows"), tr("Moves the selected card"));
-    html += row(tr("Enter / double-click"), tr("Opens the scene in the script"));
-    html += row("F2", tr("Edits the scene synopsis"));
-    html += row(tr("Ctrl+wheel"), tr("Bigger or smaller cards"));
-    html += row("Ctrl+Z / Ctrl+Y", tr("Undo / redo"));
-    html += "</table>";
-    QMessageBox::information(this, tr("Keyboard Shortcuts"), html);
+    const QStringList alternatives = keys.split(" / ");
+    for (int a = 0; a < alternatives.size(); ++a) {
+        if (a) text("/");
+        const QStringList ranges = alternatives[a].split(QString::fromUtf8(" … "));
+        for (int r = 0; r < ranges.size(); ++r) {
+            if (r) text(QString::fromUtf8("…"));
+            const QStringList parts = ranges[r].split(QRegularExpression("\\+(?=.)"));
+            for (int k = 0; k < parts.size(); ++k) {
+                if (k) text("+");
+                if (parts[k].contains(' ')) { text(parts[k]); continue; }
+                auto* cap = new QLabel(parts[k]);
+                cap->setObjectName("tecla");
+                lay->addWidget(cap);
+            }
+        }
+    }
+    lay->addStretch(1);
+    return w;
+}
+}  // namespace
+
+void MainWindow::showShortcuts() {
+    QDialog dlg(this);
+    dlg.setWindowTitle(tr("Keyboard Shortcuts"));
+    auto* grid = new QGridLayout;
+    grid->setHorizontalSpacing(24);
+    grid->setVerticalSpacing(8);
+    grid->setColumnStretch(1, 1);
+    int rowN = 0;
+    auto section = [&](const QString& title) {
+        auto* l = new QLabel(title.toUpper());
+        l->setObjectName("secao");
+        if (rowN) grid->setRowMinimumHeight(rowN++, 10);
+        grid->addWidget(l, rowN++, 0, 1, 2);
+    };
+    auto row = [&](const QString& keys, const QString& what) {
+        auto* d = new QLabel(what);
+        d->setWordWrap(true);
+        grid->addWidget(keysWidget(keys), rowN, 0, Qt::AlignTop);
+        grid->addWidget(d, rowN++, 1, Qt::AlignTop);
+    };
+    section(tr("Writing flow"));
+    row(tr("Enter"), tr("Next element: Scene Heading → Action, Character → Dialogue, "
+                        "Dialogue → Character, Transition → Scene Heading"));
+    row(tr("Tab"), tr("Action → Character → Transition → Scene Heading; Dialogue ↔ Parenthetical. "
+                      "At the end of a speech, inserts a parenthetical."));
+    row(tr("Shift+Tab"), tr("Previous element"));
+    row(tr("Enter on an empty line"), tr("Switches to Action (or Scene Heading)"));
+    row("Ctrl+1 … Ctrl+6", tr("Scene Heading, Action, Character, Parenthetical, Dialogue, Transition"));
+    row(tr("Tab / Enter / →"), tr("Accepts the grey suggestion (characters, locations, times of day, transitions)"));
+    section(tr("General"));
+    row("Ctrl+S / Ctrl+Shift+S", tr("Save / Save As (.fountain or .fdx)"));
+    row("Ctrl+Shift+E", tr("Export PDF"));
+    row("Ctrl+F", tr("Find and replace"));
+    row("Ctrl+Shift+C / Ctrl+Shift+R", tr("Index cards / script"));
+    row("Ctrl+Shift+F", tr("Focus mode"));
+    row("Ctrl+,", tr("Settings"));
+    row("Ctrl+\\", tr("Show or hide the sidebar"));
+    row(tr("Ctrl+wheel / Ctrl+= / Ctrl+-"), tr("Zoom"));
+    section(tr("Index cards"));
+    row(tr("Drag"), tr("Reorders scenes (the whole scene text moves with the card)"));
+    row(tr("Alt+arrows"), tr("Moves the selected card"));
+    row(tr("Enter / double-click"), tr("Opens the scene in the script"));
+    row("F2", tr("Edits the scene synopsis"));
+    row(tr("Ctrl+wheel"), tr("Bigger or smaller cards"));
+    row("Ctrl+Z / Ctrl+Y", tr("Undo / redo"));
+
+    auto* heading = new QLabel(tr("Keyboard Shortcuts"));
+    heading->setObjectName("tituloDialogo");
+    auto* ok = new QPushButton(tr("Close"));
+    ok->setObjectName("primarioBotao");
+    connect(ok, &QPushButton::clicked, &dlg, &QDialog::accept);
+    auto* lay = new QVBoxLayout(&dlg);
+    lay->setContentsMargins(28, 24, 28, 20);
+    lay->setSpacing(14);
+    lay->addWidget(heading);
+    lay->addLayout(grid);
+    lay->addWidget(ok, 0, Qt::AlignRight);
+    ok->setDefault(true);
+    dlg.resize(720, dlg.sizeHint().height());
+    dlg.exec();
 }
 
 void MainWindow::about() {

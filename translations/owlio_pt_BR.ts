@@ -1075,6 +1075,10 @@ Deseja salvá-las?</translation>
         <source>Show or hide the sidebar</source>
         <translation>Mostrar ou esconder a barra lateral</translation>
     </message>
+    <message>
+        <source>Close</source>
+        <translation>Fechar</translation>
+    </message>
 </context>
 <context>
     <name>PrintDialog</name>
