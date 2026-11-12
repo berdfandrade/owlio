@@ -828,12 +828,6 @@ Todas as deixas de %2 passam a ser de %1, e esta ficha substitui a dele.</transl
         <translation>Owlio</translation>
     </message>
     <message>
-        <source>The script has unsaved changes.
-Do you want to save them?</source>
-        <translation>O roteiro tem alterações não salvas.
-Deseja salvá-las?</translation>
-    </message>
-    <message>
         <source>Open Script</source>
         <translation>Abrir roteiro</translation>
     </message>
@@ -1242,6 +1236,18 @@ Deseja salvá-las?</translation>
     <message>
         <source>Timeline of the film: acts, scenes and who is in each one  (Ctrl+Shift+L)</source>
         <translation>Linha do tempo do filme: atos, cenas e quem está em cada uma  (Ctrl+Shift+L)</translation>
+    </message>
+    <message>
+        <source>The script has unsaved changes.</source>
+        <translation>O roteiro tem alterações não salvas.</translation>
+    </message>
+    <message>
+        <source>Do you want to save them before closing?</source>
+        <translation>Quer salvar antes de fechar?</translation>
+    </message>
+    <message>
+        <source>Don&apos;t Save</source>
+        <translation>Não salvar</translation>
     </message>
 </context>
 <context>
