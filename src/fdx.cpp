@@ -72,7 +72,13 @@ std::string writeFdx(const Document& doc) {
     o << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>\n";
     o << "<FinalDraft DocumentType=\"Script\" Template=\"No\" Version=\"5\">\n";
     o << "  <Content>\n";
-    for (const auto& p : doc.paragraphs) {
+    const std::vector<int> sides = dualSides(doc);
+    const size_t n = doc.paragraphs.size();
+    for (size_t i = 0; i < n; ++i) {
+        const Paragraph& p = doc.paragraphs[i];
+        // Diálogo duplo: as duas falas vão juntas dentro de <DualDialogue>.
+        if (sides[i] == 1 && (i == 0 || sides[i - 1] == 0))
+            o << "    <Paragraph>\n      <DualDialogue>\n";
         o << "    <Paragraph Type=\"" << elementFdxName(p.type) << "\">\n";
         if (p.type == Element::SceneHeading && !p.synopsis.empty()) {
             o << "      <SceneProperties>\n        <Summary>\n";
@@ -82,6 +88,8 @@ std::string writeFdx(const Document& doc) {
         }
         o << "      <Text>" << xmlEscape(u32ToUtf8(p.text)) << "</Text>\n";
         o << "    </Paragraph>\n";
+        if (sides[i] == 2 && (i + 1 == n || sides[i + 1] != 2))
+            o << "      </DualDialogue>\n    </Paragraph>\n";
     }
     o << "  </Content>\n";
 
@@ -118,12 +126,33 @@ Document parseFdx(const std::string& xml) {
     if (cEnd == std::string::npos) cEnd = xml.size();
 
     size_t pos = cStart;
+    bool inDual = false;
+    int dualCues = 0;
     while (true) {
         size_t p = xml.find("<Paragraph", pos);
+        // Fim de um bloco <DualDialogue> antes do próximo parágrafo.
+        if (inDual) {
+            size_t dEnd = xml.find("</DualDialogue>", pos);
+            if (dEnd != std::string::npos && (p == std::string::npos || dEnd < p)) {
+                inDual = false;
+                size_t outer = xml.find("</Paragraph>", dEnd);
+                pos = outer == std::string::npos ? dEnd + 15 : outer + 12;
+                continue;
+            }
+        }
         if (p == std::string::npos || p >= cEnd) break;
         size_t tagEnd = xml.find('>', p);
         if (tagEnd == std::string::npos) break;
         std::string tag = xml.substr(p, tagEnd - p + 1);
+        // <Paragraph><DualDialogue>...: os parágrafos de dentro são lidos normalmente.
+        size_t dd = xml.find("<DualDialogue", tagEnd);
+        size_t nextPara = xml.find("<Paragraph", tagEnd);
+        if (dd != std::string::npos && dd < nextPara && xml.find("<Text", tagEnd) > dd) {
+            inDual = true;
+            dualCues = 0;
+            pos = xml.find('>', dd) + 1;
+            continue;
+        }
         Paragraph para;
         para.type = elementFromFdx(attribute(tag, "Type"));
         if (tag.size() >= 2 && tag[tag.size() - 2] == '/') {  // <Paragraph ... />
@@ -169,6 +198,7 @@ Document parseFdx(const std::string& xml) {
             t = tc + 7;
         }
         para.text = utf8ToU32(text);
+        if (inDual && para.type == Element::Character) para.dual = ++dualCues >= 2;
         doc.paragraphs.push_back(para);
         pos = close + 12;
     }

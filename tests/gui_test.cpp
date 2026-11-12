@@ -18,6 +18,7 @@
 #include <QPainter>
 #include <QTemporaryDir>
 
+#include <QDir>
 #include <QDockWidget>
 #include <QListWidget>
 #include <QPlainTextEdit>
@@ -25,6 +26,7 @@
 #include <QTimer>
 #include <QTranslator>
 
+#include "autosave.h"
 #include "avatars.h"
 #include "characterdialog.h"
 #include "fountain.h"
@@ -81,6 +83,10 @@ int main(int argc, char* argv[]) {
         QCoreApplication::removeTranslator(&pt);
     }
     CHECK(i18n::elementLabel(Element::Parenthetical) == "Parenthetical");
+
+    // Começa sem cópias de recuperação nem backups de execuções anteriores.
+    QDir(autosave::recoveryDir()).removeRecursively();
+    QDir(autosave::backupRoot()).removeRecursively();
 
     MainWindow w;
     w.resize(1280, 900);
@@ -139,6 +145,23 @@ int main(int argc, char* argv[]) {
     type(v, QString::fromUtf8(" xyz"));
     QTest::keyClick(v, Qt::Key_Z, Qt::ControlModifier);
     CHECK(toUpper(para(10).text) == U"EXT. ROOFTOP - NIGHT");
+
+    // Diálogo duplo pelo atalho, com o cursor na fala do Bruno (parágrafos 5 e 6).
+    const_cast<Editor&>(ed).setCursor({6, 0});
+    QTest::keyClick(v, Qt::Key_D, Qt::ControlModifier | Qt::ShiftModifier);
+    CHECK(para(5).dual);
+    {
+        const Layout& L = ed.layout();
+        const LayoutLine& left = L.lines[L.paraLines[2].front()];
+        const LayoutLine& right = L.lines[L.paraLines[5].front()];
+        CHECK(left.row == right.row && right.col > left.col);
+    }
+    QTest::keyClick(v, Qt::Key_D, Qt::ControlModifier | Qt::ShiftModifier);  // desliga
+    CHECK(!para(5).dual);
+    QTest::keyClick(v, Qt::Key_D, Qt::ControlModifier | Qt::ShiftModifier);
+    QTest::keyClick(v, Qt::Key_Z, Qt::ControlModifier);
+    CHECK(!para(5).dual);
+    QTest::keyClick(v, Qt::Key_End, Qt::ControlModifier);
 
     // Ctrl+2 transforma em Ação; Ctrl+1 volta.
     QTest::keyClick(v, Qt::Key_2, Qt::ControlModifier);
@@ -348,8 +371,50 @@ int main(int argc, char* argv[]) {
             QTest::qWait(200);
             CHECK(settings.uiLanguage() == "en");
             CHECK(settings.scriptLanguage() == ScriptLanguage::English);
+            CHECK(settings.autosaveMinutes() == 5);
+            CHECK(settings.keepBackups());
             if (argc > 7) settings.grab().save(QString::fromLocal8Bit(argv[7]));
             settings.reject();
+
+            // ---- Salvamento automático, backups e recuperação
+            const QString scriptPath = w.currentPath();
+            CHECK(!scriptPath.isEmpty());
+            w.setCardsMode(false);
+            v->setFocus();
+            QTest::keyClick(v, Qt::Key_End, Qt::ControlModifier);
+            QTest::keyClick(v, Qt::Key_Return);
+            type(v, "Autosaved line.");
+            CHECK(ed.modified());
+            w.writeRecoveryNow();
+            CHECK(autosave::orphans().isEmpty());  // a cópia desta janela está travada por ela
+            CHECK(QDir(autosave::recoveryDir()).entryList({"*.fountain"}, QDir::Files).size() == 1);
+            w.autosaveNow();
+            CHECK(!ed.modified());
+            QFile saved(scriptPath);
+            CHECK(saved.open(QIODevice::ReadOnly) && saved.readAll().contains("Autosaved line."));
+            CHECK(autosave::backups(scriptPath).size() == 1);
+            CHECK(QDir(autosave::recoveryDir()).entryList({"*.fountain"}, QDir::Files).isEmpty());
+            // Outro salvamento automático logo depois não cria backup novo (no máximo um a cada 10 min).
+            type(v, " More.");
+            w.autosaveNow();
+            CHECK(autosave::backups(scriptPath).size() == 1);
+
+            // Uma "execução" que não fechou direito deixa uma cópia órfã.
+            {
+                autosave::Session crashed;
+                crashed.write(QByteArray::fromStdString(writeFountain(sample)), scriptPath);
+            }
+            const auto lost = autosave::orphans();
+            CHECK(lost.size() == 1);
+            if (!lost.isEmpty()) {
+                CHECK(lost.first().originalPath == scriptPath);
+                w.recover(lost.first());
+                CHECK(ed.modified());
+                CHECK(w.currentPath() == scriptPath);
+                CHECK(ed.doc().paragraphs.size() == sample.paragraphs.size());
+                CHECK(autosave::orphans().isEmpty());
+            }
+            const_cast<Editor&>(ed).markSaved();
         }
     }
 

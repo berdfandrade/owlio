@@ -33,6 +33,7 @@ public slots:
     void paste();
     void selectAll();
     void setElement(Element e);
+    bool toggleDualDialogue();  // false se o cursor não está numa fala com outra ao lado
     void zoomIn() { setZoom(zoom_ * 1.1); }
     void zoomOut() { setZoom(zoom_ / 1.1); }
     void zoomReset() { setZoom(1.0); }

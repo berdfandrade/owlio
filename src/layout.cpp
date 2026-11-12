@@ -21,6 +21,27 @@ const ElementStyle& elementStyle(Element e) {
     }
 }
 
+const ElementStyle& elementStyle(Element e, int side) {
+    // Duas colunas de 29 caracteres (15..44 e 46..75), com o mesmo desenho de uma fala normal.
+    //                                   indent width before right
+    static const ElementStyle kLChar  {21, 24, 1, false};
+    static const ElementStyle kLParen {17, 22, 0, false};
+    static const ElementStyle kLDial  {15, 28, 0, false};
+    static const ElementStyle kRChar  {52, 23, 1, false};
+    static const ElementStyle kRParen {48, 22, 0, false};
+    static const ElementStyle kRDial  {46, 29, 0, false};
+    if (side == 1) {
+        if (e == Element::Character) return kLChar;
+        if (e == Element::Parenthetical) return kLParen;
+        if (e == Element::Dialogue) return kLDial;
+    } else if (side == 2) {
+        if (e == Element::Character) return kRChar;
+        if (e == Element::Parenthetical) return kRParen;
+        if (e == Element::Dialogue) return kRDial;
+    }
+    return elementStyle(e);
+}
+
 std::vector<int> wrapText(const std::u32string& text, int width) {
     std::vector<int> starts{0};
     const int n = static_cast<int>(text.size());
@@ -67,10 +88,11 @@ Layout computeLayout(const Document& doc, const LayoutOptions& opt) {
     const int n = static_cast<int>(doc.paragraphs.size());
     L.paraLines.resize(n);
 
+    const std::vector<int> sides = dualSides(doc);
     std::vector<std::vector<int>> wraps(n);
     for (int i = 0; i < n; ++i) {
         const auto& p = doc.paragraphs[i];
-        wraps[i] = wrapText(p.text, elementStyle(p.type).width);
+        wraps[i] = wrapText(p.text, elementStyle(p.type, sides[i]).width);
     }
 
     const int LPP = page::kLinesPerPage;
@@ -98,7 +120,7 @@ Layout computeLayout(const Document& doc, const LayoutOptions& opt) {
     };
     auto placeLines = [&](int para, int from, int to) {
         const auto& p = doc.paragraphs[para];
-        const auto& st = elementStyle(p.type);
+        const auto& st = elementStyle(p.type, sides[para]);
         const auto& starts = wraps[para];
         const int len = static_cast<int>(p.text.size());
         for (int k = from; k < to; ++k) {
@@ -118,6 +140,37 @@ Layout computeLayout(const Document& doc, const LayoutOptions& opt) {
     };
 
     for (int i = 0; i < n; ++i) {
+        // Diálogo duplo: as duas falas lado a lado, sem quebrar entre páginas.
+        if (sides[i] == 1) {
+            int mid = i;
+            while (mid < n && sides[mid] == 1) ++mid;
+            int end = mid;
+            while (end < n && sides[end] == 2) ++end;
+            int hl = 0, hr = 0;
+            for (int k = i; k < mid; ++k) hl += static_cast<int>(wraps[k].size());
+            for (int k = mid; k < end; ++k) hr += static_cast<int>(wraps[k].size());
+            const int h = std::max(hl, hr);
+            int sb = row == 0 ? 0 : elementStyle(Element::Character).spaceBefore;
+            if (row > 0 && row + sb + h > LPP) {
+                newPage();
+                sb = 0;
+            }
+            row += sb;
+            const int startPg = pg, startRow = row;
+            for (int k = i; k < mid; ++k) placeLines(k, 0, static_cast<int>(wraps[k].size()));
+            const int leftPg = pg, leftRow = row;
+            pg = startPg;
+            row = startRow;
+            for (int k = mid; k < end; ++k) placeLines(k, 0, static_cast<int>(wraps[k].size()));
+            if (leftPg > pg || (leftPg == pg && leftRow > row)) {
+                pg = leftPg;
+                row = leftRow;
+            }
+            inSpeech = false;
+            i = end - 1;
+            continue;
+        }
+
         const auto& p = doc.paragraphs[i];
         const auto& st = elementStyle(p.type);
         const int nlines = static_cast<int>(wraps[i].size());
