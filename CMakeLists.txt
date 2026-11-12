@@ -27,6 +27,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
 set(UI_SOURCES
+  src/pixelavatar.cpp src/pixelavatar.h
   src/mainwindow.cpp src/mainwindow.h
   src/scriptview.cpp src/scriptview.h
   src/pagepainter.cpp src/pagepainter.h

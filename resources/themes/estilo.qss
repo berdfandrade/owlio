@@ -152,6 +152,8 @@ QPushButton#primarioBotao:hover { background: @accentHover; }
 QPushButton#primarioBotao:disabled { background: @hover; color: @muted; border-color: @border; }
 QPushButton#link { color: @accent; background: transparent; border: none; padding: 4px 0; min-width: 0; text-align: left; }
 QPushButton#link:hover { text-decoration: underline; }
+QPushButton#link { qproperty-iconSize: 15px 15px; }
+QLabel#amostraAvatar { background: transparent; }
 QSpinBox {
     background: @surface; color: @text; border: 1px solid @border; border-radius: 8px;
     padding: 5px 8px; selection-background-color: @accent;

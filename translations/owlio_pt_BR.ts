@@ -213,10 +213,6 @@ Arraste o + da borda de um beat até outro para traçar uma linha de fluxo.</tra
         <translation>Personagem — %1</translation>
     </message>
     <message>
-        <source>Choose Photo…</source>
-        <translation>Escolher foto…</translation>
-    </message>
-    <message>
         <source>Remove</source>
         <translation>Remover</translation>
     </message>
@@ -374,6 +370,14 @@ Todas as deixas de %2 passam a ser de %1, e esta ficha substitui a dele.</transl
     <message>
         <source>p. %1</source>
         <translation>pág. %1</translation>
+    </message>
+    <message>
+        <source>Upload Photo…</source>
+        <translation>Enviar foto…</translation>
+    </message>
+    <message>
+        <source>Create Avatar…</source>
+        <translation>Criar avatar…</translation>
     </message>
 </context>
 <context>
@@ -1078,6 +1082,226 @@ Deseja salvá-las?</translation>
     <message>
         <source>Close</source>
         <translation>Fechar</translation>
+    </message>
+</context>
+<context>
+    <name>PixelAvatarDialog</name>
+    <message>
+        <source>Create Avatar</source>
+        <translation>Criar avatar</translation>
+    </message>
+    <message>
+        <source>Feminine</source>
+        <translation>Feminino</translation>
+    </message>
+    <message>
+        <source>Masculine</source>
+        <translation>Masculino</translation>
+    </message>
+    <message>
+        <source>Neutral</source>
+        <translation>Neutro</translation>
+    </message>
+    <message>
+        <source>Very light</source>
+        <translation>Muito clara</translation>
+    </message>
+    <message>
+        <source>Light</source>
+        <translation>Clara</translation>
+    </message>
+    <message>
+        <source>Medium</source>
+        <translation>Média</translation>
+    </message>
+    <message>
+        <source>Tan</source>
+        <translation>Morena</translation>
+    </message>
+    <message>
+        <source>Brown</source>
+        <translation>Castanho</translation>
+    </message>
+    <message>
+        <source>Bald</source>
+        <translation>Careca</translation>
+    </message>
+    <message>
+        <source>Short</source>
+        <translation>Curto</translation>
+    </message>
+    <message>
+        <source>Messy</source>
+        <translation>Bagunçado</translation>
+    </message>
+    <message>
+        <source>Long</source>
+        <translation>Comprido</translation>
+    </message>
+    <message>
+        <source>Bob</source>
+        <translation>Chanel</translation>
+    </message>
+    <message>
+        <source>Bun</source>
+        <translation>Coque</translation>
+    </message>
+    <message>
+        <source>Mohawk</source>
+        <translation>Moicano</translation>
+    </message>
+    <message>
+        <source>Afro</source>
+        <translation>Black power</translation>
+    </message>
+    <message>
+        <source>Black</source>
+        <translation>Preto</translation>
+    </message>
+    <message>
+        <source>Light brown</source>
+        <translation>Castanho-claro</translation>
+    </message>
+    <message>
+        <source>Blond</source>
+        <translation>Loiro</translation>
+    </message>
+    <message>
+        <source>Red</source>
+        <translation>Vermelho</translation>
+    </message>
+    <message>
+        <source>Gray</source>
+        <translation>Grisalho</translation>
+    </message>
+    <message>
+        <source>Blue</source>
+        <translation>Azul</translation>
+    </message>
+    <message>
+        <source>Pink</source>
+        <translation>Rosa</translation>
+    </message>
+    <message>
+        <source>None</source>
+        <translation>Nenhum</translation>
+    </message>
+    <message>
+        <source>Mustache</source>
+        <translation>Bigode</translation>
+    </message>
+    <message>
+        <source>Beard</source>
+        <translation>Barba</translation>
+    </message>
+    <message>
+        <source>Round glasses</source>
+        <translation>Óculos redondos</translation>
+    </message>
+    <message>
+        <source>Sunglasses</source>
+        <translation>Óculos escuros</translation>
+    </message>
+    <message>
+        <source>Green</source>
+        <translation>Verde</translation>
+    </message>
+    <message>
+        <source>Yellow</source>
+        <translation>Amarelo</translation>
+    </message>
+    <message>
+        <source>Purple</source>
+        <translation>Roxo</translation>
+    </message>
+    <message>
+        <source>White</source>
+        <translation>Branco</translation>
+    </message>
+    <message>
+        <source>Orange</source>
+        <translation>Laranja</translation>
+    </message>
+    <message>
+        <source>Sand</source>
+        <translation>Areia</translation>
+    </message>
+    <message>
+        <source>Sky</source>
+        <translation>Céu</translation>
+    </message>
+    <message>
+        <source>Mint</source>
+        <translation>Menta</translation>
+    </message>
+    <message>
+        <source>Lavender</source>
+        <translation>Lavanda</translation>
+    </message>
+    <message>
+        <source>Night</source>
+        <translation>Noite</translation>
+    </message>
+    <message>
+        <source>Sun</source>
+        <translation>Sol</translation>
+    </message>
+    <message>
+        <source>Body</source>
+        <translation>Corpo</translation>
+    </message>
+    <message>
+        <source>Skin tone</source>
+        <translation>Tom de pele</translation>
+    </message>
+    <message>
+        <source>Hair</source>
+        <translation>Cabelo</translation>
+    </message>
+    <message>
+        <source>Hair color</source>
+        <translation>Cor do cabelo</translation>
+    </message>
+    <message>
+        <source>Facial hair</source>
+        <translation>Barba e bigode</translation>
+    </message>
+    <message>
+        <source>Glasses</source>
+        <translation>Óculos</translation>
+    </message>
+    <message>
+        <source>Clothes</source>
+        <translation>Roupa</translation>
+    </message>
+    <message>
+        <source>Background</source>
+        <translation>Fundo</translation>
+    </message>
+    <message>
+        <source>Surprise Me</source>
+        <translation>Surpreenda-me</translation>
+    </message>
+    <message>
+        <source>Use Avatar</source>
+        <translation>Usar avatar</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>Cancelar</translation>
+    </message>
+    <message>
+        <source>Deep</source>
+        <translation>Escura</translation>
+    </message>
+    <message>
+        <source>Very deep</source>
+        <translation>Muito escura</translation>
+    </message>
+    <message>
+        <source>Red</source>
+        <comment>hair</comment>
+        <translation>Ruivo</translation>
     </message>
 </context>
 <context>
