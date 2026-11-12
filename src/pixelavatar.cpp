@@ -1,19 +1,21 @@
 #include "pixelavatar.h"
 
 #include <QBuffer>
-#include <QComboBox>
-#include <QDialogButtonBox>
-#include <QFormLayout>
+#include <QButtonGroup>
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QListWidget>
 #include <QPainter>
 #include <QPainterPath>
 #include <QPixmap>
 #include <QPushButton>
 #include <QRandomGenerator>
+#include <QToolButton>
 #include <QVBoxLayout>
 #include <array>
 #include <cmath>
+
+#include "theme.h"
 
 namespace {
 constexpr int N = 16;  // a grade do sprite
@@ -24,7 +26,7 @@ const char* kShirt[] = {"#3d63b5", "#c94f4f", "#3f9e6e", "#e0a43b", "#7b5bc4", "
 const char* kBack[] = {"#e8c9a0", "#bcd7ea", "#c9e4c5", "#f2c6cf", "#d9cff2", "#2f3340", "#f4f4f6", "#f6dd8a"};
 const QColor kInk("#15151c");
 
-template <size_t K> int clampIndex(int i, const char* (&)[K]) { return std::clamp(i, 0, int(K) - 1); }
+template <size_t K> int pick(int i, const char* (&)[K]) { return std::clamp(i, 0, int(K) - 1); }
 
 struct Grid {
     QImage img{N, N, QImage::Format_ARGB32};
@@ -90,6 +92,12 @@ void drawHair(Grid& g, int style, const QColor& h) {
                     g.set(x, y, h);
                 }
             break;
+        case 8:  // repartido de lado
+            shortTop();
+            g.row(4, 3, 10, h);
+            g.set(3, 6, h);
+            g.set(10, 3, QColor(h).lighter(130));
+            break;
         default: break;  // careca
     }
 }
@@ -97,12 +105,12 @@ void drawHair(Grid& g, int style, const QColor& h) {
 
 QImage PixelAvatar::render(int size) const {
     Grid g;
-    const QColor skinC(kSkin[clampIndex(skin, kSkin)]);
-    const QColor hairC(kHair[clampIndex(hairColor, kHair)]);
-    const QColor shirtC(kShirt[clampIndex(shirt, kShirt)]);
+    const QColor skinC(kSkin[pick(skin, kSkin)]);
+    const QColor hairC(kHair[pick(hairColor, kHair)]);
+    const QColor shirtC(kShirt[pick(shirt, kShirt)]);
     const QColor shade = skinC.darker(118);
 
-    // Corpo: ombros largos, estreitos ou no meio.
+    // Corpo e roupa.
     const int half = body == 1 ? 6 : body == 0 ? 4 : 5;
     g.rect(8 - half - 1, 13, 7 + half + 1, 15, shirtC);
     g.row(12, 8 - half, 7 + half, shirtC);
@@ -110,16 +118,70 @@ QImage PixelAvatar::render(int size) const {
     g.set(7 + half + 1, 13, shirtC.darker(125));
     g.rect(6, 11, 9, 11, shade);  // pescoço
     g.row(12, 7, 8, shade);
-    if (body == 0) g.row(13, 7, 8, shade);  // decote
+    switch (clothes) {
+        case 1:  // gola
+            g.set(6, 12, Qt::white);
+            g.set(9, 12, Qt::white);
+            break;
+        case 2:  // terno: camisa branca e gravata
+            g.rect(6, 12, 9, 15, Qt::white);
+            g.rect(7, 13, 8, 15, kInk);
+            g.row(12, 7, 8, kInk);
+            g.set(5, 13, shirtC.darker(140));
+            g.set(10, 13, shirtC.darker(140));
+            break;
+        case 3:  // moletom: capuz atrás do pescoço e cordões
+            g.set(5, 11, shirtC);
+            g.set(10, 11, shirtC);
+            g.set(6, 14, Qt::white);
+            g.set(9, 14, Qt::white);
+            break;
+        default:
+            if (body == 0) g.row(13, 7, 8, shade);  // decote
+    }
 
     // Rosto e orelhas.
     g.rect(4, 3, 11, 9, skinC);
     g.row(10, 5, 10, skinC);
     g.rect(3, 6, 3, 7, skinC);
     g.rect(12, 6, 12, 7, skinC);
-    g.rect(6, 6, 6, 7, kInk);  // olhos
-    g.rect(9, 6, 9, 7, kInk);
-    g.row(9, 7, 8, shade.darker(115));  // boca
+    switch (eyes) {
+        case 1:  // feliz
+            g.set(5, 7, kInk); g.set(6, 6, kInk); g.set(7, 7, kInk);
+            g.set(8, 7, kInk); g.set(9, 6, kInk); g.set(10, 7, kInk);
+            break;
+        case 2:  // arregalado, com brilho
+            g.rect(5, 6, 6, 7, kInk);
+            g.rect(9, 6, 10, 7, kInk);
+            g.set(5, 6, Qt::white);
+            g.set(9, 6, Qt::white);
+            break;
+        case 3:  // cílios
+            g.rect(6, 6, 6, 7, kInk);
+            g.rect(9, 6, 9, 7, kInk);
+            g.set(5, 5, kInk);
+            g.set(10, 5, kInk);
+            break;
+        default:
+            g.rect(6, 6, 6, 7, kInk);
+            g.rect(9, 6, 9, 7, kInk);
+    }
+    const QColor lip = shade.darker(120);
+    switch (mouth) {
+        case 1: g.row(9, 7, 8, lip); break;  // neutra
+        case 2:                              // aberta
+            g.row(9, 7, 8, kInk);
+            g.row(10, 7, 8, QColor("#c0504d"));
+            break;
+        case 3:  // de lado
+            g.row(9, 8, 9, lip);
+            g.set(10, 8, lip);
+            break;
+        default:  // sorriso
+            g.row(9, 7, 8, lip);
+            g.set(6, 8, lip);
+            g.set(9, 8, lip);
+    }
     if (body == 0) {
         g.set(5, 8, QColor("#e98c8c"));
         g.set(10, 8, QColor("#e98c8c"));
@@ -138,9 +200,9 @@ QImage PixelAvatar::render(int size) const {
         const QColor frame("#2a2a35");
         g.row(5, 5, 7, frame);
         g.row(5, 8, 10, frame);
-        g.set(5, 6, frame); g.set(7, 6, frame); g.set(8, 6, frame); g.set(10, 6, frame);
-        g.set(5, 7, frame); g.set(7, 7, frame); g.set(8, 7, frame); g.set(10, 7, frame);
-        g.set(4, 6, frame); g.set(11, 6, frame);
+        for (int x : {5, 7, 8, 10}) g.rect(x, 6, x, 7, frame);
+        g.set(4, 6, frame);
+        g.set(11, 6, frame);
     } else if (glasses == 2) {
         g.rect(5, 6, 10, 7, kInk);
         g.row(6, 4, 11, kInk);
@@ -159,7 +221,7 @@ QImage PixelAvatar::render(int size) const {
                 out.set(x, y, kInk);
 
     QImage canvas(N, N, QImage::Format_ARGB32);
-    canvas.fill(QColor(kBack[clampIndex(background, kBack)]));
+    canvas.fill(QColor(kBack[pick(background, kBack)]));
     QPainter(&canvas).drawImage(0, 0, out.img);
     return canvas.scaled(size, size, Qt::IgnoreAspectRatio, Qt::FastTransformation);
 }
@@ -169,10 +231,13 @@ PixelAvatar PixelAvatar::random(unsigned seed) {
     PixelAvatar a;
     a.body = r.bounded(3);
     a.skin = r.bounded(6);
-    a.hairStyle = a.body == 0 ? int(std::array{3, 4, 5, 2, 7}[r.bounded(5)]) : int(std::array{1, 2, 6, 7, 0, 1}[r.bounded(6)]);
+    a.eyes = r.bounded(4) == 0 ? 1 + r.bounded(3) : 0;
+    a.mouth = r.bounded(4);
+    a.hairStyle = a.body == 0 ? std::array{3, 4, 5, 2, 7}[r.bounded(5)] : std::array{1, 2, 6, 7, 0, 8}[r.bounded(6)];
     a.hairColor = r.bounded(10) < 8 ? r.bounded(6) : r.bounded(8);
     a.facialHair = a.body == 1 && r.bounded(3) == 0 ? 1 + r.bounded(2) : 0;
     a.glasses = r.bounded(5) == 0 ? 1 + r.bounded(2) : 0;
+    a.clothes = r.bounded(4);
     a.shirt = r.bounded(8);
     a.background = r.bounded(8);
     return a;
@@ -180,140 +245,230 @@ PixelAvatar PixelAvatar::random(unsigned seed) {
 
 // ------------------------------------------------------------ janela
 
-PixelAvatarDialog::PixelAvatarDialog(const QString& name, QWidget* parent) : QDialog(parent) {
-    setWindowTitle(tr("Create Avatar"));
-    preview_ = new QLabel;
-    preview_->setFixedSize(192, 192);
-    preview_->setObjectName("amostraAvatar");
+namespace {
+// Uma aba do criador: qual campo as opções mudam e qual paleta as cores mudam (pode faltar um dos dois).
+struct Category {
+    const char* label;
+    const char* icon;
+    int PixelAvatar::*option;
+    QStringList names;
+    int PixelAvatar::*color;
+    const char* const* palette;
+    int paletteSize;
+};
 
-    auto combo = [](const QStringList& items) {
-        auto* c = new QComboBox;
-        c->addItems(items);
-        c->setMinimumWidth(200);
-        return c;
+QList<Category> categories() {
+    using D = PixelAvatarDialog;
+    return {
+        {QT_TRANSLATE_NOOP("PixelAvatarDialog", "Face"), "rosto-avatar", &PixelAvatar::body,
+         {D::tr("Feminine"), D::tr("Masculine"), D::tr("Neutral")}, &PixelAvatar::skin, kSkin, 6},
+        {QT_TRANSLATE_NOOP("PixelAvatarDialog", "Eyes"), "foco", &PixelAvatar::eyes,
+         {D::tr("Normal"), D::tr("Happy"), D::tr("Wide"), D::tr("Lashes")}, nullptr, nullptr, 0},
+        {QT_TRANSLATE_NOOP("PixelAvatarDialog", "Mouth"), "boca", &PixelAvatar::mouth,
+         {D::tr("Smile"), D::tr("Neutral"), D::tr("Open"), D::tr("Smirk")}, nullptr, nullptr, 0},
+        {QT_TRANSLATE_NOOP("PixelAvatarDialog", "Hair"), "cabelo", &PixelAvatar::hairStyle,
+         {D::tr("Bald"), D::tr("Short"), D::tr("Messy"), D::tr("Long"), D::tr("Bob"), D::tr("Bun"), D::tr("Mohawk"),
+          D::tr("Afro"), D::tr("Side part")},
+         &PixelAvatar::hairColor, kHair, 8},
+        {QT_TRANSLATE_NOOP("PixelAvatarDialog", "Facial hair"), "barba", &PixelAvatar::facialHair,
+         {D::tr("None"), D::tr("Mustache"), D::tr("Beard")}, &PixelAvatar::hairColor, kHair, 8},
+        {QT_TRANSLATE_NOOP("PixelAvatarDialog", "Glasses"), "oculos", &PixelAvatar::glasses,
+         {D::tr("None"), D::tr("Round glasses"), D::tr("Sunglasses")}, nullptr, nullptr, 0},
+        {QT_TRANSLATE_NOOP("PixelAvatarDialog", "Clothes"), "roupa", &PixelAvatar::clothes,
+         {D::tr("T-shirt"), D::tr("Collar"), D::tr("Suit and tie"), D::tr("Hoodie")}, &PixelAvatar::shirt, kShirt, 8},
+        {QT_TRANSLATE_NOOP("PixelAvatarDialog", "Background"), "fundo", &PixelAvatar::background,
+         {D::tr("Sand"), D::tr("Sky"), D::tr("Mint"), D::tr("Pink"), D::tr("Lavender"), D::tr("Night"), D::tr("White"),
+          D::tr("Sun")},
+         nullptr, nullptr, 0},
     };
-    auto colors = [](const QStringList& names, const char* const* hex) {
-        auto* c = new QComboBox;
-        for (int i = 0; i < names.size(); ++i) {
-            QPixmap pm(16, 16);
-            pm.fill(Qt::transparent);
-            QPainter p(&pm);
-            p.setRenderHint(QPainter::Antialiasing);
-            p.setPen(QColor(0, 0, 0, 60));
-            p.setBrush(QColor(hex[i]));
-            p.drawRoundedRect(QRectF(0.5, 0.5, 15, 15), 4, 4);
-            p.end();
-            c->addItem(QIcon(pm), names[i]);
-        }
-        c->setMinimumWidth(200);
-        return c;
-    };
-    body_ = combo({tr("Feminine"), tr("Masculine"), tr("Neutral")});
-    skin_ = colors({tr("Very light"), tr("Light"), tr("Medium"), tr("Tan"), tr("Deep"), tr("Very deep")}, kSkin);
-    hairStyle_ = combo({tr("Bald"), tr("Short"), tr("Messy"), tr("Long"), tr("Bob"), tr("Bun"), tr("Mohawk"),
-                        tr("Afro")});
-    hairColor_ = colors({tr("Black"), tr("Brown"), tr("Light brown"), tr("Blond"), tr("Red", "hair"), tr("Gray"),
-                         tr("Blue"), tr("Pink")}, kHair);
-    facialHair_ = combo({tr("None"), tr("Mustache"), tr("Beard")});
-    glasses_ = combo({tr("None"), tr("Round glasses"), tr("Sunglasses")});
-    shirt_ = colors({tr("Blue"), tr("Red"), tr("Green"), tr("Yellow"), tr("Purple"), tr("Black"), tr("White"),
-                     tr("Orange")}, kShirt);
-    background_ = colors({tr("Sand"), tr("Sky"), tr("Mint"), tr("Pink"), tr("Lavender"), tr("Night"), tr("White"),
-                          tr("Sun")}, kBack);
-
-    auto* form = new QFormLayout;
-    form->setHorizontalSpacing(14);
-    form->setVerticalSpacing(8);
-    form->addRow(tr("Body"), body_);
-    form->addRow(tr("Skin tone"), skin_);
-    form->addRow(tr("Hair"), hairStyle_);
-    form->addRow(tr("Hair color"), hairColor_);
-    form->addRow(tr("Facial hair"), facialHair_);
-    form->addRow(tr("Glasses"), glasses_);
-    form->addRow(tr("Clothes"), shirt_);
-    form->addRow(tr("Background"), background_);
-    for (QComboBox* c : {body_, skin_, hairStyle_, hairColor_, facialHair_, glasses_, shirt_, background_})
-        connect(c, &QComboBox::currentIndexChanged, this, &PixelAvatarDialog::refresh);
-
-    auto* shuffle = new QPushButton(tr("Surprise Me"));
-    shuffle->setCursor(Qt::PointingHandCursor);
-    connect(shuffle, &QPushButton::clicked, this,
-            [this] { load(PixelAvatar::random(QRandomGenerator::global()->generate())); });
-
-    auto* left = new QVBoxLayout;
-    left->addWidget(preview_);
-    left->addWidget(shuffle);
-    left->addStretch(1);
-    auto* top = new QHBoxLayout;
-    top->setSpacing(24);
-    top->addLayout(left);
-    top->addLayout(form, 1);
-
-    auto* bb = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
-    QPushButton* use = bb->button(QDialogButtonBox::Ok);
-    use->setText(tr("Use Avatar"));
-    use->setObjectName("primarioBotao");
-    bb->button(QDialogButtonBox::Cancel)->setText(tr("Cancel"));
-    for (QAbstractButton* b : bb->buttons()) b->setIcon(QIcon());
-    connect(bb, &QDialogButtonBox::accepted, this, &QDialog::accept);
-    connect(bb, &QDialogButtonBox::rejected, this, &QDialog::reject);
-
-    auto* heading = new QLabel(tr("Create Avatar"));
-    heading->setObjectName("tituloDialogo");
-    auto* root = new QVBoxLayout(this);
-    root->setContentsMargins(28, 24, 28, 20);
-    root->setSpacing(16);
-    root->addWidget(heading);
-    root->addLayout(top);
-    root->addWidget(bb);
-
-    load(PixelAvatar::random(qHash(name)));  // o mesmo nome começa sempre com o mesmo rosto
-    use->setDefault(true);
 }
 
-void PixelAvatarDialog::load(const PixelAvatar& a) {
-    const QList<std::pair<QComboBox*, int>> values = {{body_, a.body},           {skin_, a.skin},
-                                                      {hairStyle_, a.hairStyle}, {hairColor_, a.hairColor},
-                                                      {facialHair_, a.facialHair}, {glasses_, a.glasses},
-                                                      {shirt_, a.shirt},         {background_, a.background}};
-    for (const auto& [c, v] : values) {
-        QSignalBlocker b(c);
-        c->setCurrentIndex(v);
-    }
-    refresh();
-}
-
-PixelAvatar PixelAvatarDialog::current() const {
-    PixelAvatar a;
-    a.body = body_->currentIndex();
-    a.skin = skin_->currentIndex();
-    a.hairStyle = hairStyle_->currentIndex();
-    a.hairColor = hairColor_->currentIndex();
-    a.facialHair = facialHair_->currentIndex();
-    a.glasses = glasses_->currentIndex();
-    a.shirt = shirt_->currentIndex();
-    a.background = background_->currentIndex();
-    return a;
-}
-
-void PixelAvatarDialog::refresh() {
-    // Prévia redonda, como o avatar aparece nos painéis.
-    QPixmap pm(192, 192);
+QPixmap rounded(const QImage& img, int size, double radius) {
+    QPixmap pm(size, size);
     pm.fill(Qt::transparent);
     QPainter p(&pm);
     p.setRenderHint(QPainter::Antialiasing);
     QPainterPath clip;
-    clip.addEllipse(QRectF(0, 0, 192, 192));
+    clip.addRoundedRect(QRectF(0, 0, size, size), radius, radius);
     p.setClipPath(clip);
-    p.drawImage(0, 0, current().render(192));
-    p.end();
-    preview_->setPixmap(pm);
+    p.drawImage(QRect(0, 0, size, size), img);
+    return pm;
+}
+}  // namespace
+
+PixelAvatarDialog::PixelAvatarDialog(const QString& name, QWidget* parent) : QDialog(parent) {
+    setWindowTitle(tr("Create Avatar"));
+    setMinimumSize(860, 560);
+    ThemeManager& tm = ThemeManager::instance();
+    initial_ = PixelAvatar::random(qHash(name));  // o mesmo nome começa sempre com o mesmo rosto
+    history_ = {initial_};
+
+    // ---- Esquerda: prévia, sortear e recomeçar.
+    preview_ = new QLabel;
+    preview_->setFixedSize(288, 288);
+    preview_->setObjectName("amostraAvatar");
+    auto* shuffle = new QPushButton(tm.icon("aleatorio"), tr("Random"));
+    auto* reset = new QPushButton(tm.icon("redefinir"), tr("Reset"));
+    connect(shuffle, &QPushButton::clicked, this,
+            [this] { apply(PixelAvatar::random(QRandomGenerator::global()->generate())); });
+    connect(reset, &QPushButton::clicked, this, [this] { apply(initial_); });
+    auto* leftButtons = new QHBoxLayout;
+    leftButtons->addWidget(shuffle);
+    leftButtons->addWidget(reset);
+    auto* left = new QVBoxLayout;
+    left->setSpacing(14);
+    left->addWidget(preview_);
+    left->addLayout(leftButtons);
+    left->addStretch(1);
+
+    // ---- Direita: desfazer/refazer, categorias, opções e cores.
+    undo_ = new QPushButton(tm.icon("desfazer"), tr("Undo"));
+    redo_ = new QPushButton(tm.icon("refazer"), tr("Redo"));
+    connect(undo_, &QPushButton::clicked, this, [this] { if (pos_ > 0) { --pos_; refresh(); } });
+    connect(redo_, &QPushButton::clicked, this, [this] { if (pos_ + 1 < history_.size()) { ++pos_; refresh(); } });
+    auto* heading = new QLabel(tr("Create Avatar"));
+    heading->setObjectName("tituloDialogo");
+    auto* topRow = new QHBoxLayout;
+    topRow->addWidget(heading);
+    topRow->addStretch(1);
+    topRow->addWidget(undo_);
+    topRow->addWidget(redo_);
+
+    categories_ = new QButtonGroup(this);
+    auto* catRow = new QHBoxLayout;
+    catRow->setSpacing(6);
+    const QList<Category> cats = categories();
+    for (int i = 0; i < cats.size(); ++i) {
+        auto* b = new QToolButton;
+        b->setObjectName("categoria");
+        b->setCheckable(true);
+        b->setIcon(tm.icon(cats[i].icon));
+        b->setIconSize(QSize(22, 22));
+        b->setText(tr(cats[i].label));
+        b->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
+        b->setCursor(Qt::PointingHandCursor);
+        b->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+        categories_->addButton(b, i);
+        catRow->addWidget(b);
+    }
+    connect(categories_, &QButtonGroup::idClicked, this, &PixelAvatarDialog::setCategory);
+
+    options_ = new QListWidget;
+    options_->setObjectName("opcoesAvatar");
+    options_->setViewMode(QListView::IconMode);
+    options_->setIconSize(QSize(80, 80));
+    options_->setGridSize(QSize(100, 100));
+    options_->setMovement(QListView::Static);
+    options_->setResizeMode(QListView::Adjust);
+    options_->setUniformItemSizes(true);
+    options_->setSpacing(4);
+    options_->setCursor(Qt::PointingHandCursor);
+    connect(options_, &QListWidget::itemClicked, this, [this](QListWidgetItem* it) {
+        PixelAvatar a = avatar();
+        a.*(categories()[category_].option) = options_->row(it);
+        apply(a);
+    });
+
+    colorRow_ = new QWidget;
+    colorLayout_ = new QHBoxLayout(colorRow_);
+    colorLayout_->setContentsMargins(0, 0, 0, 0);
+    colorLayout_->setSpacing(8);
+
+    auto* done = new QPushButton(tr("Use Avatar"));
+    done->setObjectName("primarioBotao");
+    auto* cancel = new QPushButton(tr("Cancel"));
+    connect(done, &QPushButton::clicked, this, &QDialog::accept);
+    connect(cancel, &QPushButton::clicked, this, &QDialog::reject);
+    auto* bottom = new QHBoxLayout;
+    bottom->addWidget(colorRow_);
+    bottom->addStretch(1);
+    bottom->addWidget(cancel);
+    bottom->addWidget(done);
+
+    auto* right = new QVBoxLayout;
+    right->setSpacing(14);
+    right->addLayout(topRow);
+    right->addLayout(catRow);
+    right->addWidget(options_, 1);
+    right->addLayout(bottom);
+
+    auto* root = new QHBoxLayout(this);
+    root->setContentsMargins(28, 24, 28, 22);
+    root->setSpacing(28);
+    root->addLayout(left);
+    root->addLayout(right, 1);
+
+    setCategory(3);  // começa pelo cabelo, como nos criadores de avatar
+    done->setDefault(true);
+}
+
+void PixelAvatarDialog::setCategory(int index) {
+    category_ = std::clamp(index, 0, int(categories().size()) - 1);
+    categories_->button(category_)->setChecked(true);
+    refresh();
+}
+
+void PixelAvatarDialog::apply(const PixelAvatar& a) {
+    history_.resize(pos_ + 1);
+    history_.append(a);
+    pos_ = static_cast<int>(history_.size()) - 1;
+    refresh();
+}
+
+void PixelAvatarDialog::fillOptions() {
+    // Cada opção é desenhada com o avatar atual, só trocando a parte daquela categoria.
+    const Category c = categories()[category_];
+    const PixelAvatar a = avatar();
+    QSignalBlocker block(options_);
+    options_->clear();
+    for (int i = 0; i < c.names.size(); ++i) {
+        PixelAvatar v = a;
+        v.*(c.option) = i;
+        const QPixmap pm = rounded(v.render(160), 160, 18);
+        QIcon icon(pm);
+        icon.addPixmap(pm, QIcon::Selected);  // sem o véu azul da seleção: a borda já marca a escolhida
+        auto* it = new QListWidgetItem(icon, QString());
+        it->setToolTip(c.names[i]);
+        options_->addItem(it);
+    }
+    options_->setCurrentRow(a.*(c.option));
+
+    while (QLayoutItem* item = colorLayout_->takeAt(0)) {
+        if (QWidget* w = item->widget()) {  // pode ser o botão que acabou de ser clicado
+            w->hide();
+            w->deleteLater();
+        }
+        delete item;
+    }
+    colorRow_->setVisible(c.palette != nullptr);
+    for (int i = 0; i < c.paletteSize; ++i) {
+        auto* b = new QToolButton;
+        b->setObjectName("corAvatar");
+        b->setCheckable(true);
+        b->setChecked(a.*(c.color) == i);
+        b->setFixedSize(30, 30);
+        b->setCursor(Qt::PointingHandCursor);
+        b->setStyleSheet(QString("QToolButton#corAvatar { background: %1; }").arg(c.palette[i]));
+        connect(b, &QToolButton::clicked, this, [this, i] {
+            PixelAvatar v = avatar();
+            v.*(categories()[category_].color) = i;
+            apply(v);
+        });
+        colorLayout_->addWidget(b);
+    }
+}
+
+void PixelAvatarDialog::refresh() {
+    preview_->setPixmap(rounded(avatar().render(288), 288, 144));
+    undo_->setEnabled(pos_ > 0);
+    redo_->setEnabled(pos_ + 1 < history_.size());
+    fillOptions();
 }
 
 std::string PixelAvatarDialog::base64() const {
     QByteArray bytes;
     QBuffer buf(&bytes);
     buf.open(QIODevice::WriteOnly);
-    current().render(192).save(&buf, "PNG");
+    avatar().render(192).save(&buf, "PNG");
     return bytes.toBase64().toStdString();
 }

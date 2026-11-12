@@ -154,6 +154,18 @@ QPushButton#link { color: @accent; background: transparent; border: none; paddin
 QPushButton#link:hover { text-decoration: underline; }
 QPushButton#link { qproperty-iconSize: 15px 15px; }
 QLabel#amostraAvatar { background: transparent; }
+QToolButton#categoria {
+    background: @surface; border: 1px solid @border; border-radius: 12px; padding: 8px 6px 6px 6px;
+    color: @muted; font-size: 11px;
+}
+QToolButton#categoria:hover { background: @hover; color: @text; }
+QToolButton#categoria:checked { background: @selected; border-color: @accent; color: @accent; }
+QListWidget#opcoesAvatar { background: @surface; border: 1px solid @border; border-radius: 12px; padding: 8px; }
+QListWidget#opcoesAvatar::item { border: 2px solid transparent; border-radius: 12px; }
+QListWidget#opcoesAvatar::item:hover { background: @hover; }
+QListWidget#opcoesAvatar::item:selected { background: transparent; border-color: @accent; }
+QToolButton#corAvatar { border: 2px solid @border; border-radius: 15px; }
+QToolButton#corAvatar:checked { border: 3px solid @accent; }
 QSpinBox {
     background: @surface; color: @text; border: 1px solid @border; border-radius: 8px;
     padding: 5px 8px; selection-background-color: @accent;
