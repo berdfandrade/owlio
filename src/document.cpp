@@ -1,5 +1,6 @@
 #include "document.h"
 
+#include <algorithm>
 #include <cwctype>
 
 const char* elementName(Element e) {
@@ -45,6 +46,18 @@ void Document::setTitleValue(const std::string& key, const std::string& value) {
         }
     }
     if (!value.empty()) titlePage.emplace_back(key, value);
+}
+
+const Beat* BeatBoard::beat(int id) const {
+    for (const Beat& b : beats)
+        if (b.id == id) return &b;
+    return nullptr;
+}
+
+int BeatBoard::nextId() const {
+    int m = 0;
+    for (const Beat& b : beats) m = std::max(m, b.id);
+    return m + 1;
 }
 
 bool CharacterInfo::blank() const {

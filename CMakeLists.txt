@@ -40,6 +40,8 @@ set(UI_SOURCES
   src/settingsdialog.cpp src/settingsdialog.h
   src/i18n.cpp src/i18n.h
   src/autosave.cpp src/autosave.h
+  src/beatboard.cpp src/beatboard.h
+  src/beatdialog.cpp src/beatdialog.h
   resources/owlio.qrc
 )
 set(UI_LIBS owlio_core Qt6::Widgets Qt6::PrintSupport Qt6::Svg)

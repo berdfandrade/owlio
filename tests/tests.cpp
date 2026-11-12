@@ -418,6 +418,78 @@ static void testDualDialogue() {
     CHECK(dualSides(lone) == std::vector<int>({0, 0, 0}));
 }
 
+static void testBeatBoard() {
+    Editor e;
+    Document d;
+    d.paragraphs = {{Element::SceneHeading, U"INT. A - DIA"}, {Element::Action, U"Algo."}};
+    e.setDocument(d);
+
+    Beat a;
+    a.x = 10; a.y = 20; a.w = 240; a.h = 160;
+    a.title = U"Abertura";
+    a.text = U"Helena chega atrasada.\nChove */ muito.";
+    a.color = "#6e7bf2";
+    a.image = std::make_shared<const std::string>("aGVsbG8=");
+    const int ia = e.addBeat(a);
+    Beat b;
+    b.x = 400.5; b.y = -30;
+    b.title = U"Virada";
+    const int ib = e.addBeat(b);
+    CHECK(ia == 1 && ib == 2);
+    CHECK(e.addFlow(ia, ib));
+    CHECK(!e.addFlow(ia, ib));   // repetida
+    CHECK(!e.addFlow(ib, ia));   // invertida
+    CHECK(!e.addFlow(ia, ia));   // para si mesma
+    CHECK(!e.addFlow(ia, 99));   // beat que não existe
+
+    // Fountain de ida e volta; o roteiro não muda.
+    const std::string text = writeFountain(e.doc());
+    CHECK(text.find("owlio-beatboard") != std::string::npos);
+    Document back = parseFountain(text);
+    CHECK(back.paragraphs.size() == 2);
+    CHECK(back.board.beats.size() == 2 && back.board.flows.size() == 1);
+    if (const Beat* r = back.board.beat(ia)) {
+        CHECK(r->x == 10 && r->y == 20 && r->w == 240 && r->h == 160);
+        CHECK(r->title == a.title && r->text == a.text && r->color == a.color);
+        CHECK(r->image && *r->image == "aGVsbG8=");
+    } else {
+        CHECK(false);
+    }
+    if (const Beat* r = back.board.beat(ib)) CHECK(r->x == 400.5 && r->y == -30 && !r->image);
+    CHECK(back.board.flows[0] == (FlowLine{ia, ib}));
+
+    // Mover é um passo de desfazer; mover para o mesmo lugar não cria passo.
+    Beat moved = *e.doc().board.beat(ib);
+    moved.x += 50;
+    e.updateBeats({moved});
+    CHECK(e.doc().board.beat(ib)->x == 450.5);
+    const int rev = e.revision();
+    e.updateBeats({moved});
+    CHECK(e.revision() == rev);
+    e.undo();
+    CHECK(e.doc().board.beat(ib)->x == 400.5);
+
+    // Apagar um beat leva junto a linha; desfazer volta os dois.
+    e.removeBeats({ia});
+    CHECK(e.doc().board.beats.size() == 1 && e.doc().board.flows.empty());
+    e.undo();
+    CHECK(e.doc().board.beats.size() == 2 && e.doc().board.flows.size() == 1);
+    e.removeFlows({FlowLine{ia, ib}});
+    CHECK(e.doc().board.flows.empty());
+
+    // Copiar e colar texto do roteiro não leva o quadro junto.
+    e.selectAll();
+    CHECK(e.copySelection().find("owlio-beatboard") == std::string::npos);
+
+    // Quadro vazio não escreve bloco; linhas inválidas e ids repetidos são corrigidos ao ler.
+    Editor empty;
+    CHECK(writeFountain(empty.doc()).find("owlio-beatboard") == std::string::npos);
+    Document odd = parseFountain(
+        "INT. A - DIA\n\n/* owlio-beatboard\nbeat: 3\nframe: 0 0 10 10\nbeat: 3\ntitle: B\nflow: 3 9\n*/\n");
+    CHECK(odd.board.beats.size() == 2 && odd.board.beats[0].id != odd.board.beats[1].id);
+    CHECK(odd.board.beats[0].w >= 80 && odd.board.flows.empty());
+}
+
 int main() {
     testScenes();
     testFountain();
@@ -426,6 +498,7 @@ int main() {
     testEditor();
     testCharacters();
     testDualDialogue();
+    testBeatBoard();
     if (failures == 0) std::printf("All tests passed.\n");
     return failures == 0 ? 0 : 1;
 }

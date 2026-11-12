@@ -1,6 +1,7 @@
 #include "fountain.h"
 
 #include <algorithm>
+#include <cstdlib>
 #include <cstring>
 #include <sstream>
 #include <vector>
@@ -101,6 +102,7 @@ namespace {
 // Fichas dos personagens num comentário que outros apps Fountain ignoram.
 const char* const kCastBlock = "/* owlio-characters";
 const char* const kAvatarBlock = "/* owlio-avatars";  // formato antigo: só fotos
+const char* const kBoardBlock = "/* owlio-beatboard";  // Beat Board: beats e linhas de fluxo
 
 // Valores numa linha só: \ vira \\, quebra de linha vira \n e "*/" não pode fechar o comentário.
 std::string escapeValue(const std::u32string& v) {
@@ -187,10 +189,60 @@ std::vector<CharacterInfo> readCast(const std::string& src) {
               out.end());
     return out;
 }
+BeatBoard readBoard(const std::string& src) {
+    BeatBoard bb;
+    for (const std::string& line : blockLines(src, kBoardBlock)) {
+        size_t colon = line.find(':');
+        if (colon == std::string::npos) continue;
+        const std::string key = line.substr(0, colon);
+        std::string raw = line.substr(colon + 1);
+        if (!raw.empty() && raw[0] == ' ') raw.erase(0, 1);
+        if (key == "flow") {
+            std::istringstream in(raw);
+            FlowLine f;
+            if (in >> f.from >> f.to) bb.flows.push_back(f);
+            continue;
+        }
+        if (key == "beat") {
+            bb.beats.emplace_back();
+            bb.beats.back().id = std::atoi(raw.c_str());
+            continue;
+        }
+        if (bb.beats.empty()) continue;
+        Beat& b = bb.beats.back();
+        if (key == "frame") {
+            std::istringstream in(raw);
+            in >> b.x >> b.y >> b.w >> b.h;
+        } else if (key == "color") {
+            b.color = raw;
+        } else if (key == "title") {
+            b.title = unescapeValue(raw);
+        } else if (key == "text") {
+            b.text = unescapeValue(raw);
+        } else if (key == "image" && !raw.empty()) {
+            b.image = std::make_shared<const std::string>(raw);
+        }
+    }
+    // Ids repetidos ou ausentes ganham ids novos; linhas para beats que não existem somem.
+    int next = 1;
+    for (const Beat& b : bb.beats) next = std::max(next, b.id + 1);
+    std::vector<int> seen;
+    for (Beat& b : bb.beats) {
+        if (b.id <= 0 || std::find(seen.begin(), seen.end(), b.id) != seen.end()) b.id = next++;
+        seen.push_back(b.id);
+        b.w = std::max(b.w, 80.0);
+        b.h = std::max(b.h, 60.0);
+    }
+    bb.flows.erase(std::remove_if(bb.flows.begin(), bb.flows.end(),
+                                  [&](const FlowLine& f) { return !bb.beat(f.from) || !bb.beat(f.to) || f.from == f.to; }),
+                   bb.flows.end());
+    return bb;
+}
 }  // namespace
 
 Document parseFountain(const std::string& utf8In, bool parseTitlePage) {
     auto cast = readCast(utf8In);
+    BeatBoard board = parseTitlePage ? readBoard(utf8In) : BeatBoard{};
     std::string src = removeComments(utf8In);
     // Normaliza fins de linha e remove BOM.
     if (src.size() >= 3 && static_cast<unsigned char>(src[0]) == 0xEF &&
@@ -336,6 +388,7 @@ Document parseFountain(const std::string& utf8In, bool parseTitlePage) {
     }
 
     doc.cast = std::move(cast);
+    doc.board = std::move(board);
     doc.ensureNotEmpty();
     return doc;
 }
@@ -422,6 +475,20 @@ std::string writeFountain(const Document& doc, bool writeTitlePage) {
             if (!c.photo.empty()) out << "photo: " << c.photo << "\n";
             out << "\n";
         }
+        out << "*/\n";
+    }
+    if (writeTitlePage && !doc.board.empty()) {
+        out << "\n" << kBoardBlock << "\n";
+        for (const Beat& b : doc.board.beats) {
+            out << "beat: " << b.id << "\n";
+            out << "frame: " << b.x << " " << b.y << " " << b.w << " " << b.h << "\n";
+            out << "color: " << b.color << "\n";
+            if (!b.title.empty()) out << "title: " << escapeValue(b.title) << "\n";
+            if (!b.text.empty()) out << "text: " << escapeValue(b.text) << "\n";
+            if (b.image && !b.image->empty()) out << "image: " << *b.image << "\n";
+            out << "\n";
+        }
+        for (const FlowLine& f : doc.board.flows) out << "flow: " << f.from << " " << f.to << "\n";
         out << "*/\n";
     }
     return out.str();

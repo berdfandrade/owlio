@@ -151,3 +151,47 @@ role: Supporting
 traits: Sleeps through most shows and never misses a reel change.
 
 */
+
+/* owlio-beatboard
+beat: 1
+frame: 0 0 240 120
+color: #6e7bf2
+title: Rain at the Odeon
+text: Helena arrives late for the last show, like she has for forty years.
+
+beat: 2
+frame: 312 0 240 120
+color: #f2b13b
+title: The usher lets her in
+text: Tomas breaks the rule. The manager died in 1998 anyway.
+
+beat: 3
+frame: 624 0 240 120
+color: #36b39b
+title: Row F, seat 12
+text: Where she first saw the sea. The cinema is closing tonight.
+
+beat: 4
+frame: 624 180 240 120
+color: #f0855a
+title: One last reel
+text: Tomas talks Jair into finding a film with the sea in it.
+
+beat: 5
+frame: 312 180 240 120
+color: #d55fd6
+title: The sea on screen
+text: Waves, washed-out colors. Helena laughs like a child.
+
+beat: 6
+frame: 0 180 240 120
+color: #8fbf4a
+title: Dawn
+text: The marquee comes down. Helena leaves to see the real sea.
+
+flow: 1 2
+flow: 2 3
+flow: 3 4
+flow: 4 5
+flow: 5 6
+*/

@@ -14,6 +14,7 @@ class QDockWidget;
 class QPagedPaintDevice;
 class ScriptView;
 class SceneBoard;
+class BeatBoardView;
 class QStackedWidget;
 class FindDialog;
 
@@ -25,8 +26,12 @@ public:
     bool exportPdfTo(const QString& path);
     ScriptView* view() const { return view_; }
     SceneBoard* board() const { return board_; }
-    bool cardsMode() const;
-    void setCardsMode(bool cards);
+    enum class ViewMode { Script, Cards, Beats };
+    ViewMode viewMode() const;
+    void setViewMode(ViewMode mode);
+    bool cardsMode() const { return viewMode() == ViewMode::Cards; }
+    void setCardsMode(bool cards) { setViewMode(cards ? ViewMode::Cards : ViewMode::Script); }
+    BeatBoardView* beatBoard() const { return beats_; }
     const Editor& editor() const { return editor_; }
     // Oferece as cópias de recuperação deixadas por execuções que não fecharam direito.
     void offerRecovery();
@@ -81,6 +86,8 @@ private:
     QStackedWidget* stack_ = nullptr;
     QAction* scriptModeAct_ = nullptr;
     QAction* cardsModeAct_ = nullptr;
+    QAction* beatsModeAct_ = nullptr;
+    BeatBoardView* beats_ = nullptr;
     QAction* elementComboAct_ = nullptr;
     QString path_;
     QTimer panelTimer_;
