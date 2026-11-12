@@ -1,4 +1,6 @@
 #include "characterdialog.h"
+#include "pixelavatar.h"
+#include "theme.h"
 
 #include <QComboBox>
 #include <QDialogButtonBox>
@@ -198,9 +200,19 @@ CharacterDialog::CharacterDialog(const Editor& ed, const QString& name, QWidget*
     // ---- Coluna da esquerda: foto, nome, números e cenas.
     avatar_ = new AvatarButton;
     connect(avatar_, &AvatarButton::clicked, this, &CharacterDialog::choosePhoto);
-    auto* choose = new QPushButton(tr("Choose Photo…"));
+    ThemeManager& tm = ThemeManager::instance();
+    auto* choose = new QPushButton(tm.icon("enviar", tm.colors().accent), tr("Upload Photo…"));
     choose->setObjectName("link");
     connect(choose, &QPushButton::clicked, this, &CharacterDialog::choosePhoto);
+    auto* create = new QPushButton(tm.icon("avatar", tm.colors().accent), tr("Create Avatar…"));
+    create->setObjectName("link");
+    connect(create, &QPushButton::clicked, this, [this] {
+        const QString n = name_->text().trimmed().toUpper();
+        PixelAvatarDialog dlg(n.isEmpty() ? original_ : n, this);
+        if (dlg.exec() != QDialog::Accepted) return;
+        photo_ = dlg.base64();
+        updatePhoto();
+    });
     removePhoto_ = new QPushButton(tr("Remove"));
     removePhoto_->setObjectName("perigo");
     connect(removePhoto_, &QPushButton::clicked, this, [this] {
@@ -209,8 +221,10 @@ CharacterDialog::CharacterDialog(const Editor& ed, const QString& name, QWidget*
     });
     auto* photoButtons = new QHBoxLayout;
     photoButtons->addStretch(1);
+    photoButtons->setSpacing(12);
     photoButtons->addWidget(choose);
-    photoButtons->addWidget(removePhoto_);
+    photoButtons->addWidget(create);
+    for (QPushButton* b : {choose, create, removePhoto_}) b->setCursor(Qt::PointingHandCursor);
     photoButtons->addStretch(1);
 
     nameLabel_ = new QLabel;
@@ -285,6 +299,7 @@ CharacterDialog::CharacterDialog(const Editor& ed, const QString& name, QWidget*
     sl->setSpacing(8);
     sl->addWidget(avatar_, 0, Qt::AlignHCenter);
     sl->addLayout(photoButtons);
+    sl->addWidget(removePhoto_, 0, Qt::AlignHCenter);  // linha própria: as três não cabem lado a lado
     sl->addWidget(nameLabel_);
     sl->addWidget(roleLabel_);
     sl->addSpacing(6);

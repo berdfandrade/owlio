@@ -54,5 +54,7 @@
   <file>icons/escuro.svg</file>
   <file>icons/fonte.svg</file>
   <file>icons/idioma.svg</file>
+  <file>icons/enviar.svg</file>
+  <file>icons/avatar.svg</file>
   <file>themes/estilo.qss</file>
 </qresource></RCC>

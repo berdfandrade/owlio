@@ -14,6 +14,7 @@
 #include "mainwindow.h"
 #include "theme.h"
 #include "pagepainter.h"
+#include "pixelavatar.h"
 #include <QFile>
 #include <QFontDatabase>
 #include <QLineEdit>
@@ -399,6 +400,27 @@ int main(int argc, char* argv[]) {
                     if (a->shortcut() == QKeySequence(QKeySequence::HelpContents)) a->trigger();
             }
             settings.reject();
+
+            // ---- Criador de avatar em pixel art
+            {
+                PixelAvatarDialog pav("HELENA", &w);
+                pav.show();
+                QTest::qWait(100);
+                QImage img;
+                CHECK(img.loadFromData(QByteArray::fromBase64(QByteArray::fromStdString(pav.base64()))));
+                CHECK(img.width() == 192 && img.height() == 192);
+                if (argc > 12) pav.grab().save(QString::fromLocal8Bit(argv[12]));
+                pav.reject();
+                if (argc > 13) {  // folha com variações, para conferir o desenho
+                    QImage sheet(8 * 100, 3 * 100, QImage::Format_RGB32);
+                    sheet.fill(Qt::white);
+                    QPainter sp(&sheet);
+                    for (int i = 0; i < 24; ++i)
+                        sp.drawImage((i % 8) * 100 + 2, (i / 8) * 100 + 2, PixelAvatar::random(i * 7919u + 3).render(96));
+                    sp.end();
+                    sheet.save(QString::fromLocal8Bit(argv[13]));
+                }
+            }
 
             // ---- Fonte das páginas: qualquer monoespaçada, sem mudar a paginação.
             const int pagesBefore = ed.layout().pageCount;
