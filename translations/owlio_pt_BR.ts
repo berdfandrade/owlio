@@ -1063,6 +1063,18 @@ Deseja salvá-las?</translation>
         <source>Free board for ideas, with images and flow lines  (Ctrl+Shift+B)</source>
         <translation>Quadro livre de ideias, com imagens e linhas de fluxo  (Ctrl+Shift+B)</translation>
     </message>
+    <message>
+        <source>Show &amp;Sidebar</source>
+        <translation>Mostrar barra &amp;lateral</translation>
+    </message>
+    <message>
+        <source>Switch Between Light and Dark</source>
+        <translation>Alternar entre claro e escuro</translation>
+    </message>
+    <message>
+        <source>Show or hide the sidebar</source>
+        <translation>Mostrar ou esconder a barra lateral</translation>
+    </message>
 </context>
 <context>
     <name>PrintDialog</name>
@@ -1300,10 +1312,6 @@ Escreva um cabeçalho (INT. ou EXT.) no roteiro e ele aparece aqui como cartão.
         <translation>Português: (MAIS), (CONT.), DIA, NOITE, CORTA PARA:</translation>
     </message>
     <message>
-        <source>Script conventions</source>
-        <translation>Convenções do roteiro</translation>
-    </message>
-    <message>
         <source>Follow System</source>
         <translation>Seguir o sistema</translation>
     </message>
@@ -1378,6 +1386,94 @@ Escreva um cabeçalho (INT. ou EXT.) no roteiro e ele aparece aqui como cartão.
     <message>
         <source>Untitled scripts are not saved automatically, but if Owlio closes unexpectedly your unsaved changes are offered back the next time it starts.</source>
         <translation>Roteiros sem título não são salvos automaticamente, mas, se o Owlio fechar de repente, as alterações não salvas são oferecidas de volta no próximo início.</translation>
+    </message>
+    <message>
+        <source>Reopen the last script when Owlio starts</source>
+        <translation>Reabrir o último roteiro ao iniciar o Owlio</translation>
+    </message>
+    <message>
+        <source>Default</source>
+        <translation>Padrão</translation>
+    </message>
+    <message>
+        <source>Default (%1)</source>
+        <translation>Padrão (%1)</translation>
+    </message>
+    <message>
+        <source>The quick brown fox jumps over the lazy dog — 0123456789</source>
+        <translation>Jovem craque belga prima por whisky de fadas — 0123456789</translation>
+    </message>
+    <message>
+        <source>Font</source>
+        <translation>Fonte</translation>
+    </message>
+    <message>
+        <source>Automatic (%1)</source>
+        <translation>Automática (%1)</translation>
+    </message>
+    <message>
+        <source>INT. DINER - NIGHT</source>
+        <translation>INT. LANCHONETE - NOITE</translation>
+    </message>
+    <message>
+        <source>Eleanor slides into the booth.</source>
+        <translation>Eleanor se acomoda na mesa.</translation>
+    </message>
+    <message>
+        <source>ELEANOR</source>
+        <translation>ELEANOR</translation>
+    </message>
+    <message>
+        <source>I&apos;m looking for the chain</source>
+        <translation>Estou procurando a cadeia</translation>
+    </message>
+    <message>
+        <source>of title.</source>
+        <translation>de proprietários.</translation>
+    </message>
+    <message>
+        <source>Number scenes</source>
+        <translation>Numerar cenas</translation>
+    </message>
+    <message>
+        <source>General</source>
+        <translation>Geral</translation>
+    </message>
+    <message>
+        <source>Language and startup.</source>
+        <translation>Idioma e inicialização.</translation>
+    </message>
+    <message>
+        <source>Startup</source>
+        <translation>Inicialização</translation>
+    </message>
+    <message>
+        <source>Theme and the font of menus, panels and dialogs.</source>
+        <translation>Tema e fonte dos menus, painéis e janelas.</translation>
+    </message>
+    <message>
+        <source>Changes apply right away to the whole interface.</source>
+        <translation>As mudanças valem na hora para toda a interface.</translation>
+    </message>
+    <message>
+        <source>How the pages look and which conventions they follow.</source>
+        <translation>Como as páginas ficam e que convenções seguem.</translation>
+    </message>
+    <message>
+        <source>Conventions</source>
+        <translation>Convenções</translation>
+    </message>
+    <message>
+        <source>Page font</source>
+        <translation>Fonte das páginas</translation>
+    </message>
+    <message>
+        <source>Only monospaced fonts keep the industry layout: the page is always set at 12 points, 10 characters per inch, so page count stays the same whatever font you pick.</source>
+        <translation>Só fontes monoespaçadas mantêm o formato padrão: a página é sempre composta em 12 pontos, 10 caracteres por polegada, então o número de páginas não muda com a fonte escolhida.</translation>
+    </message>
+    <message>
+        <source>Autosave, backups and crash recovery.</source>
+        <translation>Salvamento automático, backups e recuperação após falhas.</translation>
     </message>
 </context>
 <context>

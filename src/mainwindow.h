@@ -39,6 +39,9 @@ public:
     void writeRecoveryNow();                    // o que o timer faz a cada 20 s
     void autosaveNow();                         // o que o timer de salvamento automático faz
     QString currentPath() const { return path_; }
+    bool sidebarVisible() const;
+    void setSidebarVisible(bool visible);  // os painéis de cenas e de personagens juntos
+    QAction* sidebarAction() const { return sidebarAct_; }
 
 protected:
     void closeEvent(QCloseEvent* e) override;
@@ -76,6 +79,7 @@ private:
     QString suggestedPdfPath() const;
     void openPrintDialog(bool pdf);
     void updateTitle();
+    void syncSidebarAction();
     void refreshIcons();
     QAction* iconAction(QAction* a, const QString& icon);
     QDockWidget* makeDock(const QString& title, const QString& objectName, QWidget* content);
@@ -105,6 +109,10 @@ private:
     QLabel* wordLabel_ = nullptr;
     QList<QAction*> elementActions_;
     QAction* dualAct_ = nullptr;
+    QAction* sceneNumsAct_ = nullptr;
+    QAction* sidebarAct_ = nullptr;
+    QAction* themeToggleAct_ = nullptr;
+    QString rememberedPath_;
     QAction* undoAct_ = nullptr;
     QAction* redoAct_ = nullptr;
     FindDialog* findDialog_ = nullptr;

@@ -54,17 +54,17 @@ std::vector<int> SheetPreview::sheets() const {
 }
 
 void SheetPreview::relayout() {
-    const double margin = 28, gap = 24;
+    // Uma folha embaixo da outra, como o papel vai sair da impressora.
+    const double margin = 32, gap = 28, labelH = 26;
     const double avail = viewport()->width() - 2 * margin;
-    cols_ = avail > 560 ? 2 : 1;
-    sheetW_ = std::min(340.0, (avail - (cols_ - 1) * gap) / cols_);
+    cols_ = 1;
+    sheetW_ = std::clamp(avail, 160.0, 520.0);
     sheetH_ = sheetW_ * 11.0 / 8.5;
-    const int rows = (static_cast<int>(sheets().size()) + cols_ - 1) / cols_;
-    const double labelH = 26;
-    const double total = margin + rows * (sheetH_ + labelH + gap) + margin;
+    const int rows = static_cast<int>(sheets().size());
+    const double total = margin + rows * (sheetH_ + labelH + gap) - gap + margin;
     verticalScrollBar()->setRange(0, std::max(0, static_cast<int>(total - viewport()->height())));
     verticalScrollBar()->setPageStep(viewport()->height());
-    verticalScrollBar()->setSingleStep(40);
+    verticalScrollBar()->setSingleStep(48);
 }
 
 void SheetPreview::resizeEvent(QResizeEvent* e) {
@@ -80,7 +80,7 @@ void SheetPreview::paintEvent(QPaintEvent*) {
     p.fillRect(viewport()->rect(), tc.canvas);
 
     const auto list = sheets();
-    const double margin = 28, gap = 24, labelH = 26;
+    const double margin = 32, gap = 28, labelH = 26;
     const double gridW = cols_ * sheetW_ + (cols_ - 1) * gap;
     const double left = (viewport()->width() - gridW) / 2;
     const double ppi = sheetW_ / 8.5;

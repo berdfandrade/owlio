@@ -1,7 +1,9 @@
 #include <QApplication>
 #include <QIcon>
 #include <QCommandLineParser>
+#include <QFileInfo>
 #include <QScreen>
+#include <QSettings>
 #include <QStyleFactory>
 #include <QTimer>
 #include <cstdio>
@@ -16,7 +18,7 @@ int main(int argc, char* argv[]) {
     QApplication::setOrganizationName("Owlio");
     QApplication::setApplicationName("Owlio");
     QApplication::setApplicationVersion("0.1");
-    QApplication::setStyle(QStyleFactory::create("Fusion"));
+    QApplication::setStyle(ThemeManager::createStyle());
     QApplication::setWindowIcon(QIcon(":/owlio.png"));
     ThemeManager::instance().init();
 
@@ -45,6 +47,11 @@ int main(int argc, char* argv[]) {
     MainWindow w;
     const QStringList files = cli.positionalArguments();
     if (!files.isEmpty() && !w.openFile(files.first())) return 1;
+    if (files.isEmpty() && !cli.isSet(pdfOpt) && !cli.isSet(shotOpt)) {
+        QSettings s;
+        const QString last = s.value("lastFile").toString();
+        if (s.value("reopenLast", false).toBool() && !last.isEmpty() && QFileInfo::exists(last)) w.openFile(last);
+    }
 
     if (cli.isSet(pdfOpt)) {
         bool ok = w.exportPdfTo(cli.value(pdfOpt));

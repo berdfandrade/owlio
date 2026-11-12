@@ -30,5 +30,29 @@
   <file>icons/seta-direita-escura.svg</file>
   <file>icons/seta-escura.svg</file>
   <file>icons/tema.svg</file>
+  <file>icons/painel.svg</file>
+  <file>icons/salvar-como.svg</file>
+  <file>icons/exportar.svg</file>
+  <file>icons/historico.svg</file>
+  <file>icons/sair.svg</file>
+  <file>icons/recortar.svg</file>
+  <file>icons/copiar.svg</file>
+  <file>icons/colar.svg</file>
+  <file>icons/selecionar.svg</file>
+  <file>icons/configuracoes.svg</file>
+  <file>icons/dialogo-duplo.svg</file>
+  <file>icons/numerar.svg</file>
+  <file>icons/zoom-mais.svg</file>
+  <file>icons/zoom-menos.svg</file>
+  <file>icons/zoom-100.svg</file>
+  <file>icons/teclado.svg</file>
+  <file>icons/sobre.svg</file>
+  <file>icons/cenas.svg</file>
+  <file>icons/personagens.svg</file>
+  <file>icons/sistema.svg</file>
+  <file>icons/claro.svg</file>
+  <file>icons/escuro.svg</file>
+  <file>icons/fonte.svg</file>
+  <file>icons/idioma.svg</file>
   <file>themes/estilo.qss</file>
 </qresource></RCC>

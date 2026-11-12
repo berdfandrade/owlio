@@ -28,10 +28,17 @@ public:
     enum class Mode { System = 0, Light, Dark };
 
     static ThemeManager& instance();
+    // Fusion sem o sublinhado permanente das teclas de acesso (aparece só com Alt).
+    static class QStyle* createStyle();
     void init();  // lê a preferência salva e acompanha o tema do sistema
     void setMode(Mode m, bool persist = true);
     Mode mode() const { return mode_; }
     const ThemeColors& colors() const { return colors_; }
+
+    // Fonte da interface: família vazia = a padrão (Inter, Cantarell, Ubuntu…); tamanho em pontos.
+    void setInterfaceFont(const QString& family, double pointSize);
+    static QString defaultInterfaceFamily();
+    static constexpr double kDefaultFontSize = 10;
 
     // Ícone de resources/icons/<nome>.svg na cor do tema (ou na cor indicada).
     QIcon icon(const QString& name, const QColor& color = QColor()) const;

@@ -55,7 +55,7 @@ It also follows the keyboard-first flow screenwriters know from tools like Final
 ### Files
 - **Fountain** (`.fountain`) is the native format: plain text, open, and readable by many other screenwriting tools.
 - **Final Draft** (`.fdx`) import and export, including scene summaries.
-- **Print and PDF window** with page thumbnails: pick a printer and number of copies, a page range, whether to include the title page and scene numbers, and an optional diagonal **watermark** (for example "DRAFT", or the name of the person receiving the copy). PDFs embed their fonts.
+- **Print and PDF window** with a preview of every sheet, one below the other: pick a printer and number of copies, a page range, whether to include the title page and scene numbers, and an optional diagonal **watermark** (for example "DRAFT", or the name of the person receiving the copy). PDFs embed their fonts.
 
 ### Beat Board
 - A **free board for ideas**: press Ctrl+Shift+B (or the Beat Board button) and lay out beats anywhere, at any zoom.
@@ -72,9 +72,11 @@ It also follows the keyboard-first flow screenwriters know from tools like Final
 
 ### Interface
 - **English interface**, with a **Brazilian Portuguese** translation you can switch to in Edit → Settings.
-- Light and dark themes that follow the system automatically.
+- Light and dark themes that follow the system automatically, with a quick switch in the corner of the menu bar.
+- **Settings** in pages (General, Appearance, Script, Saving): interface language, reopening the last script at startup, theme, **interface font and size**, script conventions, **page font** (any installed monospaced font, always set at 12 pt on the 10-characters-per-inch grid, so the page count does not change) and saving options.
+- Every menu item has its own icon; items that are on (current view, element, focus mode) light up in the accent color.
 - **Focus mode** dims everything except the speech or paragraph you are writing.
-- Side panels list scenes (with page and cast) and characters (with line counts).
+- Side panels list scenes (with page and cast) and characters (with line counts). The sidebar button at the left of the toolbar (Ctrl+\\) hides or shows them both.
 - Find and replace, unlimited undo and redo, and zoom.
 
 <p align="center">
@@ -88,7 +90,7 @@ It also follows the keyboard-first flow screenwriters know from tools like Final
 
 <p align="center">
   <img src="docs/screenshots/character.png" width="49%" alt="Character sheet with photo, stats and synopsis">
-  <img src="docs/screenshots/settings.png" width="40%" alt="Settings: interface language, script conventions and theme">
+  <img src="docs/screenshots/settings.png" width="40%" alt="Settings: pages for general options, appearance and fonts, script and saving">
 </p>
 
 <p align="center">
@@ -111,7 +113,8 @@ It also follows the keyboard-first flow screenwriters know from tools like Final
 | **Ctrl+Shift+F** | Focus mode |
 | **Ctrl+Shift+E** | Export PDF |
 | **Ctrl+F** | Find and replace |
-| **Ctrl+,** | Settings (interface language, script conventions, theme) |
+| **Ctrl+\\** | Show or hide the sidebar |
+| **Ctrl+,** | Settings (language, theme, fonts, script conventions, saving) |
 | **F2** (cards) | Edit the selected scene's synopsis |
 | **Alt+arrows** (cards) | Move the selected card |
 | **Ctrl+mouse wheel** | Zoom pages / resize cards |
