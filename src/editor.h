@@ -72,6 +72,8 @@ public:
 
     // ---- mapa de relações (um passo de desfazer; nada muda se for igual)
     void setRelations(const RelationMap& map);
+    // ---- forma narrativa da linha do tempo (um passo de desfazer)
+    void setStructure(const StoryStructure& st);
 
     // ---- cursor e seleção
     Pos cursor() const { return cursor_; }
@@ -147,6 +149,7 @@ private:
         std::vector<CharacterInfo> cast;
         BeatBoard board;
         RelationMap relations;
+        StoryStructure structure;
         Pos cursor, anchor;
     };
 

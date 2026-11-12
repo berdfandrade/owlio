@@ -2318,6 +2318,362 @@ Escreva um cabeçalho (INT. ou EXT.) no roteiro e ele aparece aqui como cartão.
         <source>%1% of the planned length</source>
         <translation>%1% da duração planejada</translation>
     </message>
+    <message>
+        <source>Act</source>
+        <translation>Ato</translation>
+    </message>
+    <message>
+        <source>Name:</source>
+        <translation>Nome:</translation>
+    </message>
+    <message>
+        <source>Subtitle:</source>
+        <translation>Subtítulo:</translation>
+    </message>
+    <message>
+        <source>Plot Point</source>
+        <translation>Ponto de virada</translation>
+    </message>
+    <message>
+        <source>Rename Plot Point...</source>
+        <translation>Renomear ponto de virada...</translation>
+    </message>
+    <message>
+        <source>Remove Plot Point</source>
+        <translation>Remover ponto de virada</translation>
+    </message>
+    <message>
+        <source>Rename Act...</source>
+        <translation>Renomear ato...</translation>
+    </message>
+    <message>
+        <source>Split Act Here</source>
+        <translation>Dividir ato aqui</translation>
+    </message>
+    <message>
+        <source>New act</source>
+        <translation>Novo ato</translation>
+    </message>
+    <message>
+        <source>Merge with Next Act</source>
+        <translation>Juntar com o próximo ato</translation>
+    </message>
+    <message>
+        <source>Add Plot Point Here</source>
+        <translation>Adicionar ponto de virada aqui</translation>
+    </message>
+    <message>
+        <source>Conventional (three acts)</source>
+        <translation>Convencional (três atos)</translation>
+    </message>
+    <message>
+        <source>Fragmented (nonlinear)</source>
+        <translation>Fragmentada (não linear)</translation>
+    </message>
+    <message>
+        <source>TV episode (drama)</source>
+        <translation>Episódio de TV (drama)</translation>
+    </message>
+    <message>
+        <source>Sitcom</source>
+        <translation>Sitcom</translation>
+    </message>
+    <message>
+        <source>Five acts (Freytag)</source>
+        <translation>Cinco atos (Freytag)</translation>
+    </message>
+    <message>
+        <source>Save the Cat</source>
+        <translation>Save the Cat</translation>
+    </message>
+    <message>
+        <source>Hero&apos;s journey</source>
+        <translation>Jornada do herói</translation>
+    </message>
+    <message>
+        <source>Kishōtenketsu</source>
+        <translation>Kishōtenketsu</translation>
+    </message>
+    <message>
+        <source>Present</source>
+        <translation>Presente</translation>
+    </message>
+    <message>
+        <source>Hook</source>
+        <translation>Gancho</translation>
+    </message>
+    <message>
+        <source>Past</source>
+        <translation>Passado</translation>
+    </message>
+    <message>
+        <source>Fragment</source>
+        <translation>Fragmento</translation>
+    </message>
+    <message>
+        <source>Escalation</source>
+        <translation>Escalada</translation>
+    </message>
+    <message>
+        <source>Convergence</source>
+        <translation>Convergência</translation>
+    </message>
+    <message>
+        <source>Mystery set up</source>
+        <translation>Mistério armado</translation>
+    </message>
+    <message>
+        <source>First reveal</source>
+        <translation>Primeira revelação</translation>
+    </message>
+    <message>
+        <source>Timelines cross</source>
+        <translation>As linhas se cruzam</translation>
+    </message>
+    <message>
+        <source>Full picture</source>
+        <translation>Quadro completo</translation>
+    </message>
+    <message>
+        <source>Teaser</source>
+        <translation>Teaser</translation>
+    </message>
+    <message>
+        <source>Cold open</source>
+        <translation>Abertura fria</translation>
+    </message>
+    <message>
+        <source>Act One</source>
+        <translation>Ato um</translation>
+    </message>
+    <message>
+        <source>Act Two</source>
+        <translation>Ato dois</translation>
+    </message>
+    <message>
+        <source>Act Three</source>
+        <translation>Ato três</translation>
+    </message>
+    <message>
+        <source>Act Four</source>
+        <translation>Ato quatro</translation>
+    </message>
+    <message>
+        <source>Tag</source>
+        <translation>Tag</translation>
+    </message>
+    <message>
+        <source>Act out</source>
+        <translation>Gancho de intervalo</translation>
+    </message>
+    <message>
+        <source>A and B stories</source>
+        <translation>Tramas A e B</translation>
+    </message>
+    <message>
+        <source>Complications</source>
+        <translation>Complicações</translation>
+    </message>
+    <message>
+        <source>Problem</source>
+        <translation>Problema</translation>
+    </message>
+    <message>
+        <source>Act break</source>
+        <translation>Virada de ato</translation>
+    </message>
+    <message>
+        <source>Exposition</source>
+        <translation>Exposição</translation>
+    </message>
+    <message>
+        <source>Rising action</source>
+        <translation>Ação crescente</translation>
+    </message>
+    <message>
+        <source>Falling action</source>
+        <translation>Ação decrescente</translation>
+    </message>
+    <message>
+        <source>Denouement</source>
+        <translation>Desfecho</translation>
+    </message>
+    <message>
+        <source>Turning point</source>
+        <translation>Ponto de virada</translation>
+    </message>
+    <message>
+        <source>Catastrophe</source>
+        <translation>Catástrofe</translation>
+    </message>
+    <message>
+        <source>Thesis</source>
+        <translation>Tese</translation>
+    </message>
+    <message>
+        <source>Act Two A</source>
+        <translation>Ato dois A</translation>
+    </message>
+    <message>
+        <source>Fun and games</source>
+        <translation>Diversão e jogos</translation>
+    </message>
+    <message>
+        <source>Act Two B</source>
+        <translation>Ato dois B</translation>
+    </message>
+    <message>
+        <source>Bad guys close in</source>
+        <translation>Os vilões se aproximam</translation>
+    </message>
+    <message>
+        <source>Synthesis</source>
+        <translation>Síntese</translation>
+    </message>
+    <message>
+        <source>Opening image</source>
+        <translation>Imagem de abertura</translation>
+    </message>
+    <message>
+        <source>Theme stated</source>
+        <translation>Tema declarado</translation>
+    </message>
+    <message>
+        <source>Catalyst</source>
+        <translation>Catalisador</translation>
+    </message>
+    <message>
+        <source>Debate</source>
+        <translation>Debate</translation>
+    </message>
+    <message>
+        <source>Break into Two</source>
+        <translation>Entrada no ato dois</translation>
+    </message>
+    <message>
+        <source>B story</source>
+        <translation>Trama B</translation>
+    </message>
+    <message>
+        <source>All is lost</source>
+        <translation>Tudo está perdido</translation>
+    </message>
+    <message>
+        <source>Dark night of the soul</source>
+        <translation>Noite escura da alma</translation>
+    </message>
+    <message>
+        <source>Break into Three</source>
+        <translation>Entrada no ato três</translation>
+    </message>
+    <message>
+        <source>Finale</source>
+        <translation>Final</translation>
+    </message>
+    <message>
+        <source>Final image</source>
+        <translation>Imagem final</translation>
+    </message>
+    <message>
+        <source>Departure</source>
+        <translation>Partida</translation>
+    </message>
+    <message>
+        <source>Ordinary world</source>
+        <translation>Mundo comum</translation>
+    </message>
+    <message>
+        <source>Initiation</source>
+        <translation>Iniciação</translation>
+    </message>
+    <message>
+        <source>Special world</source>
+        <translation>Mundo especial</translation>
+    </message>
+    <message>
+        <source>Return</source>
+        <translation>Retorno</translation>
+    </message>
+    <message>
+        <source>Master of two worlds</source>
+        <translation>Senhor dos dois mundos</translation>
+    </message>
+    <message>
+        <source>Call to adventure</source>
+        <translation>Chamado à aventura</translation>
+    </message>
+    <message>
+        <source>Meeting the mentor</source>
+        <translation>Encontro com o mentor</translation>
+    </message>
+    <message>
+        <source>Crossing the threshold</source>
+        <translation>Travessia do limiar</translation>
+    </message>
+    <message>
+        <source>Ordeal</source>
+        <translation>Provação</translation>
+    </message>
+    <message>
+        <source>Reward</source>
+        <translation>Recompensa</translation>
+    </message>
+    <message>
+        <source>The road back</source>
+        <translation>Caminho de volta</translation>
+    </message>
+    <message>
+        <source>Resurrection</source>
+        <translation>Ressurreição</translation>
+    </message>
+    <message>
+        <source>Ki</source>
+        <translation>Ki</translation>
+    </message>
+    <message>
+        <source>Introduction</source>
+        <translation>Introdução</translation>
+    </message>
+    <message>
+        <source>Shō</source>
+        <translation>Shō</translation>
+    </message>
+    <message>
+        <source>Development</source>
+        <translation>Desenvolvimento</translation>
+    </message>
+    <message>
+        <source>Ten</source>
+        <translation>Ten</translation>
+    </message>
+    <message>
+        <source>Twist</source>
+        <translation>Reviravolta</translation>
+    </message>
+    <message>
+        <source>Ketsu</source>
+        <translation>Ketsu</translation>
+    </message>
+    <message>
+        <source>Conclusion</source>
+        <translation>Conclusão</translation>
+    </message>
+    <message>
+        <source>The twist</source>
+        <translation>A reviravolta</translation>
+    </message>
+    <message>
+        <source>Narrative shape. Drag the act dividers and the plot points to reshape it; double-click or right-click to rename, split or add.</source>
+        <translation>Forma narrativa. Arraste as divisas dos atos e os pontos de virada para mudá-la; clique duas vezes ou com o botão direito para renomear, dividir ou adicionar.</translation>
+    </message>
+    <message>
+        <source>Custom</source>
+        <translation>Personalizada</translation>
+    </message>
+    <message>
+        <source>Structure:</source>
+        <translation>Estrutura:</translation>
+    </message>
 </context>
 <context>
     <name>TitlePageDialog</name>

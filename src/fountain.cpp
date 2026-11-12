@@ -104,6 +104,7 @@ const char* const kCastBlock = "/* owlio-characters";
 const char* const kAvatarBlock = "/* owlio-avatars";  // formato antigo: só fotos
 const char* const kBoardBlock = "/* owlio-beatboard";  // Beat Board: beats e linhas de fluxo
 const char* const kRelationsBlock = "/* owlio-relations";  // mapa de relações entre personagens
+const char* const kStructureBlock = "/* owlio-structure";  // forma narrativa da linha do tempo
 
 // Valores numa linha só: \ vira \\, quebra de linha vira \n e "*/" não pode fechar o comentário.
 std::string escapeValue(const std::u32string& v) {
@@ -226,6 +227,41 @@ RelationMap readRelations(const std::string& src) {
     return m;
 }
 
+StoryStructure readStructure(const std::string& src) {
+    StoryStructure st;
+    for (const std::string& line : blockLines(src, kStructureBlock)) {
+        size_t colon = line.find(':');
+        if (colon == std::string::npos) continue;
+        const std::string key = line.substr(0, colon);
+        std::string raw = line.substr(colon + 1);
+        if (!raw.empty() && raw[0] == ' ') raw.erase(0, 1);
+        if (key == "preset") st.preset = raw;
+        else if (key == "act") { st.acts.emplace_back(); st.acts.back().name = unescapeValue(raw); }
+        else if (key == "sub" && !st.acts.empty()) st.acts.back().subtitle = unescapeValue(raw);
+        else if (key == "end" && !st.acts.empty()) st.acts.back().end = std::atof(raw.c_str());
+        else if (key == "color" && !st.acts.empty()) st.acts.back().color = raw;
+        else if (key == "beat") {  // beat: 0.25 Nome
+            std::istringstream in(raw);
+            StoryBeat b;
+            if (!(in >> b.at)) continue;
+            std::string rest;
+            std::getline(in, rest);
+            b.name = trim(unescapeValue(rest));
+            b.at = std::clamp(b.at, 0.0, 1.0);
+            st.beats.push_back(b);
+        }
+    }
+    // Fins crescentes e o último em 1; sem atos, nada vale.
+    double prev = 0;
+    for (StoryAct& a : st.acts) {
+        a.end = std::clamp(a.end, prev, 1.0);
+        prev = a.end;
+    }
+    if (!st.acts.empty()) st.acts.back().end = 1.0;
+    else st.beats.clear();
+    return st;
+}
+
 BeatBoard readBoard(const std::string& src) {
     BeatBoard bb;
     for (const std::string& line : blockLines(src, kBoardBlock)) {
@@ -281,6 +317,7 @@ Document parseFountain(const std::string& utf8In, bool parseTitlePage) {
     auto cast = readCast(utf8In);
     BeatBoard board = parseTitlePage ? readBoard(utf8In) : BeatBoard{};
     RelationMap relations = parseTitlePage ? readRelations(utf8In) : RelationMap{};
+    StoryStructure structure = parseTitlePage ? readStructure(utf8In) : StoryStructure{};
     std::string src = removeComments(utf8In);
     // Normaliza fins de linha e remove BOM.
     if (src.size() >= 3 && static_cast<unsigned char>(src[0]) == 0xEF &&
@@ -428,6 +465,7 @@ Document parseFountain(const std::string& utf8In, bool parseTitlePage) {
     doc.cast = std::move(cast);
     doc.board = std::move(board);
     doc.relations = std::move(relations);
+    doc.structure = std::move(structure);
     doc.ensureNotEmpty();
     return doc;
 }
@@ -528,6 +566,17 @@ std::string writeFountain(const Document& doc, bool writeTitlePage) {
             out << "\n";
         }
         for (const FlowLine& f : doc.board.flows) out << "flow: " << f.from << " " << f.to << "\n";
+        out << "*/\n";
+    }
+    if (writeTitlePage && !doc.structure.empty()) {
+        out << "\n" << kStructureBlock << "\n";
+        if (!doc.structure.preset.empty()) out << "preset: " << doc.structure.preset << "\n";
+        for (const StoryAct& a : doc.structure.acts) {
+            out << "act: " << escapeValue(a.name) << "\n";
+            if (!a.subtitle.empty()) out << "sub: " << escapeValue(a.subtitle) << "\n";
+            out << "end: " << a.end << "\ncolor: " << a.color << "\n";
+        }
+        for (const StoryBeat& b : doc.structure.beats) out << "beat: " << b.at << " " << escapeValue(b.name) << "\n";
         out << "*/\n";
     }
     if (writeTitlePage && !doc.relations.empty()) {

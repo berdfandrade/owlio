@@ -275,3 +275,14 @@ void RelationMap::rename(const std::u32string& from, const std::u32string& to) {
     }
     links = std::move(kept);
 }
+
+bool StoryStructure::operator==(const StoryStructure& o) const {
+    if (preset != o.preset || acts.size() != o.acts.size() || beats.size() != o.beats.size()) return false;
+    for (size_t i = 0; i < acts.size(); ++i)
+        if (acts[i].name != o.acts[i].name || acts[i].subtitle != o.acts[i].subtitle || acts[i].end != o.acts[i].end ||
+            acts[i].color != o.acts[i].color)
+            return false;
+    for (size_t i = 0; i < beats.size(); ++i)
+        if (beats[i].name != o.beats[i].name || beats[i].at != o.beats[i].at) return false;
+    return true;
+}
