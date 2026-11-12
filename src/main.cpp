@@ -53,6 +53,7 @@ int main(int argc, char* argv[]) {
 
     w.show();
     if (cli.isSet(cardsOpt)) w.setCardsMode(true);
+    if (!cli.isSet(shotOpt)) QTimer::singleShot(0, &w, [&w] { w.offerRecovery(); });
     if (cli.isSet(shotOpt)) {
         const QString out = cli.value(shotOpt);
         QTimer::singleShot(1200, &w, [&w, out] {

@@ -181,6 +181,10 @@ Todas as deixas de %2 passam a ser de %1, e esta ficha substitui a dele.</transl
         <translation>Não foi possível abrir a imagem:
 %1</translation>
     </message>
+    <message>
+        <source>p. %1</source>
+        <translation>pág. %1</translation>
+    </message>
 </context>
 <context>
     <name>Element</name>
@@ -793,6 +797,74 @@ Deseja salvá-las?</translation>
         <source>Untitled</source>
         <translation>Sem título</translation>
     </message>
+    <message>
+        <source>&amp;Backups...</source>
+        <translation>&amp;Backups...</translation>
+    </message>
+    <message>
+        <source>&amp;Dual Dialogue</source>
+        <translation>&amp;Diálogo duplo</translation>
+    </message>
+    <message>
+        <source>Dual dialogue needs two speeches in a row: put the cursor in one of them.</source>
+        <translation>O diálogo duplo precisa de duas falas seguidas: ponha o cursor em uma delas.</translation>
+    </message>
+    <message>
+        <source>Puts this speech side by side with the one before it</source>
+        <translation>Põe esta fala lado a lado com a anterior</translation>
+    </message>
+    <message>
+        <source>Could not save %1: %2</source>
+        <translation>Não foi possível salvar %1: %2</translation>
+    </message>
+    <message>
+        <source>Saved automatically.</source>
+        <translation>Salvo automaticamente.</translation>
+    </message>
+    <message>
+        <source>an untitled script</source>
+        <translation>um roteiro sem título</translation>
+    </message>
+    <message>
+        <source>Recover Unsaved Changes</source>
+        <translation>Recuperar alterações não salvas</translation>
+    </message>
+    <message>
+        <source>Owlio closed before saving your changes to %1.</source>
+        <translation>O Owlio fechou antes de salvar suas alterações em %1.</translation>
+    </message>
+    <message>
+        <source>The last copy was kept on %1. Do you want to recover it?</source>
+        <translation>A última cópia foi guardada em %1. Quer recuperá-la?</translation>
+    </message>
+    <message>
+        <source>Recover</source>
+        <translation>Recuperar</translation>
+    </message>
+    <message>
+        <source>Discard</source>
+        <translation>Descartar</translation>
+    </message>
+    <message>
+        <source>Decide Later</source>
+        <translation>Decidir depois</translation>
+    </message>
+    <message>
+        <source>Changes recovered. Save to keep them.</source>
+        <translation>Alterações recuperadas. Salve para mantê-las.</translation>
+    </message>
+    <message>
+        <source>Open a Backup</source>
+        <translation>Abrir um backup</translation>
+    </message>
+    <message>
+        <source>Scripts (*.fountain *.fdx);;All files (*)</source>
+        <translation>Roteiros (*.fountain *.fdx);;Todos os arquivos (*)</translation>
+    </message>
+    <message>
+        <source>Opened a copy of the backup. Use Save As to keep it.</source>
+        <translation>Aberta uma cópia do backup. Use Salvar como para mantê-la.</translation>
+    </message>
 </context>
 <context>
     <name>PrintDialog</name>
@@ -995,6 +1067,10 @@ Escreva um cabeçalho (INT. ou EXT.) no roteiro e ele aparece aqui como cartão.
         <source>Element</source>
         <translation>Elemento</translation>
     </message>
+    <message>
+        <source>Dual Dialogue</source>
+        <translation>Diálogo duplo</translation>
+    </message>
 </context>
 <context>
     <name>SettingsDialog</name>
@@ -1061,6 +1137,42 @@ Escreva um cabeçalho (INT. ou EXT.) no roteiro e ele aparece aqui como cartão.
     <message>
         <source>Appearance</source>
         <translation>Aparência</translation>
+    </message>
+    <message>
+        <source>Off</source>
+        <translation>Desligado</translation>
+    </message>
+    <message>
+        <source>Every minute</source>
+        <translation>A cada minuto</translation>
+    </message>
+    <message>
+        <source>Every 5 minutes</source>
+        <translation>A cada 5 minutos</translation>
+    </message>
+    <message>
+        <source>Every 10 minutes</source>
+        <translation>A cada 10 minutos</translation>
+    </message>
+    <message>
+        <source>Keep a dated backup copy every time the script is saved</source>
+        <translation>Guardar uma cópia de backup com data a cada salvamento</translation>
+    </message>
+    <message>
+        <source>Open Backups Folder</source>
+        <translation>Abrir a pasta de backups</translation>
+    </message>
+    <message>
+        <source>Save automatically</source>
+        <translation>Salvar automaticamente</translation>
+    </message>
+    <message>
+        <source>Saving</source>
+        <translation>Salvamento</translation>
+    </message>
+    <message>
+        <source>Untitled scripts are not saved automatically, but if Owlio closes unexpectedly your unsaved changes are offered back the next time it starts.</source>
+        <translation>Roteiros sem título não são salvos automaticamente, mas, se o Owlio fechar de repente, as alterações não salvas são oferecidas de volta no próximo início.</translation>
     </message>
 </context>
 <context>
