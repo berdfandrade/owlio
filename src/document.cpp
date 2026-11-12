@@ -47,6 +47,23 @@ void Document::setTitleValue(const std::string& key, const std::string& value) {
     if (!value.empty()) titlePage.emplace_back(key, value);
 }
 
+std::string Document::avatar(const std::u32string& name) const {
+    for (auto& kv : avatars)
+        if (kv.first == name) return kv.second;
+    return {};
+}
+
+void Document::setAvatar(const std::u32string& name, const std::string& base64) {
+    for (auto it = avatars.begin(); it != avatars.end(); ++it) {
+        if (it->first == name) {
+            if (base64.empty()) avatars.erase(it);
+            else it->second = base64;
+            return;
+        }
+    }
+    if (!base64.empty()) avatars.emplace_back(name, base64);
+}
+
 void Document::ensureNotEmpty() {
     if (paragraphs.empty()) paragraphs.push_back({Element::SceneHeading, U""});
 }

@@ -34,9 +34,13 @@ struct Document {
     std::vector<Paragraph> paragraphs;
     // Página de rosto (chave/valor, no estilo Fountain: Title, Credit, Author, Contact...)
     std::vector<std::pair<std::string, std::string>> titlePage;
+    // Fotos dos personagens: nome (maiúsculas, sem extensão) -> imagem em base64 (JPEG/PNG).
+    std::vector<std::pair<std::u32string, std::string>> avatars;
 
     std::string titleValue(const std::string& key) const;
     void setTitleValue(const std::string& key, const std::string& value);
+    std::string avatar(const std::u32string& name) const;
+    void setAvatar(const std::u32string& name, const std::string& base64);
     void ensureNotEmpty();
 };
 

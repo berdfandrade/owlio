@@ -10,6 +10,7 @@ public:
     enum Kind { Scene, Character };
     static constexpr int kSubtitleRole = Qt::UserRole + 1;
     static constexpr int kBadgeRole = Qt::UserRole + 2;
+    static constexpr int kAvatarRole = Qt::UserRole + 3;  // foto do personagem (base64, QByteArray)
 
     explicit CardDelegate(Kind kind, QObject* parent = nullptr) : QStyledItemDelegate(parent), kind_(kind) {}
 

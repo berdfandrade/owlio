@@ -127,6 +127,37 @@ QToolTip {
     padding: 5px 8px;
 }
 
+/* ---------- janelas de diálogo ---------- */
+QLabel#tituloDialogo { font-size: 20px; font-weight: 700; color: @text; }
+QLabel#subtituloDialogo { color: @muted; }
+QLabel#secao { color: @muted; font-size: 11px; font-weight: 700; padding-top: 4px; }
+QLineEdit#campoTitulo { font-size: 15px; font-weight: 600; padding: 8px 10px; }
+QWidget#painelLateral { background: @surface; border-left: 1px solid @border; }
+QPushButton#perigo { color: #e5484d; background: transparent; border-color: transparent; }
+QPushButton#perigo:hover { background: @hover; }
+QPushButton#primarioBotao { background: @accent; color: @accentText; border-color: @accent; font-weight: 600; }
+QPushButton#primarioBotao:hover { background: @accentHover; }
+QPushButton#primarioBotao:disabled { background: @hover; color: @muted; border-color: @border; }
+QPushButton#link { color: @accent; background: transparent; border: none; padding: 4px 0; min-width: 0; text-align: left; }
+QPushButton#link:hover { text-decoration: underline; }
+QSpinBox {
+    background: @surface; color: @text; border: 1px solid @border; border-radius: 8px;
+    padding: 5px 8px; selection-background-color: @accent;
+}
+QSpinBox:focus { border-color: @accent; }
+QSpinBox::up-button, QSpinBox::down-button { width: 0; border: none; }
+QCheckBox { color: @text; spacing: 8px; padding: 3px 0; }
+QCheckBox::indicator {
+    width: 16px; height: 16px; border-radius: 4px;
+    border: 1px solid @border; background: @surface;
+}
+QCheckBox::indicator:hover { border-color: @accent; }
+QCheckBox::indicator:checked { background: @accent; border-color: @accent; image: url(@checkWhite); }
+QCheckBox::indicator:disabled { background: @hover; }
+QCheckBox:disabled { color: @muted; }
+QToolButton#segmento { border: 1px solid @border; }
+QToolButton#segmento:checked { border-color: @accent; }
+
 /* ---------- painéis laterais ---------- */
 QDockWidget { color: @muted; }
 QLabel#tituloPainel {

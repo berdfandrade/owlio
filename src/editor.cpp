@@ -87,6 +87,13 @@ void Editor::setTitleValue(const std::string& key, const std::string& value) {
     changed();
 }
 
+void Editor::setAvatar(const std::u32string& name, const std::string& base64) {
+    if (doc_.avatar(name) == base64) return;
+    beginEdit(EditKind::Other);
+    doc_.setAvatar(name, base64);
+    changed();
+}
+
 // ------------------------------------------------------------ undo
 
 void Editor::beginEdit(EditKind kind) {
@@ -94,7 +101,7 @@ void Editor::beginEdit(EditKind kind) {
     bool coalesce = kind != EditKind::Other && kind == lastKind_ &&
                     now - lastEditTime_ < std::chrono::milliseconds(1500) && !undo_.empty();
     if (!coalesce) {
-        undo_.push_back({doc_.paragraphs, doc_.titlePage, cursor_, anchor_});
+        undo_.push_back({doc_.paragraphs, doc_.titlePage, doc_.avatars, cursor_, anchor_});
         if (undo_.size() > kMaxUndo) undo_.erase(undo_.begin());
     }
     redo_.clear();
@@ -112,11 +119,12 @@ void Editor::changed() {
 
 void Editor::undo() {
     if (undo_.empty()) return;
-    redo_.push_back({doc_.paragraphs, doc_.titlePage, cursor_, anchor_});
+    redo_.push_back({doc_.paragraphs, doc_.titlePage, doc_.avatars, cursor_, anchor_});
     Snapshot s = std::move(undo_.back());
     undo_.pop_back();
     doc_.paragraphs = std::move(s.paragraphs);
     doc_.titlePage = std::move(s.titlePage);
+    doc_.avatars = std::move(s.avatars);
     cursor_ = s.cursor;
     anchor_ = s.anchor;
     lastKind_ = EditKind::None;
@@ -125,11 +133,12 @@ void Editor::undo() {
 
 void Editor::redo() {
     if (redo_.empty()) return;
-    undo_.push_back({doc_.paragraphs, doc_.titlePage, cursor_, anchor_});
+    undo_.push_back({doc_.paragraphs, doc_.titlePage, doc_.avatars, cursor_, anchor_});
     Snapshot s = std::move(redo_.back());
     redo_.pop_back();
     doc_.paragraphs = std::move(s.paragraphs);
     doc_.titlePage = std::move(s.titlePage);
+    doc_.avatars = std::move(s.avatars);
     cursor_ = s.cursor;
     anchor_ = s.anchor;
     lastKind_ = EditKind::None;

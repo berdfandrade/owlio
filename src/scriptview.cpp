@@ -230,7 +230,6 @@ void ScriptView::paintEvent(QPaintEvent* ev) {
 
     const int pages = ed_->layout().pageCount;
     const double stride = pageH() + gap();
-    const int curPage = currentPage();
     int first = std::max(0, static_cast<int>((verticalScrollBar()->value() - gap()) / stride));
     for (int pg = first; pg < pages; ++pg) {
         QPointF o = pageOrigin(pg);
@@ -249,33 +248,6 @@ void ScriptView::paintEvent(QPaintEvent* ev) {
         p.setBrush(Qt::white);
         p.drawRoundedRect(pr, 2, 2);
         painter_.paintPage(p, pg, o, ppi(), ex);
-
-        // Etiqueta do elemento atual na margem esquerda (só na tela).
-        if (pg == curPage && hasFocus() && !ed_->hasSelection() && zoom_ >= 0.85) {
-            const LayoutLine& l = ed_->layout().lines[ed_->lineOf(ed_->cursor())];
-            const Element el = ed_->currentElement();
-            if (!(sceneNumbers_ && el == Element::SceneHeading)) {
-                QFont f = font();
-                f.setPointSizeF(std::max(6.5, 7.5 * zoom_));
-                f.setWeight(QFont::DemiBold);
-                QFontMetricsF fm(f);
-                const QString tag = QString::fromUtf8(elementName(el));
-                const double lineH = ppi() / 6.0;
-                const double w = fm.horizontalAdvance(tag) + 12 * zoom_;
-                const double h = std::min(lineH, fm.height() + 4 * zoom_);
-                const double right = o.x() + (page::kLeftCol - 2) * (ppi() / 10.0);
-                const double top = o.y() + (page::kTopRow + l.row) * lineH + (lineH - h) / 2;
-                QRectF pill(right - w, top, w, h);
-                QColor bg = tc.accent;
-                bg.setAlphaF(0.10);
-                p.setBrush(bg);
-                p.drawRoundedRect(pill, h / 2, h / 2);
-                p.setFont(f);
-                p.setPen(QColor(59, 108, 246));
-                p.drawText(pill, Qt::AlignCenter, tag);
-                p.setPen(Qt::NoPen);
-            }
-        }
     }
 }
 

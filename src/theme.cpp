@@ -162,6 +162,7 @@ void ThemeManager::apply() {
         {"@border", c.border.name()},           {"@text", c.text.name()},
         {"@muted", c.muted.name()},             {"@canvas", c.canvas.name()},
         {"@scroll", c.scroll.name()},           {"@arrow", ":/icons/seta-" + suffix + ".svg"},
+        {"@checkWhite", ":/icons/check-branco.svg"},
         {"@check", ":/icons/check-" + suffix + ".svg"},
         {"@submenu", ":/icons/seta-direita-" + suffix + ".svg"},
     };

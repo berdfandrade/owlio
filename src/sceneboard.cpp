@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <cmath>
 
+#include "avatars.h"
 #include "theme.h"
 
 namespace {
@@ -305,12 +306,7 @@ void SceneBoard::paintCard(QPainter& p, const QRectF& r, int index, bool selecte
     for (int k = 0; k < static_cast<int>(s.cast.size()) && k < maxAvatars; ++k) {
         const QString name = q(s.cast[k]);
         const QRectF av(ax, foot.center().y() - d / 2, d, d);
-        p.setPen(QPen(tc.dark ? tc.raised : QColor(Qt::white), 2));
-        p.setBrush(QColor::fromHsl(static_cast<int>(qHash(name) % 360), tc.dark ? 110 : 140, tc.dark ? 120 : 150));
-        p.drawEllipse(av);
-        p.setFont(smallBold);
-        p.setPen(Qt::white);
-        p.drawText(av, Qt::AlignCenter, name.left(1));
+        avatars::draw(p, av, name, ed_->doc().avatar(s.cast[k]), 2, tc.dark ? tc.raised : QColor(Qt::white));
         ax += d - 5;
     }
     if (static_cast<int>(s.cast.size()) > maxAvatars) {
