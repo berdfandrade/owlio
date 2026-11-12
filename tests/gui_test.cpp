@@ -48,6 +48,7 @@
 #include "relationmap.h"
 #include "timeline.h"
 #include <QTreeWidget>
+#include <QComboBox>
 #include "scriptview.h"
 
 static int failures = 0;
@@ -757,6 +758,38 @@ int main(int argc, char* argv[]) {
                 CHECK(ed.cursor().para == ed.sceneSummaries().at(idx).para);
             }
             if (fitW) fitW->setChecked(false);
+
+            // Forma narrativa: preset e arraste da divisa entre atos.
+            w.setViewMode(MainWindow::ViewMode::Timeline);
+            QTest::qWait(150);
+            CHECK(ed.doc().structure.empty());  // padrão: convencional, fora do arquivo
+            QComboBox* shape = nullptr;
+            for (QComboBox* cb : tl->findChildren<QComboBox*>())
+                if (cb->findData("episode") >= 0) shape = cb;
+            CHECK(shape);
+            if (shape) {
+                const int ep = shape->findData("episode");
+                shape->setCurrentIndex(ep);
+                emit shape->activated(ep);
+                CHECK(ed.doc().structure.preset == "episode" && ed.doc().structure.acts.size() == 6);
+                const double before = ed.doc().structure.acts[1].end;
+                const QPoint d = tl->dividerPoint(1);
+                QTest::mouseMove(tl->canvas(), d);
+                QTest::mousePress(tl->canvas(), Qt::LeftButton, {}, d);
+                QTest::mouseMove(tl->canvas(), d + QPoint(40, 0));
+                QTest::mouseMove(tl->canvas(), d + QPoint(80, 0));
+                QTest::mouseRelease(tl->canvas(), Qt::LeftButton, {}, d + QPoint(80, 0));
+                CHECK(ed.doc().structure.preset == "custom" && ed.doc().structure.acts[1].end > before);
+                CHECK(shape->currentData().toString() == "custom");
+                const_cast<Editor&>(ed).undo();
+                w.view()->refreshAfterExternalEdit();
+                CHECK(ed.doc().structure.acts[1].end == before);
+                const int stc = shape->findData("savethecat");
+                shape->setCurrentIndex(stc);
+                emit shape->activated(stc);
+                QTest::qWait(150);
+                if (argc > 17) w.grab().save(QString::fromLocal8Bit(argv[17]));
+            }
         }
         const_cast<Editor&>(ed).markSaved();
     }

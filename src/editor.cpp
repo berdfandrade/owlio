@@ -296,6 +296,13 @@ void Editor::setRelations(const RelationMap& map) {
     changed();
 }
 
+void Editor::setStructure(const StoryStructure& st) {
+    if (st == doc_.structure) return;
+    beginEdit(EditKind::Other);
+    doc_.structure = st;
+    changed();
+}
+
 // ------------------------------------------------------------ undo
 
 void Editor::beginEdit(EditKind kind) {
@@ -303,7 +310,7 @@ void Editor::beginEdit(EditKind kind) {
     bool coalesce = kind != EditKind::Other && kind == lastKind_ &&
                     now - lastEditTime_ < std::chrono::milliseconds(1500) && !undo_.empty();
     if (!coalesce) {
-        undo_.push_back({doc_.paragraphs, doc_.titlePage, doc_.cast, doc_.board, doc_.relations, cursor_, anchor_});
+        undo_.push_back({doc_.paragraphs, doc_.titlePage, doc_.cast, doc_.board, doc_.relations, doc_.structure, cursor_, anchor_});
         if (undo_.size() > kMaxUndo) undo_.erase(undo_.begin());
     }
     redo_.clear();
@@ -321,7 +328,7 @@ void Editor::changed() {
 
 void Editor::undo() {
     if (undo_.empty()) return;
-    redo_.push_back({doc_.paragraphs, doc_.titlePage, doc_.cast, doc_.board, doc_.relations, cursor_, anchor_});
+    redo_.push_back({doc_.paragraphs, doc_.titlePage, doc_.cast, doc_.board, doc_.relations, doc_.structure, cursor_, anchor_});
     Snapshot s = std::move(undo_.back());
     undo_.pop_back();
     doc_.paragraphs = std::move(s.paragraphs);
@@ -329,6 +336,7 @@ void Editor::undo() {
     doc_.cast = std::move(s.cast);
     doc_.board = std::move(s.board);
     doc_.relations = std::move(s.relations);
+    doc_.structure = std::move(s.structure);
     cursor_ = s.cursor;
     anchor_ = s.anchor;
     lastKind_ = EditKind::None;
@@ -337,7 +345,7 @@ void Editor::undo() {
 
 void Editor::redo() {
     if (redo_.empty()) return;
-    undo_.push_back({doc_.paragraphs, doc_.titlePage, doc_.cast, doc_.board, doc_.relations, cursor_, anchor_});
+    undo_.push_back({doc_.paragraphs, doc_.titlePage, doc_.cast, doc_.board, doc_.relations, doc_.structure, cursor_, anchor_});
     Snapshot s = std::move(redo_.back());
     redo_.pop_back();
     doc_.paragraphs = std::move(s.paragraphs);
@@ -345,6 +353,7 @@ void Editor::redo() {
     doc_.cast = std::move(s.cast);
     doc_.board = std::move(s.board);
     doc_.relations = std::move(s.relations);
+    doc_.structure = std::move(s.structure);
     cursor_ = s.cursor;
     anchor_ = s.anchor;
     lastKind_ = EditKind::None;

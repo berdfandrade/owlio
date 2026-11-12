@@ -148,6 +148,7 @@ MainWindow::MainWindow() {
     connect(relations_, &RelationMapView::openSheet, this, &MainWindow::editCharacter);
     timeline_ = new TimelineView(&editor_, this);
     stack_->addWidget(timeline_);
+    connect(timeline_, &TimelineView::changed, this, [this] { view_->refreshAfterExternalEdit(); });
     connect(timeline_, &TimelineView::openScene, this, [this](int para) {
         setViewMode(ViewMode::Script);
         view_->gotoParagraph(para);

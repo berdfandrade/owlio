@@ -531,6 +531,27 @@ static void testRelations() {
     CHECK(odd.paragraphs.size() == 1);
 }
 
+static void testStructure() {
+    Editor e;
+    Document d;
+    d.paragraphs = {{Element::SceneHeading, U"INT. A - DIA"}};
+    e.setDocument(d);
+    CHECK(writeFountain(e.doc()).find("owlio-structure") == std::string::npos);  // padrão não vai para o arquivo
+    StoryStructure st;
+    st.preset = "episode";
+    st.acts = {{U"Teaser", U"", 0.1, "#3f8fe0"}, {U"Ato */ um", U"Gancho", 0.6, "#8a6fd6"}, {U"Tag", U"", 1.0, "#e0567a"}};
+    st.beats = {{U"Act out", 0.6}};
+    e.setStructure(st);
+    const Document back = parseFountain(writeFountain(e.doc()));
+    CHECK(back.structure == st);
+    CHECK(back.paragraphs.size() == 1);
+    e.undo();
+    CHECK(e.doc().structure.empty());
+    const Document odd = parseFountain("INT. A\n\n/* owlio-structure\nact: A\nend: 0.7\nact: B\nend: 0.2\nbeat: 3 X\n*/\n");
+    CHECK(odd.structure.acts.size() == 2 && odd.structure.acts[1].end == 1.0 && odd.structure.acts[0].end == 0.7);
+    CHECK(odd.structure.beats.size() == 1 && odd.structure.beats[0].at == 1.0);
+}
+
 int main() {
     testScenes();
     testFountain();
@@ -541,6 +562,7 @@ int main() {
     testDualDialogue();
     testBeatBoard();
     testRelations();
+    testStructure();
     if (failures == 0) std::printf("All tests passed.\n");
     return failures == 0 ? 0 : 1;
 }

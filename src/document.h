@@ -97,6 +97,25 @@ struct RelationMap {
     void rename(const std::u32string& from, const std::u32string& to);
 };
 
+// Forma narrativa da linha do tempo: atos em sequência (cada um termina numa fração da duração) e
+// pontos de virada. Vazia = a estrutura em três atos padrão, que não vai para o arquivo.
+struct StoryAct {
+    std::u32string name, subtitle;
+    double end = 1.0;  // 0..1, crescente; o último termina em 1
+    std::string color = "#3f8fe0";
+};
+struct StoryBeat {
+    std::u32string name;
+    double at = 0.5;  // 0..1
+};
+struct StoryStructure {
+    std::string preset;  // "conventional", "episode"... ou "custom" depois de mexer
+    std::vector<StoryAct> acts;
+    std::vector<StoryBeat> beats;
+    bool empty() const { return acts.empty(); }
+    bool operator==(const StoryStructure& o) const;
+};
+
 struct Document {
     std::vector<Paragraph> paragraphs;
     // Página de rosto (chave/valor, no estilo Fountain: Title, Credit, Author, Contact...)
@@ -105,6 +124,7 @@ struct Document {
     std::vector<CharacterInfo> cast;
     BeatBoard board;
     RelationMap relations;
+    StoryStructure structure;
 
     std::string titleValue(const std::string& key) const;
     void setTitleValue(const std::string& key, const std::string& value);

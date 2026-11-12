@@ -1,6 +1,13 @@
 #include "timeline.h"
 
+#include <QComboBox>
+#include <QDialog>
+#include <QDialogButtonBox>
+#include <QFormLayout>
 #include <QHBoxLayout>
+#include <QInputDialog>
+#include <QLineEdit>
+#include <QMenu>
 #include <QLabel>
 #include <QMouseEvent>
 #include <QPainter>
@@ -27,7 +34,7 @@ constexpr int kLeft = 176;   // coluna dos nomes
 constexpr int kRight = 32;
 constexpr int kTop = 18;
 constexpr int kRuler = 34;
-constexpr int kActs = 64;
+constexpr int kActs = 96;
 constexpr int kScenes = 58;
 constexpr int kLane = 36;
 constexpr int kMaxLanes = 14;
@@ -55,20 +62,78 @@ public:
     explicit TimelineCanvas(QWidget* parent) : QWidget(parent) { setMouseTracking(true); }
 
     std::function<void(int)> onOpen;
+    std::function<void(const StoryStructure&)> onStructure;  // a forma narrativa mudou (grava no editor)
     QList<Scene> scenes;
     QList<Lane> lanes;
+    StoryStructure st;  // nunca vazia: sem nada no documento, vale a convencional
     double total = 0;  // páginas escritas (pela soma das cenas)
     int target = 110;
     bool fitWritten = false;  // escala só nas páginas escritas
     int current = -1;  // cena do cursor
     int pages = 0;     // páginas do roteiro paginado
     int hover = -1;
+    int dragAct = -1, dragBeat = -1, hoverAct = -1, hoverBeat = -1;
 
     double scale() const { return fitWritten ? std::max(total, 1.0) : std::max<double>({total, double(target), 1.0}); }
     double xOf(double page) const { return kLeft + page / scale() * (width() - kLeft - kRight); }
+    double xOfFrac(double f) const { return xOf(f * target); }
+    double fracAt(double x) const {
+        return std::clamp((x - kLeft) / std::max(1, width() - kLeft - kRight) * scale() / std::max(1, target), 0.0, 1.0);
+    }
+    int actsTop() const { return kTop + kRuler; }
     int scenesTop() const { return kTop + kRuler + kActs + 16; }
     int lanesTop() const { return scenesTop() + kScenes + 28; }
     int preferredHeight() const { return lanesTop() + int(lanes.size()) * kLane + 40; }
+    QFont smallFont() const {
+        QFont f = font();
+        f.setPointSizeF(std::max(7.0, f.pointSizeF() * 0.88));
+        return f;
+    }
+
+    // Rótulos dos pontos de virada em até três fileiras, sem se sobreporem; perto da borda direita o
+    // rótulo vai para a esquerda do losango. Devolve fileira + 10 quando o rótulo fica à esquerda.
+    std::vector<int> beatRows() const {
+        std::vector<int> order(st.beats.size()), rows(st.beats.size(), 0);
+        for (size_t i = 0; i < order.size(); ++i) order[i] = int(i);
+        std::sort(order.begin(), order.end(), [&](int a, int b) { return st.beats[a].at < st.beats[b].at; });
+        const QFontMetricsF fm(smallFont());
+        const double edge = width() - kRight;
+        double right[3] = {-1e9, -1e9, -1e9};
+        for (int i : order) {
+            const double x = xOfFrac(st.beats[i].at);
+            const double w = fm.horizontalAdvance(q(st.beats[i].name));
+            const bool left = x + 12 + w > edge;
+            const double leftEdge = left ? x - 12 - w : x - 6;
+            int row = -1;
+            for (int r = 0; r < 3 && row < 0; ++r)
+                if (leftEdge > right[r]) row = r;
+            if (row < 0) row = int(std::min_element(right, right + 3) - right);
+            right[row] = left ? x + 8 : x + 12 + w;
+            rows[i] = row + (left ? 10 : 0);
+        }
+        return rows;
+    }
+    int boundaryAt(QPoint p) const {
+        if (p.y() < actsTop() || p.y() > actsTop() + 40) return -1;
+        for (int i = 0; i + 1 < int(st.acts.size()); ++i)
+            if (std::abs(p.x() - xOfFrac(st.acts[i].end)) <= 6) return i;
+        return -1;
+    }
+    int beatAt(QPoint p) const {
+        const std::vector<int> rows = beatRows();
+        for (int j = 0; j < int(st.beats.size()); ++j)
+            if (std::abs(p.x() - xOfFrac(st.beats[j].at)) <= 7 &&
+                std::abs(p.y() - (actsTop() + 47 + (rows[j] % 10) * 16)) <= 7)
+                return j;
+        return -1;
+    }
+    int actAt(QPoint p) const {
+        if (p.y() < actsTop() || p.y() > actsTop() + 40) return -1;
+        const double f = fracAt(p.x());
+        for (int i = 0; i < int(st.acts.size()); ++i)
+            if (f <= st.acts[i].end) return i;
+        return -1;
+    }
 
     int sceneAt(QPoint p) const {
         if (p.y() < scenesTop() || p.y() > lanesTop() + int(lanes.size()) * kLane) return -1;
@@ -79,9 +144,46 @@ public:
         return -1;
     }
 
+    void commit() {
+        st.preset = "custom";
+        if (onStructure) onStructure(st);
+    }
+    void renameAct(int i);
+    void renameBeat(int j);
+
 protected:
     void paintEvent(QPaintEvent*) override;
+    void mousePressEvent(QMouseEvent* e) override {
+        if (e->button() != Qt::LeftButton) return;
+        dragBeat = beatAt(e->pos());
+        if (dragBeat < 0) dragAct = boundaryAt(e->pos());
+        if (dragBeat >= 0 || dragAct >= 0) setCursor(Qt::SizeHorCursor);
+    }
     void mouseMoveEvent(QMouseEvent* e) override {
+        const double f = fracAt(e->position().x());
+        if (dragBeat >= 0) {
+            st.beats[dragBeat].at = f;
+            update();
+            return;
+        }
+        if (dragAct >= 0) {
+            const double lo = (dragAct > 0 ? st.acts[dragAct - 1].end : 0.0) + 0.02;
+            const double hi = st.acts[dragAct + 1].end - 0.02;
+            st.acts[dragAct].end = std::clamp(f, lo, hi);
+            update();
+            return;
+        }
+        const int b = beatAt(e->pos()), a = b < 0 ? boundaryAt(e->pos()) : -1;
+        if (b != hoverBeat || a != hoverAct) {
+            hoverBeat = b;
+            hoverAct = a;
+            update();
+        }
+        if (a >= 0 || b >= 0) {
+            setCursor(Qt::SizeHorCursor);
+            QToolTip::hideText();
+            return;
+        }
         const int s = sceneAt(e->pos());
         if (s != hover) {
             hover = s;
@@ -100,14 +202,105 @@ protected:
         }
     }
     void leaveEvent(QEvent*) override {
-        hover = -1;
+        hover = hoverAct = hoverBeat = -1;
         update();
     }
     void mouseReleaseEvent(QMouseEvent* e) override {
+        if (dragBeat >= 0 || dragAct >= 0) {
+            dragBeat = dragAct = -1;
+            unsetCursor();
+            commit();
+            return;
+        }
         const int s = sceneAt(e->pos());
         if (e->button() == Qt::LeftButton && s >= 0 && onOpen) onOpen(scenes[s].para);
     }
+    void mouseDoubleClickEvent(QMouseEvent* e) override {
+        if (const int b = beatAt(e->pos()); b >= 0) renameBeat(b);
+        else if (const int a = actAt(e->pos()); a >= 0) renameAct(a);
+    }
+    void contextMenuEvent(QContextMenuEvent* e) override;
 };
+
+namespace {
+const char* const kActColors[] = {"#3f8fe0", "#8a6fd6", "#e0567a", "#3fa66b", "#e8743b", "#2f93ad", "#d6a23a"};
+}
+
+void TimelineCanvas::renameAct(int i) {
+    QDialog dlg(this);
+    dlg.setWindowTitle(TimelineView::tr("Act"));
+    auto* name = new QLineEdit(q(st.acts[i].name));
+    auto* sub = new QLineEdit(q(st.acts[i].subtitle));
+    auto* form = new QFormLayout(&dlg);
+    form->setContentsMargins(22, 20, 22, 18);
+    form->setSpacing(10);
+    form->addRow(TimelineView::tr("Name:"), name);
+    form->addRow(TimelineView::tr("Subtitle:"), sub);
+    auto* box = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+    form->addRow(box);
+    connect(box, &QDialogButtonBox::accepted, &dlg, &QDialog::accept);
+    connect(box, &QDialogButtonBox::rejected, &dlg, &QDialog::reject);
+    dlg.setMinimumWidth(380);
+    if (dlg.exec() != QDialog::Accepted) return;
+    st.acts[i].name = name->text().trimmed().toStdU32String();
+    st.acts[i].subtitle = sub->text().trimmed().toStdU32String();
+    commit();
+}
+
+void TimelineCanvas::renameBeat(int j) {
+    bool ok = false;
+    const QString t = QInputDialog::getText(this, TimelineView::tr("Plot Point"), TimelineView::tr("Name:"),
+                                            QLineEdit::Normal, q(st.beats[j].name), &ok);
+    if (!ok || t.trimmed().isEmpty()) return;
+    st.beats[j].name = t.trimmed().toStdU32String();
+    commit();
+}
+
+void TimelineCanvas::contextMenuEvent(QContextMenuEvent* e) {
+    if (e->pos().y() < actsTop() || e->pos().y() > actsTop() + kActs) return;
+    const double f = fracAt(e->pos().x());
+    const int b = beatAt(e->pos());
+    const int a = b < 0 ? actAt(e->pos()) : -1;
+    QMenu menu(this);
+    if (b >= 0) {
+        menu.addAction(TimelineView::tr("Rename Plot Point..."), this, [this, b] { renameBeat(b); });
+        menu.addAction(TimelineView::tr("Remove Plot Point"), this, [this, b] {
+            st.beats.erase(st.beats.begin() + b);
+            commit();
+        });
+        menu.addSeparator();
+    }
+    if (a >= 0) {
+        menu.addAction(TimelineView::tr("Rename Act..."), this, [this, a] { renameAct(a); });
+        menu.addAction(TimelineView::tr("Split Act Here"), this, [this, a, f] {
+            const double start = a > 0 ? st.acts[a - 1].end : 0.0;
+            if (f - start < 0.02 || st.acts[a].end - f < 0.02) return;
+            StoryAct n;
+            n.name = TimelineView::tr("New act").toStdU32String();
+            n.end = st.acts[a].end;
+            n.color = kActColors[st.acts.size() % std::size(kActColors)];
+            st.acts[a].end = f;
+            st.acts.insert(st.acts.begin() + a + 1, n);
+            commit();
+        });
+        QAction* merge = menu.addAction(TimelineView::tr("Merge with Next Act"), this, [this, a] {
+            st.acts[a].end = st.acts[a + 1].end;
+            st.acts.erase(st.acts.begin() + a + 1);
+            commit();
+        });
+        merge->setEnabled(a + 1 < int(st.acts.size()));
+        menu.addSeparator();
+    }
+    menu.addAction(TimelineView::tr("Add Plot Point Here"), this, [this, f] {
+        bool ok = false;
+        const QString t = QInputDialog::getText(this, TimelineView::tr("Plot Point"), TimelineView::tr("Name:"),
+                                                QLineEdit::Normal, {}, &ok);
+        if (!ok || t.trimmed().isEmpty()) return;
+        st.beats.push_back({t.trimmed().toStdU32String(), f});
+        commit();
+    });
+    menu.exec(e->globalPos());
+}
 
 void TimelineCanvas::paintEvent(QPaintEvent*) {
     const ThemeColors& c = ThemeManager::instance().colors();
@@ -145,52 +338,57 @@ void TimelineCanvas::paintEvent(QPaintEvent*) {
     }
     sectionLabel(y, TimelineView::tr("Pages"));
 
-    // ---- Atos e pontos de virada, pela duração planejada.
-    y += kRuler;
+    // ---- Atos e pontos de virada, na forma narrativa escolhida (arraste as divisas e os losangos).
+    y = actsTop();
     sectionLabel(y + 8, TimelineView::tr("Structure"));
-    const double T = target;
-    struct Act { double from, to; QString name, sub; QColor tint; };
-    const Act acts[] = {
-        {0, 0.25 * T, TimelineView::tr("Act I"), TimelineView::tr("Setup"), QColor("#3f8fe0")},
-        {0.25 * T, 0.75 * T, TimelineView::tr("Act II"), TimelineView::tr("Confrontation"), QColor("#8a6fd6")},
-        {0.75 * T, T, TimelineView::tr("Act III"), TimelineView::tr("Resolution"), QColor("#e0567a")},
-    };
     p.save();
-    p.setClipRect(QRectF(x0 - 2, 0, x1 - x0 + 4, height()));
-    for (const Act& a : acts) {
-        if (xOf(a.from) >= x1) continue;
-        QRectF r(QPointF(xOf(a.from) + 1, y), QPointF(std::min(xOf(a.to), x1) - 1, y + 40));
-        QColor fill = a.tint;
+    p.setClipRect(QRectF(x0 - 8, 0, x1 - x0 + 16, height()));
+    double from = 0;
+    for (int i = 0; i < int(st.acts.size()); ++i) {
+        const StoryAct& a = st.acts[i];
+        const double ax = xOfFrac(from), bx = xOfFrac(a.end);
+        from = a.end;
+        if (ax >= x1) continue;
+        QRectF r(QPointF(ax + 1, y), QPointF(std::min(bx, x1) - 1, y + 40));
+        const QColor tint(QString::fromStdString(a.color));
+        QColor fill = tint;
         fill.setAlphaF(dark ? 0.22f : 0.13f);
         p.setPen(Qt::NoPen);
         p.setBrush(fill);
         p.drawRoundedRect(r, 8, 8);
-        p.setPen(a.tint.darker(dark ? 60 : 125));
+        p.setPen(tint.darker(dark ? 60 : 125));
         p.setFont(bold);
-        p.drawText(r.adjusted(10, 3, -6, -18), Qt::AlignLeft | Qt::AlignVCenter, a.name);
+        p.drawText(r.adjusted(10, 3, -6, -18), Qt::AlignLeft | Qt::AlignVCenter,
+                   QFontMetrics(bold).elidedText(q(a.name), Qt::ElideRight, int(r.width()) - 14));
         p.setFont(small);
         p.setPen(c.muted);
-        p.drawText(r.adjusted(10, 20, -6, -2), Qt::AlignLeft | Qt::AlignVCenter, a.sub);
+        p.drawText(r.adjusted(10, 20, -6, -2), Qt::AlignLeft | Qt::AlignVCenter,
+                   QFontMetrics(small).elidedText(q(a.subtitle), Qt::ElideRight, int(r.width()) - 14));
+        if (i + 1 < int(st.acts.size())) {  // alça da divisa
+            const bool hot = i == dragAct || i == hoverAct;
+            p.setPen(Qt::NoPen);
+            p.setBrush(hot ? c.accent : c.border);
+            p.drawRoundedRect(QRectF(bx - 2, y + 12, 4, 16), 2, 2);
+        }
     }
-    struct Beat { double at; QString name; };
-    const Beat beats[] = {{0.12, TimelineView::tr("Inciting incident")}, {0.25, TimelineView::tr("Plot point 1")},
-                          {0.5, TimelineView::tr("Midpoint")}, {0.75, TimelineView::tr("Plot point 2")},
-                          {0.9, TimelineView::tr("Climax")}};
+    const std::vector<int> rows = beatRows();
     p.setFont(small);
-    for (const Beat& b : beats) {
-        const double x = xOf(b.at * T);
+    for (int j = 0; j < int(st.beats.size()); ++j) {
+        const double x = xOfFrac(st.beats[j].at);
         if (x > x1) continue;
+        const double cy = y + 47 + (rows[j] % 10) * 16;
         QPainterPath diamond;
-        diamond.moveTo(x, y + 42);
-        diamond.lineTo(x + 5, y + 47);
-        diamond.lineTo(x, y + 52);
-        diamond.lineTo(x - 5, y + 47);
+        diamond.moveTo(x, cy - 5);
+        diamond.lineTo(x + 5, cy);
+        diamond.lineTo(x, cy + 5);
+        diamond.lineTo(x - 5, cy);
         diamond.closeSubpath();
         p.setPen(Qt::NoPen);
-        p.setBrush(c.text);
+        p.setBrush(j == dragBeat || j == hoverBeat ? c.accent : c.text);
         p.drawPath(diamond);
         p.setPen(c.text);
-        p.drawText(QRectF(x + 8, y + 40, 160, 16), Qt::AlignLeft | Qt::AlignVCenter, b.name);
+        if (rows[j] >= 10) p.drawText(QRectF(x - 208, cy - 8, 200, 16), Qt::AlignRight | Qt::AlignVCenter, q(st.beats[j].name));
+        else p.drawText(QRectF(x + 8, cy - 8, 200, 16), Qt::AlignLeft | Qt::AlignVCenter, q(st.beats[j].name));
     }
     p.restore();
 
@@ -274,6 +472,108 @@ void TimelineCanvas::paintEvent(QPaintEvent*) {
     p.drawText(tag, Qt::AlignCenter, here);
 }
 
+// ------------------------------------------------------------ formas narrativas prontas
+
+QList<QPair<QString, QString>> TimelineView::presets() {
+    return {{"conventional", tr("Conventional (three acts)")}, {"fragmented", tr("Fragmented (nonlinear)")},
+            {"episode", tr("TV episode (drama)")},           {"sitcom", tr("Sitcom")},
+            {"fiveact", tr("Five acts (Freytag)")},         {"savethecat", tr("Save the Cat")},
+            {"hero", tr("Hero's journey")},                  {"kishotenketsu", tr("Kishōtenketsu")}};
+}
+
+StoryStructure TimelineView::preset(const QString& key) {
+    StoryStructure st;
+    st.preset = key.toStdString();
+    auto act = [&](const QString& name, const QString& sub, double end) {
+        st.acts.push_back({name.toStdU32String(), sub.toStdU32String(), end,
+                           kActColors[st.acts.size() % std::size(kActColors)]});
+    };
+    auto beat = [&](const QString& name, double at) { st.beats.push_back({name.toStdU32String(), at}); };
+    if (key == "fragmented") {
+        act(tr("Present"), tr("Hook"), 0.18);
+        act(tr("Past"), tr("Fragment"), 0.36);
+        act(tr("Present"), tr("Escalation"), 0.54);
+        act(tr("Past"), tr("Fragment"), 0.72);
+        act(tr("Present"), tr("Convergence"), 1.0);
+        beat(tr("Mystery set up"), 0.08);
+        beat(tr("First reveal"), 0.36);
+        beat(tr("Timelines cross"), 0.72);
+        beat(tr("Full picture"), 0.92);
+    } else if (key == "episode") {
+        act(tr("Teaser"), tr("Cold open"), 0.08);
+        act(tr("Act One"), QString(), 0.31);
+        act(tr("Act Two"), QString(), 0.54);
+        act(tr("Act Three"), QString(), 0.77);
+        act(tr("Act Four"), QString(), 0.96);
+        act(tr("Tag"), QString(), 1.0);
+        beat(tr("Act out"), 0.31);
+        beat(tr("Act out"), 0.54);
+        beat(tr("Act out"), 0.77);
+    } else if (key == "sitcom") {
+        act(tr("Cold open"), QString(), 0.1);
+        act(tr("Act One"), tr("A and B stories"), 0.5);
+        act(tr("Act Two"), tr("Complications"), 0.92);
+        act(tr("Tag"), QString(), 1.0);
+        beat(tr("Problem"), 0.15);
+        beat(tr("Act break"), 0.5);
+        beat(tr("Resolution"), 0.88);
+    } else if (key == "fiveact") {
+        act(tr("Exposition"), QString(), 0.2);
+        act(tr("Rising action"), QString(), 0.45);
+        act(tr("Climax"), QString(), 0.6);
+        act(tr("Falling action"), QString(), 0.82);
+        act(tr("Denouement"), QString(), 1.0);
+        beat(tr("Inciting incident"), 0.15);
+        beat(tr("Turning point"), 0.52);
+        beat(tr("Catastrophe"), 0.88);
+    } else if (key == "savethecat") {
+        act(tr("Act One"), tr("Thesis"), 0.2);
+        act(tr("Act Two A"), tr("Fun and games"), 0.5);
+        act(tr("Act Two B"), tr("Bad guys close in"), 0.75);
+        act(tr("Act Three"), tr("Synthesis"), 1.0);
+        beat(tr("Opening image"), 0.0);
+        beat(tr("Theme stated"), 0.05);
+        beat(tr("Catalyst"), 0.1);
+        beat(tr("Debate"), 0.13);
+        beat(tr("Break into Two"), 0.2);
+        beat(tr("B story"), 0.22);
+        beat(tr("Midpoint"), 0.5);
+        beat(tr("All is lost"), 0.68);
+        beat(tr("Dark night of the soul"), 0.7);
+        beat(tr("Break into Three"), 0.77);
+        beat(tr("Finale"), 0.8);
+        beat(tr("Final image"), 0.99);
+    } else if (key == "hero") {
+        act(tr("Departure"), tr("Ordinary world"), 0.25);
+        act(tr("Initiation"), tr("Special world"), 0.75);
+        act(tr("Return"), tr("Master of two worlds"), 1.0);
+        beat(tr("Call to adventure"), 0.08);
+        beat(tr("Meeting the mentor"), 0.17);
+        beat(tr("Crossing the threshold"), 0.25);
+        beat(tr("Ordeal"), 0.5);
+        beat(tr("Reward"), 0.62);
+        beat(tr("The road back"), 0.75);
+        beat(tr("Resurrection"), 0.9);
+    } else if (key == "kishotenketsu") {
+        act(tr("Ki"), tr("Introduction"), 0.25);
+        act(tr("Shō"), tr("Development"), 0.5);
+        act(tr("Ten"), tr("Twist"), 0.75);
+        act(tr("Ketsu"), tr("Conclusion"), 1.0);
+        beat(tr("The twist"), 0.5);
+    } else {
+        st.preset = "conventional";
+        act(tr("Act I"), tr("Setup"), 0.25);
+        act(tr("Act II"), tr("Confrontation"), 0.75);
+        act(tr("Act III"), tr("Resolution"), 1.0);
+        beat(tr("Inciting incident"), 0.12);
+        beat(tr("Plot point 1"), 0.25);
+        beat(tr("Midpoint"), 0.5);
+        beat(tr("Plot point 2"), 0.75);
+        beat(tr("Climax"), 0.9);
+    }
+    return st;
+}
+
 // ------------------------------------------------------------ visão
 
 TimelineView::TimelineView(Editor* editor, QWidget* parent) : QWidget(parent), ed_(editor) {
@@ -304,6 +604,21 @@ TimelineView::TimelineView(Editor* editor, QWidget* parent) : QWidget(parent), e
     auto* targetLabel = new QLabel(tr("Planned length:"));
     targetLabel->setObjectName("subtituloDialogo");
 
+    shape_ = new QComboBox;
+    shape_->setToolTip(tr("Narrative shape. Drag the act dividers and the plot points to reshape it; "
+                          "double-click or right-click to rename, split or add."));
+    for (const auto& [key, label] : presets()) shape_->addItem(label, key);
+    shape_->addItem(tr("Custom"), "custom");
+    connect(shape_, &QComboBox::activated, this, [this](int i) {
+        const QString key = shape_->itemData(i).toString();
+        if (key == "custom") return;
+        ed_->setStructure(preset(key));
+        emit changed();
+        reload();
+    });
+    auto* shapeLabel = new QLabel(tr("Structure:"));
+    shapeLabel->setObjectName("subtituloDialogo");
+
     auto* titleCol = new QVBoxLayout;
     titleCol->setSpacing(4);
     titleCol->addWidget(heading);
@@ -315,6 +630,9 @@ TimelineView::TimelineView(Editor* editor, QWidget* parent) : QWidget(parent), e
     header->addStretch(1);
     header->addWidget(progress_, 1, Qt::AlignVCenter);
     header->addSpacing(12);
+    header->addWidget(shapeLabel);
+    header->addWidget(shape_);
+    header->addSpacing(8);
     header->addWidget(fit_);
     header->addSpacing(8);
     header->addWidget(targetLabel);
@@ -322,6 +640,11 @@ TimelineView::TimelineView(Editor* editor, QWidget* parent) : QWidget(parent), e
 
     canvas_ = new TimelineCanvas(this);
     canvas_->onOpen = [this](int para) { emit openScene(para); };
+    canvas_->onStructure = [this](const StoryStructure& st) {
+        ed_->setStructure(st);
+        emit changed();
+        reload();
+    };
     scroll_ = new QScrollArea;
     scroll_->setWidget(canvas_);
     scroll_->setWidgetResizable(true);
@@ -341,6 +664,11 @@ TimelineView::TimelineView(Editor* editor, QWidget* parent) : QWidget(parent), e
     connect(&ThemeManager::instance(), &ThemeManager::changed, canvas_, qOverload<>(&QWidget::update));
 }
 
+TimelineCanvas* TimelineView::structureCanvas() const { return canvas_; }
+QPoint TimelineView::dividerPoint(int act) const {
+    if (act < 0 || act + 1 >= int(canvas_->st.acts.size())) return {};
+    return QPointF(canvas_->xOfFrac(canvas_->st.acts[act].end), canvas_->actsTop() + 20).toPoint();
+}
 int TimelineView::targetPages() const { return target_->value(); }
 void TimelineView::setTargetPages(int pages) { target_->setValue(pages); }
 int TimelineView::sceneAt(QPoint canvasPos) const { return canvas_->sceneAt(canvasPos); }
@@ -385,6 +713,10 @@ void TimelineView::reload() {
         }
         at = pages;
     }
+    const StoryStructure& doc = ed_->doc().structure;
+    canvas_->st = doc.empty() ? preset("conventional") : doc;
+    const int shapeIndex = shape_->findData(QString::fromStdString(canvas_->st.preset));
+    shape_->setCurrentIndex(shapeIndex >= 0 ? shapeIndex : shape_->count() - 1);
     canvas_->lanes = lanes;
     canvas_->total = at;
     canvas_->pages = pages;
