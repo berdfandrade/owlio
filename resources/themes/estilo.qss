@@ -59,7 +59,7 @@ QToolButton {
 QToolButton:hover { background: @hover; }
 QToolButton:pressed, QToolButton:checked { background: @selected; }
 QToolButton:disabled { color: @muted; }
-QToolButton#segmento { padding: 6px 12px; color: @muted; }
+QToolButton#segmento { padding: 6px 10px; margin: 0 2px; color: @muted; }
 QToolButton#segmento:checked { background: @selected; color: @text; }
 
 QToolButton#primario {

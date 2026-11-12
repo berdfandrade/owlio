@@ -498,7 +498,7 @@ void MainWindow::buildActions() {
         tb->addAction(a);
         if (auto* b = qobject_cast<QToolButton*>(tb->widgetForAction(a))) {
             b->setObjectName("segmento");
-            b->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+            b->setToolButtonStyle(Qt::ToolButtonIconOnly);  // o nome fica na dica
         }
     }
     tb->addSeparator();
