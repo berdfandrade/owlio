@@ -16,9 +16,11 @@
 #include <QPlainTextEdit>
 #include <QPushButton>
 #include <QSettings>
+#include <QStyledItemDelegate>
 #include <QVBoxLayout>
 
 #include "avatars.h"
+#include "sceneheading.h"
 #include "theme.h"
 
 namespace {
@@ -43,13 +45,99 @@ QPlainTextEdit* multiLine(const QString& text, int lines, const QString& placeho
 }
 
 QLabel* statLabel(const QString& value, const QString& caption) {
-    auto* l = new QLabel(QString("<div style='font-size:17px;font-weight:700'>%1</div>"
-                                 "<div style='opacity:.65'>%2</div>")
-                             .arg(value.toHtmlEscaped(), caption.toHtmlEscaped()));
+    auto* l = new QLabel(QString("<div style='font-size:18px;font-weight:700'>%1</div>"
+                                 "<div style='font-size:11px;color:%3'>%2</div>")
+                             .arg(value.toHtmlEscaped(), caption.toHtmlEscaped(),
+                                  ThemeManager::instance().colors().muted.name()));
     l->setAlignment(Qt::AlignCenter);
     l->setTextFormat(Qt::RichText);
     return l;
 }
+// Cena da ficha como um cartãozinho: número, local e, embaixo, horário (com cor) e INT/EXT.
+enum SceneRole { kNumberRole = Qt::UserRole + 1, kPrefixRole, kTimeRole, kPageRole };
+
+class SceneRowDelegate : public QStyledItemDelegate {
+public:
+    using QStyledItemDelegate::QStyledItemDelegate;
+
+    QSize sizeHint(const QStyleOptionViewItem& opt, const QModelIndex&) const override {
+        return {200, opt.fontMetrics.height() * 2 + 26};
+    }
+
+    void paint(QPainter* p, const QStyleOptionViewItem& opt, const QModelIndex& idx) const override {
+        const ThemeColors& c = ThemeManager::instance().colors();
+        p->save();
+        p->setRenderHint(QPainter::Antialiasing);
+
+        const QRectF card = QRectF(opt.rect).adjusted(0, 3, -2, -3);
+        const bool selected = opt.state & QStyle::State_Selected;
+        const bool hover = opt.state & QStyle::State_MouseOver;
+        QColor bg = c.dark ? c.surface : QColor(Qt::white);
+        if (hover) bg = c.dark ? c.surface.lighter(118) : c.hover.lighter(103);
+        p->setPen(selected ? QPen(c.accent, 1.5) : QPen(c.dark ? QColor(255, 255, 255, 14) : QColor(0, 0, 0, 16), 1));
+        p->setBrush(bg);
+        p->drawRoundedRect(card, 9, 9);
+
+        const QString number = idx.data(kNumberRole).toString();
+        const QString location = idx.data(Qt::DisplayRole).toString();
+        const QString prefix = idx.data(kPrefixRole).toString();
+        const QString time = idx.data(kTimeRole).toString();
+        const QString page = idx.data(kPageRole).toString();
+
+        QFont bold = opt.font;
+        bold.setWeight(QFont::DemiBold);
+        QFont small = opt.font;
+        small.setPointSizeF(opt.font.pointSizeF() * 0.86);
+        QFont smallBold = small;
+        smallBold.setWeight(QFont::Bold);
+        const QFontMetricsF bm(bold), sm(small), sbm(smallBold);
+
+        // Número da cena numa pastilha com a cor de destaque.
+        const double pad = 10;
+        const double bw = std::max(26.0, sbm.horizontalAdvance(number) + 12);
+        const QRectF badge(card.left() + pad, card.center().y() - 11, bw, 22);
+        QColor tint = c.accent;
+        tint.setAlphaF(c.dark ? 0.24 : 0.12);
+        p->setPen(Qt::NoPen);
+        p->setBrush(tint);
+        p->drawRoundedRect(badge, 6, 6);
+        p->setFont(smallBold);
+        p->setPen(c.accent);
+        p->drawText(badge, Qt::AlignCenter, number);
+
+        const double x = badge.right() + 10;
+        const double right = card.right() - pad;
+        const double top = card.center().y() - (bm.height() + sm.height() + 2) / 2;
+
+        p->setFont(bold);
+        p->setPen(c.text);
+        p->drawText(QRectF(x, top, right - x, bm.height()), Qt::AlignLeft | Qt::AlignVCenter,
+                    bm.elidedText(location, Qt::ElideRight, right - x));
+
+        // Segunda linha: ● HORÁRIO · INT. e a página à direita.
+        const double y2 = top + bm.height() + 2;
+        p->setFont(small);
+        const double pw = sm.horizontalAdvance(page);
+        p->setPen(c.muted);
+        p->drawText(QRectF(right - pw, y2, pw, sm.height()), Qt::AlignRight | Qt::AlignVCenter, page);
+        double cx = x;
+        if (!time.isEmpty()) {
+            p->setPen(Qt::NoPen);
+            p->setBrush(timeColor(time));
+            p->drawEllipse(QPointF(cx + 3.5, y2 + sm.height() / 2), 3.5, 3.5);
+            cx += 12;
+        }
+        QString meta = time;
+        if (!prefix.isEmpty()) meta += (meta.isEmpty() ? "" : QStringLiteral("  ·  ")) + prefix;
+        p->setFont(small);
+        p->setPen(c.muted);
+        const double mw = right - pw - 10 - cx;
+        p->drawText(QRectF(cx, y2, mw, sm.height()), Qt::AlignLeft | Qt::AlignVCenter,
+                    sm.elidedText(meta, Qt::ElideRight, mw));
+        p->restore();
+    }
+};
+
 }  // namespace
 
 // ------------------------------------------------------------ foto
@@ -129,14 +217,28 @@ CharacterDialog::CharacterDialog(const Editor& ed, const QString& name, QWidget*
     nameLabel_->setObjectName("nomeFicha");
     nameLabel_->setAlignment(Qt::AlignCenter);
     nameLabel_->setWordWrap(true);
+    roleLabel_ = new QLabel;
+    roleLabel_->setObjectName("papelFicha");
+    roleLabel_->setAlignment(Qt::AlignCenter);
 
     int firstScene = st.scenes.empty() ? -1 : st.scenes.front();
-    auto* stats = new QHBoxLayout;
-    stats->setSpacing(4);
-    stats->addWidget(statLabel(QString::number(st.speeches), tr("line(s)", "", st.speeches)));
+    auto* statsBox = new QFrame;
+    statsBox->setObjectName("estatisticas");
+    auto* stats = new QHBoxLayout(statsBox);
+    stats->setContentsMargins(6, 10, 6, 10);
+    stats->setSpacing(0);
+    auto divider = [] {
+        auto* d = new QFrame;
+        d->setObjectName("divisor");
+        d->setFixedWidth(1);
+        return d;
+    };
+    stats->addWidget(statLabel(QString::number(st.speeches), tr("line(s)", "", st.speeches)), 1);
+    stats->addWidget(divider());
     stats->addWidget(statLabel(QString::number(static_cast<int>(st.scenes.size())),
-                               tr("scene(s)", "", static_cast<int>(st.scenes.size()))));
-    stats->addWidget(statLabel(QString::number(st.words), tr("word(s)", "", st.words)));
+                               tr("scene(s)", "", static_cast<int>(st.scenes.size()))), 1);
+    stats->addWidget(divider());
+    stats->addWidget(statLabel(QString::number(st.words), tr("word(s)", "", st.words)), 1);
 
     auto* firstLabel = new QLabel;
     firstLabel->setObjectName("subtituloDialogo");
@@ -151,12 +253,22 @@ CharacterDialog::CharacterDialog(const Editor& ed, const QString& name, QWidget*
     scenes_->setObjectName("cenasFicha");
     scenes_->setFrameShape(QFrame::NoFrame);
     scenes_->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    scenes_->setItemDelegate(new SceneRowDelegate(scenes_));
+    scenes_->setMouseTracking(true);
+    scenes_->viewport()->setAttribute(Qt::WA_Hover);
+    scenes_->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
     scenes_->setToolTip(tr("Double-click to go to the scene"));
     for (int s : st.scenes) {
         if (s >= static_cast<int>(summaries.size())) continue;
-        const QString heading = summaries[s].heading.empty() ? tr("(untitled)") : q(summaries[s].heading);
-        auto* it = new QListWidgetItem(QString("%1   %2").arg(s + 1).arg(heading));
+        const QString heading = q(summaries[s].heading);
+        const HeadingParts h = splitHeading(heading);
+        auto* it = new QListWidgetItem(h.location.isEmpty() ? (heading.isEmpty() ? tr("(untitled)") : heading)
+                                                            : h.location);
         it->setData(Qt::UserRole, summaries[s].para);
+        it->setData(kNumberRole, QString::number(s + 1));
+        it->setData(kPrefixRole, h.prefix);
+        it->setData(kTimeRole, h.time);
+        it->setData(kPageRole, tr("p. %1").arg(summaries[s].page + 1));
         it->setToolTip(heading);
         scenes_->addItem(it);
     }
@@ -167,18 +279,19 @@ CharacterDialog::CharacterDialog(const Editor& ed, const QString& name, QWidget*
 
     auto* side = new QFrame;
     side->setObjectName("ficha");
-    side->setFixedWidth(270);
+    side->setFixedWidth(300);
     auto* sl = new QVBoxLayout(side);
     sl->setContentsMargins(18, 22, 18, 14);
     sl->setSpacing(8);
     sl->addWidget(avatar_, 0, Qt::AlignHCenter);
     sl->addLayout(photoButtons);
     sl->addWidget(nameLabel_);
-    sl->addSpacing(4);
-    sl->addLayout(stats);
+    sl->addWidget(roleLabel_);
+    sl->addSpacing(6);
+    sl->addWidget(statsBox);
     sl->addWidget(firstLabel);
-    sl->addSpacing(8);
-    sl->addWidget(sectionLabel(tr("Scenes")));
+    sl->addSpacing(10);
+    sl->addWidget(sectionLabel(tr("Scenes") + QStringLiteral("  ·  %1").arg(scenes_->count())));
     sl->addWidget(scenes_, 1);
 
     // ---- Coluna da direita: campos.
@@ -198,6 +311,7 @@ CharacterDialog::CharacterDialog(const Editor& ed, const QString& name, QWidget*
     role_->addItems({QString(), tr("Protagonist"), tr("Antagonist"), tr("Supporting"), tr("Minor"), tr("Extra")});
     role_->setCurrentText(q(info.role));
     role_->lineEdit()->setPlaceholderText(tr("Protagonist, antagonist, supporting…"));
+    connect(role_, &QComboBox::currentTextChanged, this, &CharacterDialog::updatePhoto);
 
     age_ = new QLineEdit(q(info.age));
     age_->setPlaceholderText(tr("E.g. 34, early 40s"));
@@ -317,4 +431,6 @@ void CharacterDialog::updatePhoto() {
     avatar_->set(n.isEmpty() ? original_ : n, photo_);
     nameLabel_->setText(n.isEmpty() ? original_ : n);
     removePhoto_->setVisible(!photo_.empty());
+    roleLabel_->setText(role_->currentText().trimmed());
+    roleLabel_->setVisible(!roleLabel_->text().isEmpty());
 }
