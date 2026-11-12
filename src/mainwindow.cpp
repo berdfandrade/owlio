@@ -40,6 +40,9 @@
 #include <QInputDialog>
 #include <QStackedWidget>
 
+#include "avatars.h"
+#include "printdialog.h"
+#include "titlepagedialog.h"
 #include "carddelegate.h"
 #include "sceneboard.h"
 #include "fdx.h"
@@ -161,6 +164,26 @@ MainWindow::MainWindow() {
         view_->refreshAfterExternalEdit();
         view_->setFocus();
     });
+    charList_->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(charList_, &QListWidget::customContextMenuRequested, this, [this](const QPoint& pos) {
+        QListWidgetItem* it = charList_->itemAt(pos);
+        if (!it) return;
+        const QString name = it->data(Qt::UserRole).toString();
+        const bool hasPhoto = !editor_.doc().avatar(name.toStdU32String()).empty();
+        QMenu menu(this);
+        menu.addAction(hasPhoto ? tr("Trocar foto...") : tr("Escolher foto..."), this,
+                       [this, name] { chooseAvatar(name); });
+        menu.addAction(tr("Remover foto"), this, [this, name] {
+            editor_.setAvatar(name.toStdU32String(), {});
+            view_->refreshAfterExternalEdit();
+        })->setEnabled(hasPhoto);
+        menu.addSeparator();
+        menu.addAction(tr("Ir para a primeira fala"), this, [this, it] { charList_->itemClicked(it); });
+        menu.exec(charList_->viewport()->mapToGlobal(pos));
+    });
+    connect(charList_, &QListWidget::itemDoubleClicked, this,
+            [this](QListWidgetItem* it) { chooseAvatar(it->data(Qt::UserRole).toString()); });
+
     for (QListWidget* l : {sceneList_, charList_}) {
         l->setMouseTracking(true);
         l->viewport()->setAttribute(Qt::WA_Hover);
@@ -524,33 +547,26 @@ void MainWindow::exportFdx() {
     if (writeTo(p)) statusBar()->showMessage(tr("Exportado: %1").arg(QFileInfo(p).fileName()), 4000);
 }
 
-void MainWindow::renderAll(QPagedPaintDevice& device, double ppi) {
-    QPainter p(&device);
-    p.setRenderHint(QPainter::TextAntialiasing, true);
-    PagePainter pp(editor_);
-    PagePainter::Extras ex;
-    ex.sceneNumbers = view_->sceneNumbers();
-    bool first = true;
-    if (pp.hasTitlePage()) {
-        pp.paintTitlePage(p, QPointF(0, 0), ppi);
-        first = false;
-    }
-    const int pages = editor_.layout().pageCount;
-    for (int i = 0; i < pages; ++i) {
-        if (!first) device.newPage();
-        pp.paintPage(p, i, QPointF(0, 0), ppi, ex);
-        first = false;
-    }
+QString MainWindow::suggestedPdfPath() const {
+    const QString base = path_.isEmpty()
+                             ? QSettings().value("lastDir").toString() + "/roteiro"
+                             : QFileInfo(path_).absolutePath() + "/" + QFileInfo(path_).completeBaseName();
+    return base + ".pdf";
 }
 
-void MainWindow::exportPdf() {
-    QString base = path_.isEmpty() ? QSettings().value("lastDir").toString() + "/roteiro"
-                                   : QFileInfo(path_).absolutePath() + "/" + QFileInfo(path_).completeBaseName();
-    QString p = QFileDialog::getSaveFileName(this, tr("Exportar PDF"), base + ".pdf", tr("PDF (*.pdf)"));
-    if (p.isEmpty()) return;
-    if (!p.endsWith(".pdf", Qt::CaseInsensitive)) p += ".pdf";
-    if (exportPdfTo(p)) statusBar()->showMessage(tr("PDF exportado: %1").arg(QFileInfo(p).fileName()), 5000);
+void MainWindow::openPrintDialog(bool pdf) {
+    PrintDialog dlg(editor_, pdf ? PrintDialog::Target::Pdf : PrintDialog::Target::Printer, suggestedPdfPath(),
+                    view_->sceneNumbers(), this);
+    dlg.resize(1100, 720);
+    if (dlg.exec() != QDialog::Accepted) return;
+    if (!dlg.exportedPath().isEmpty())
+        statusBar()->showMessage(tr("PDF exportado: %1").arg(QFileInfo(dlg.exportedPath()).fileName()), 5000);
+    else
+        statusBar()->showMessage(tr("Enviado para a impressora."), 4000);
 }
+
+void MainWindow::exportPdf() { openPrintDialog(true); }
+void MainWindow::print() { openPrintDialog(false); }
 
 bool MainWindow::exportPdfTo(const QString& p) {
     QPdfWriter w(p);
@@ -558,60 +574,21 @@ bool MainWindow::exportPdfTo(const QString& p) {
     w.setPageLayout(QPageLayout(QPageSize(QPageSize::Letter), QPageLayout::Portrait, QMarginsF(0, 0, 0, 0)));
     w.setTitle(q(editor_.doc().titleValue("Title")));
     w.setCreator("Owlio");
-    renderAll(w, w.resolution());
+    PrintOptions opt;
+    opt.sceneNumbers = view_->sceneNumbers();
+    renderScript(w, w.resolution(), editor_, opt);
     return QFileInfo(p).size() > 0;
-}
-
-void MainWindow::print() {
-    QPrinter printer(QPrinter::HighResolution);
-    printer.setFullPage(true);
-    printer.setPageLayout(QPageLayout(QPageSize(QPageSize::Letter), QPageLayout::Portrait, QMarginsF(0, 0, 0, 0)));
-    QPrintDialog dlg(&printer, this);
-    if (dlg.exec() != QDialog::Accepted) return;
-    renderAll(printer, printer.resolution());
 }
 
 // ------------------------------------------------------------ diálogos
 
 void MainWindow::editTitlePage() {
-    QDialog dlg(this);
-    dlg.setWindowTitle(tr("Página de rosto"));
-    auto* form = new QFormLayout;
-    const Document& d = editor_.doc();
-    auto* title = new QLineEdit(q(d.titleValue("Title")));
-    auto* credit = new QLineEdit(d.titleValue("Credit").empty() ? tr("Escrito por") : q(d.titleValue("Credit")));
-    auto* author = new QLineEdit(q(d.titleValue("Author")));
-    auto* source = new QLineEdit(q(d.titleValue("Source")));
-    source->setPlaceholderText(tr("Ex.: Baseado no livro de..."));
-    auto* draft = new QLineEdit(q(d.titleValue("Draft date")));
-    draft->setPlaceholderText(QDate::currentDate().toString("dd/MM/yyyy"));
-    auto* contact = new QPlainTextEdit(q(d.titleValue("Contact")));
-    contact->setPlaceholderText(tr("Nome\nTelefone\nE-mail"));
-    contact->setMaximumHeight(90);
-    form->addRow(tr("Título:"), title);
-    form->addRow(tr("Crédito:"), credit);
-    form->addRow(tr("Autor(es):"), author);
-    form->addRow(tr("Fonte:"), source);
-    form->addRow(tr("Data da versão:"), draft);
-    form->addRow(tr("Contato:"), contact);
-    auto* note = new QLabel(tr("A página de rosto é incluída no PDF quando há um título."));
-    note->setStyleSheet("color: gray");
-    auto* bb = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
-    connect(bb, &QDialogButtonBox::accepted, &dlg, &QDialog::accept);
-    connect(bb, &QDialogButtonBox::rejected, &dlg, &QDialog::reject);
-    auto* lay = new QVBoxLayout(&dlg);
-    lay->addLayout(form);
-    lay->addWidget(note);
-    lay->addWidget(bb);
-    dlg.resize(460, dlg.sizeHint().height());
+    TitlePageDialog dlg(editor_.doc(), this);
+    dlg.resize(980, 660);
     if (dlg.exec() != QDialog::Accepted) return;
-    editor_.setTitleValue("Title", title->text().trimmed().toStdString());
-    editor_.setTitleValue("Credit", credit->text().trimmed().toStdString());
-    editor_.setTitleValue("Author", author->text().trimmed().toStdString());
-    editor_.setTitleValue("Source", source->text().trimmed().toStdString());
-    editor_.setTitleValue("Draft date", draft->text().trimmed().toStdString());
-    editor_.setTitleValue("Contact", contact->toPlainText().trimmed().toStdString());
+    for (const auto& [key, value] : dlg.values()) editor_.setTitleValue(key, value);
     updateTitle();
+    view_->refreshAfterExternalEdit();
 }
 
 void MainWindow::showFind() {
@@ -695,6 +672,24 @@ void MainWindow::editSynopsis(int sceneIndex) {
     board_->selectScene(sceneIndex);
 }
 
+void MainWindow::chooseAvatar(const QString& name) {
+    QSettings settings;
+    const QString path = QFileDialog::getOpenFileName(this, tr("Foto de %1").arg(name),
+                                                      settings.value("lastImageDir").toString(),
+                                                      avatars::fileFilter());
+    if (path.isEmpty()) return;
+    settings.setValue("lastImageDir", QFileInfo(path).absolutePath());
+    QString error;
+    const std::string data = avatars::fromImageFile(path, &error);
+    if (data.empty()) {
+        QMessageBox::warning(this, tr("Foto"), tr("Não foi possível abrir a imagem:\n%1").arg(error));
+        return;
+    }
+    editor_.setAvatar(name.toStdU32String(), data);
+    view_->refreshAfterExternalEdit();
+    statusBar()->showMessage(tr("Foto de %1 atualizada.").arg(name), 2500);
+}
+
 void MainWindow::onDocumentChanged() {
     if (cardsMode()) board_->reload();
     updateTitle();
@@ -768,7 +763,9 @@ void MainWindow::refreshPanels() {
         auto* it = new QListWidgetItem(q(name));
         it->setData(Qt::UserRole, q(name));
         it->setData(CardDelegate::kBadgeRole, tr("%n fala(s)", "", count));
-        it->setToolTip(tr("%n fala(s) em %1 cena(s)", "", count).arg(scenesOf.value(q(name)).size()));
+        it->setData(CardDelegate::kAvatarRole, QByteArray::fromStdString(editor_.doc().avatar(name)));
+        it->setToolTip(tr("%n fala(s) em %1 cena(s)", "", count).arg(scenesOf.value(q(name)).size()) +
+                       "\n" + tr("Duplo clique ou clique direito para escolher uma foto"));
         charList_->addItem(it);
     }
     wordLabel_->setText(tr("%n palavra(s)", "", editor_.wordCount()));

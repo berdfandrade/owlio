@@ -245,6 +245,15 @@ static void testScenes() {
     auto back = e.sceneSummaries();
     CHECK(back[0].heading == U"INT. A - DIA" && back[2].heading == U"INT. C - DIA");
 
+    // Fotos dos personagens: Fountain de ida e volta e desfazer.
+    e.setAvatar(U"ANA", "aGVsbG8=");
+    CHECK(e.doc().avatar(U"ANA") == "aGVsbG8=");
+    Document withAvatar = parseFountain(writeFountain(e.doc()));
+    CHECK(withAvatar.avatar(U"ANA") == "aGVsbG8=");
+    CHECK(withAvatar.paragraphs.size() == e.doc().paragraphs.size());
+    e.undo();
+    CHECK(e.doc().avatar(U"ANA").empty());
+
     e.setSynopsis(sc[1].para, U"Linha 1\nLinha 2");
     CHECK(e.doc().paragraphs[sc[1].para].synopsis == U"Linha 1 Linha 2");
     e.undo();

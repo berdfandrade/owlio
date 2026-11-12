@@ -3,6 +3,7 @@
 #include <QPainter>
 #include <QPainterPath>
 
+#include "avatars.h"
 #include "theme.h"
 
 QSize CardDelegate::sizeHint(const QStyleOptionViewItem& opt, const QModelIndex&) const {
@@ -64,23 +65,10 @@ void CardDelegate::paint(QPainter* p, const QStyleOptionViewItem& opt, const QMo
         QRectF sr(x, tr.bottom() + 2, w, sm.height());
         p->drawText(sr, Qt::AlignLeft | Qt::AlignVCenter, sm.elidedText(subtitle, Qt::ElideRight, w));
     } else {
-        // Avatar com iniciais, cor estável derivada do nome.
+        // Avatar: foto do personagem ou iniciais.
         const double d = card.height() - 12;
         QRectF av(card.left() + 8, card.top() + 6, d, d);
-        const int hue = static_cast<int>(qHash(title) % 360);
-        QColor col = QColor::fromHsl(hue, c.dark ? 110 : 140, c.dark ? 120 : 150);
-        p->setPen(Qt::NoPen);
-        p->setBrush(col);
-        p->drawEllipse(av);
-        QString initials;
-        for (const QString& part : title.split(' ', Qt::SkipEmptyParts)) {
-            if (initials.size() < 2 && part.at(0).isLetter()) initials += part.at(0);
-        }
-        QFont ib = small;
-        ib.setWeight(QFont::Bold);
-        p->setFont(ib);
-        p->setPen(Qt::white);
-        p->drawText(av, Qt::AlignCenter, initials);
+        avatars::draw(*p, av, title, idx.data(kAvatarRole).toByteArray().toStdString());
 
         QFontMetricsF sm(small);
         const double bw = sm.horizontalAdvance(badge);

@@ -47,12 +47,14 @@ private slots:
     void onCursorMoved();
     void refreshPanels();
     void editSynopsis(int sceneIndex);
+    void chooseAvatar(const QString& characterName);
 
 private:
     void buildActions();
     bool maybeSave();
     bool writeTo(const QString& path);
-    void renderAll(QPagedPaintDevice& device, double ppi);
+    QString suggestedPdfPath() const;
+    void openPrintDialog(bool pdf);
     void updateTitle();
     void refreshIcons();
     QAction* iconAction(QAction* a, const QString& icon);

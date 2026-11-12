@@ -37,7 +37,8 @@ It also follows the keyboard-first flow screenwriters know from tools like Final
 ### Pages and pagination
 - US Letter pages drawn on screen with exact industry margins (1.5" left, 1" elsewhere).
 - Professional page breaks: scene headings and character cues never sit alone at the bottom of a page, and dialogue split across pages gets **(MORE)** and **CHARACTER (CONT'D)**. The Portuguese forms (MAIS)/(CONT.) are also available.
-- Page numbers, optional scene numbers in both margins, and a title page.
+- Page numbers and optional scene numbers in both margins.
+- **Title page editor** with a live preview: title, credit, authors, source, revision, draft date, notes and contact.
 
 ### Index cards
 - Every scene becomes a card showing its number, INT/EXT, location, time of day (color-coded), starting page, the characters who speak in it, and its length in eighths of a page.
@@ -48,17 +49,23 @@ It also follows the keyboard-first flow screenwriters know from tools like Final
 ### Files
 - **Fountain** (`.fountain`) is the native format: plain text, open, and readable by many other screenwriting tools.
 - **Final Draft** (`.fdx`) import and export, including scene summaries.
-- **PDF export** with embedded fonts and a title page, plus printing.
+- **Print and PDF window** with page thumbnails: pick a printer and number of copies, a page range, whether to include the title page and scene numbers, and an optional diagonal **watermark** (for example "DRAFT", or the name of the person receiving the copy). PDFs embed their fonts.
 
 ### Interface
 - Light and dark themes that follow the system automatically.
 - **Focus mode** dims everything except the speech or paragraph you are writing.
 - Side panels list scenes (with page and cast) and characters (with line counts).
+- **Character photos**: double-click a character (or right-click → Choose photo) to give them a picture. It shows up in the panel and on the index cards, and it is stored inside the `.fountain` file in a comment block that other Fountain apps ignore, so a script stays a single portable file.
 - Find and replace, unlimited undo and redo, and zoom.
 
 <p align="center">
   <img src="docs/screenshots/cards-dark.png" width="49%" alt="Index cards, dark theme">
   <img src="docs/screenshots/pdf-page.png" width="35%" alt="Exported PDF page">
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/title-page.png" width="49%" alt="Title page editor with live preview">
+  <img src="docs/screenshots/print.png" width="49%" alt="Print and PDF window with watermark">
 </p>
 
 ## Keyboard shortcuts
@@ -131,7 +138,9 @@ LD_LIBRARY_PATH=$HOME/Qt/6.8.3/gcc_64/lib ./build/owlio_gui_test   # drives the 
 | `src/pagepainter.*` | Draws pages to screen, PDF or printer with exact glyph positions |
 | `src/scriptview.*` | The page editor widget (keyboard, mouse, input methods, scrolling) |
 | `src/sceneboard.*` | The index cards board (grid, drag and drop) |
-| `src/mainwindow.*` | Menus, toolbar, side panels, dialogs |
+| `src/mainwindow.*` | Menus, toolbar, side panels |
+| `src/titlepagedialog.*`, `src/printdialog.*` | Title page editor and print/PDF window, both with previews |
+| `src/avatars.*` | Character photos: import, crop, cache and circular drawing |
 | `src/theme.*`, `resources/themes/estilo.qss` | Light/dark palettes, the Qt style sheet, recolored SVG icons |
 | `tests/` | Core unit tests and a QTest-based UI test |
 | `exemplos/` | A short sample screenplay |

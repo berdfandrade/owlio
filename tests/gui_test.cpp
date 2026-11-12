@@ -12,7 +12,17 @@
 
 #include "mainwindow.h"
 #include "theme.h"
+#include <QFile>
+#include <QLineEdit>
+#include <QLinearGradient>
+#include <QPainter>
+#include <QTemporaryDir>
+
+#include "avatars.h"
+#include "fountain.h"
+#include "printdialog.h"
 #include "sceneboard.h"
+#include "titlepagedialog.h"
 #include "scriptview.h"
 
 static int failures = 0;
@@ -187,6 +197,70 @@ int main(int argc, char* argv[]) {
             }
         }
     }
+    // ---- Fotos dos personagens, página de rosto e impressão (com capturas opcionais)
+    {
+        QFile f("exemplos/a_ultima_sessao.fountain");
+        if (f.open(QIODevice::ReadOnly)) {
+            Document sample = parseFountain(f.readAll().toStdString());
+            QString err;
+            const std::string owl = avatars::fromImageFile(":/owlio.png", &err);
+            CHECK(!owl.empty());
+            sample.setAvatar(U"HELENA", owl);
+            // Uma "foto" gerada para o Tomás.
+            QImage img(256, 256, QImage::Format_RGB32);
+            QPainter ip(&img);
+            QLinearGradient g(0, 0, 256, 256);
+            g.setColorAt(0, QColor("#4f7cff"));
+            g.setColorAt(1, QColor("#9b5cff"));
+            ip.fillRect(img.rect(), g);
+            ip.setPen(Qt::white);
+            QFont big = ip.font();
+            big.setPixelSize(120);
+            big.setBold(true);
+            ip.setFont(big);
+            ip.drawText(img.rect(), Qt::AlignCenter, "T");
+            ip.end();
+            QTemporaryDir tmp;
+            img.save(tmp.filePath("tomas.png"));
+            const std::string tomas = avatars::fromImageFile(tmp.filePath("tomas.png"), &err);
+            CHECK(!tomas.empty());
+            sample.setAvatar(U"TOMÁS", tomas);
+            QFile out(tmp.filePath("com_fotos.fountain"));
+            if (out.open(QIODevice::WriteOnly)) {
+                out.write(QByteArray::fromStdString(writeFountain(sample)));
+                out.close();
+            }
+            // Abre em modo "sem alterações" (o editor atual tem mudanças: descarta).
+            const_cast<Editor&>(ed).markSaved();
+            CHECK(w.openFile(tmp.filePath("com_fotos.fountain")));
+            CHECK(ed.doc().avatar(U"HELENA") == owl);
+            CHECK(!ed.doc().titleValue("Title").empty());
+            w.setCardsMode(true);
+            QTest::qWait(400);
+            if (argc > 3) w.grab().save(QString::fromLocal8Bit(argv[3]));
+
+            TitlePageDialog title(ed.doc(), &w);
+            title.resize(980, 660);
+            title.show();
+            QTest::qWait(250);
+            CHECK(!title.values().empty() && title.values()[0].second == ed.doc().titleValue("Title"));
+            if (argc > 4) title.grab().save(QString::fromLocal8Bit(argv[4]));
+            title.reject();
+
+            PrintDialog print(ed, PrintDialog::Target::Pdf, tmp.filePath("x.pdf"), true, &w);
+            print.resize(1100, 720);
+            print.show();
+            QTest::qWait(250);
+            CHECK(print.options().titlePage);
+            CHECK(print.options().sceneNumbers);
+            if (auto* wm = print.findChild<QLineEdit*>()) wm->setText("rascunho");
+            QTest::qWait(150);
+            CHECK(print.options().watermark == "rascunho");
+            if (argc > 5) print.grab().save(QString::fromLocal8Bit(argv[5]));
+            print.reject();
+        }
+    }
+
     std::printf(failures == 0 ? "Teste de interface passou.\n" : "%d falha(s).\n", failures);
     return failures == 0 ? 0 : 1;
 }

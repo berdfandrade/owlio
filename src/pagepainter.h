@@ -4,6 +4,8 @@
 #include <QPainter>
 #include <QPointF>
 #include <QRawFont>
+#include <QPagedPaintDevice>
+#include <climits>
 #include <map>
 
 #include "editor.h"
@@ -31,6 +33,8 @@ public:
     void paintPage(QPainter& p, int page, QPointF origin, double ppi, const Extras& ex);
     void paintTitlePage(QPainter& p, QPointF origin, double ppi);
     bool hasTitlePage() const;
+    // Marca d'água diagonal (ex.: "RASCUNHO" ou o nome de quem recebe a cópia).
+    static void drawWatermark(QPainter& p, QPointF origin, double ppi, const QString& text);
 
 private:
     void drawText(QPainter& p, const QRawFont& f, const std::u32string& text, double x, double baseline,
@@ -39,3 +43,15 @@ private:
     const Editor& ed_;
     std::map<int, QRawFont> fonts_;
 };
+
+// O que imprimir / exportar.
+struct PrintOptions {
+    bool titlePage = true;
+    bool sceneNumbers = false;
+    int fromPage = 1;        // páginas do roteiro (1 = primeira depois do rosto)
+    int toPage = INT_MAX;
+    QString watermark;
+};
+
+// Desenha o roteiro inteiro (rosto + páginas) num PDF ou impressora.
+void renderScript(QPagedPaintDevice& device, double ppi, const Editor& ed, const PrintOptions& opt);

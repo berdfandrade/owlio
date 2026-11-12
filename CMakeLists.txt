@@ -33,6 +33,9 @@ set(UI_SOURCES
   src/theme.cpp src/theme.h
   src/carddelegate.cpp src/carddelegate.h
   src/sceneboard.cpp src/sceneboard.h
+  src/avatars.cpp src/avatars.h
+  src/titlepagedialog.cpp src/titlepagedialog.h
+  src/printdialog.cpp src/printdialog.h
   resources/owlio.qrc
 )
 set(UI_LIBS owlio_core Qt6::Widgets Qt6::PrintSupport Qt6::Svg)

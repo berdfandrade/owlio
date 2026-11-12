@@ -1,5 +1,6 @@
 #include "fountain.h"
 
+#include <cstring>
 #include <sstream>
 #include <vector>
 
@@ -95,7 +96,35 @@ bool looksLikeSceneHeading(const std::u32string& line) {
     return false;
 }
 
+namespace {
+const char* const kAvatarBlock = "/* owlio-avatars";
+
+// Lê o bloco de fotos dos personagens (comentário que outros apps Fountain ignoram).
+std::vector<std::pair<std::u32string, std::string>> readAvatars(const std::string& src) {
+    std::vector<std::pair<std::u32string, std::string>> out;
+    size_t start = src.find(kAvatarBlock);
+    if (start == std::string::npos) return out;
+    size_t end = src.find("*/", start);
+    if (end == std::string::npos) return out;
+    std::string body = src.substr(start + strlen(kAvatarBlock), end - start - strlen(kAvatarBlock));
+    size_t pos = 0;
+    while (pos < body.size()) {
+        size_t nl = body.find('\n', pos);
+        std::string line = body.substr(pos, nl == std::string::npos ? std::string::npos : nl - pos);
+        pos = nl == std::string::npos ? body.size() : nl + 1;
+        size_t colon = line.rfind(": ");
+        if (colon == std::string::npos) continue;
+        std::u32string name = trim(utf8ToU32(line.substr(0, colon)));
+        std::string data = line.substr(colon + 2);
+        while (!data.empty() && (data.back() == '\r' || data.back() == ' ')) data.pop_back();
+        if (!name.empty() && !data.empty()) out.emplace_back(name, data);
+    }
+    return out;
+}
+}  // namespace
+
 Document parseFountain(const std::string& utf8In, bool parseTitlePage) {
+    auto avatars = readAvatars(utf8In);
     std::string src = removeComments(utf8In);
     // Normaliza fins de linha e remove BOM.
     if (src.size() >= 3 && static_cast<unsigned char>(src[0]) == 0xEF &&
@@ -236,6 +265,7 @@ Document parseFountain(const std::string& utf8In, bool parseTitlePage) {
         doc.paragraphs.push_back({Element::Action, l});
     }
 
+    doc.avatars = std::move(avatars);
     doc.ensureNotEmpty();
     return doc;
 }
@@ -307,5 +337,10 @@ std::string writeFountain(const Document& doc, bool writeTitlePage) {
         first = false;
     }
     out << "\n";
+    if (!doc.avatars.empty()) {
+        out << "\n" << kAvatarBlock << "\n";
+        for (const auto& [name, data] : doc.avatars) out << u32ToUtf8(name) << ": " << data << "\n";
+        out << "*/\n";
+    }
     return out.str();
 }

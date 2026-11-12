@@ -14,7 +14,8 @@ Editor de roteiros no estilo Final Draft, em C++17 e Qt 6.
 - **Autocompletar (SmartType)**: nomes de personagens, locações, horários (DIA, NOITE, …), extensões (V.O., O.S.) e transições.
 - **Paginação profissional**: cabeçalho e personagem nunca ficam sozinhos no pé da página, falas quebradas recebem (MAIS) / NOME (CONT.) (há opção para MORE/CONT'D), e as páginas são numeradas.
 - **Arquivos**: Fountain (`.fountain`, formato nativo, texto puro) e Final Draft (`.fdx`, abrir e salvar).
-- **Exportação para PDF** com página de rosto, e impressão.
+- **Página de rosto** editada numa janela com prévia ao vivo: título, crédito, autores, fonte, versão, data, observações e contato.
+- **Janela de impressão e PDF** com miniaturas das folhas: impressora, cópias, intervalo de páginas, página de rosto, numeração de cenas e **marca d'água** opcional (por exemplo "RASCUNHO" ou o nome de quem recebe a cópia).
 - Navegador de cenas, lista de personagens, localizar/substituir, desfazer/refazer, numeração de cenas e zoom.
 
 ## Tela de cartões
@@ -32,7 +33,7 @@ Editor de roteiros no estilo Final Draft, em C++17 e Qt 6.
 - Ícones SVG próprios (`resources/icons`), recoloridos automaticamente para cada tema.
 - Painéis em cartões: cenas com número, página e quem fala, e personagens com avatar.
 - **Modo foco** (Ctrl+Shift+F): esmaece tudo menos o trecho atual. Numa fala, o personagem, os parentéticos e o diálogo ficam em destaque juntos.
-- Etiqueta do elemento atual na margem da página.
+- **Fotos dos personagens**: duplo clique num personagem (ou clique direito → Escolher foto). A foto aparece no painel e nos cartões, e fica guardada dentro do próprio `.fountain`, num bloco de comentário que outros apps Fountain ignoram.
 
 O estilo fica em [`resources/themes/estilo.qss`](resources/themes/estilo.qss). É CSS do Qt com variáveis de cor (`@accent`, `@surface`, …), definidas em `src/theme.cpp`. Para editar e ver o resultado ao salvar, sem recompilar:
 
@@ -44,7 +45,7 @@ Para forçar um tema numa execução: `./run.sh --tema escuro`.
 
 ## Compilar
 
-Requer CMake ≥ 3.16, g++ com C++17 e Qt 6 (Widgets, PrintSupport).
+Requer CMake ≥ 3.16, g++ com C++17 e Qt 6 (Widgets, PrintSupport, Svg; Test para o teste de interface).
 
 ```bash
 cmake -S . -B build -DCMAKE_PREFIX_PATH=$HOME/Qt/6.8.3/gcc_64
@@ -85,7 +86,9 @@ LD_LIBRARY_PATH=$HOME/Qt/6.8.3/gcc_64/lib:$HOME/Qt/extra/usr/lib/x86_64-linux-gn
 | `src/fountain.*`, `src/fdx.*` | Leitura e escrita de arquivos |
 | `src/pagepainter.*` | Desenha as páginas em tela, PDF ou impressora (`QGlyphRun` em posições exatas) |
 | `src/scriptview.*` | Widget de edição (teclado, mouse, método de entrada, rolagem) |
-| `src/mainwindow.*` | Menus, barra de ferramentas, painéis, diálogos |
+| `src/mainwindow.*` | Menus, barra de ferramentas, painéis |
+| `src/titlepagedialog.*`, `src/printdialog.*` | Janelas de página de rosto e de impressão/PDF, com prévia |
+| `src/avatars.*` | Fotos dos personagens: importação, recorte, cache e desenho em círculo |
 | `src/theme.*` | Paleta, QSS com variáveis, ícones SVG recoloridos, claro/escuro |
 | `src/carddelegate.*` | Cartões dos painéis de cenas e personagens |
 | `src/sceneboard.*` | Tela de cartões (quadro de cenas com arrastar e soltar) |

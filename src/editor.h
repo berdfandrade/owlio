@@ -41,6 +41,7 @@ public:
     bool modified() const { return modified_; }
     void markSaved() { modified_ = false; }
     void setTitleValue(const std::string& key, const std::string& value);
+    void setAvatar(const std::u32string& name, const std::string& base64);  // vazio remove
 
     // ---- cursor e seleção
     Pos cursor() const { return cursor_; }
@@ -109,6 +110,7 @@ private:
     struct Snapshot {
         std::vector<Paragraph> paragraphs;
         std::vector<std::pair<std::string, std::string>> titlePage;
+        std::vector<std::pair<std::u32string, std::string>> avatars;
         Pos cursor, anchor;
     };
 

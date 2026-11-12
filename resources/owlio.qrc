@@ -1,6 +1,7 @@
 <RCC><qresource prefix="/">
   <file>owlio.png</file>
   <file>icons/abrir.svg</file>
+  <file>icons/check-branco.svg</file>
   <file>icons/check-clara.svg</file>
   <file>icons/check-escura.svg</file>
   <file>icons/desfazer.svg</file>
