@@ -388,6 +388,16 @@ int main(int argc, char* argv[]) {
             settings.showPage(2);
             QTest::qWait(100);
             if (argc > 10) settings.grab().save(QString::fromLocal8Bit(argv[10]));
+            if (argc > 11) {  // janela de atalhos com as teclas desenhadas
+                QTimer::singleShot(300, &w, [&] {
+                    if (QWidget* d = QApplication::activeModalWidget()) {
+                        d->grab().save(QString::fromLocal8Bit(argv[11]));
+                        d->close();
+                    }
+                });
+                for (QAction* a : w.findChildren<QAction*>())
+                    if (a->shortcut() == QKeySequence(QKeySequence::HelpContents)) a->trigger();
+            }
             settings.reject();
 
             // ---- Fonte das páginas: qualquer monoespaçada, sem mudar a paginação.
