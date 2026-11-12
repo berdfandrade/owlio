@@ -17,6 +17,7 @@
 #include "pixelavatar.h"
 #include <QFile>
 #include <QFontDatabase>
+#include <QToolButton>
 #include <QLineEdit>
 #include <QLinearGradient>
 #include <QPainter>
@@ -409,6 +410,26 @@ int main(int argc, char* argv[]) {
                 QImage img;
                 CHECK(img.loadFromData(QByteArray::fromBase64(QByteArray::fromStdString(pav.base64()))));
                 CHECK(img.width() == 192 && img.height() == 192);
+                // Trocar uma cor e um estilo de cabelo, desfazer e refazer.
+                const PixelAvatar before = pav.avatar();
+                auto swatches = pav.findChildren<QToolButton*>("corAvatar");
+                CHECK(swatches.size() == 8);  // começa pelo cabelo: cores do cabelo
+                const int target = before.hairColor == 3 ? 4 : 3;
+                swatches[target]->click();
+                QTest::qWait(20);
+                CHECK(pav.avatar().hairColor == target);
+                auto* opts = pav.findChild<QListWidget*>("opcoesAvatar");
+                CHECK(opts && opts->count() == 9);
+                emit opts->itemClicked(opts->item(7));
+                CHECK(pav.avatar().hairStyle == 7);
+                QPushButton* undoB = nullptr;
+                for (QPushButton* pb : pav.findChildren<QPushButton*>())
+                    if (pb->text() == "Undo") undoB = pb;
+                CHECK(undoB);
+                if (undoB) { undoB->click(); undoB->click(); }
+                CHECK(pav.avatar().hairColor == before.hairColor && pav.avatar().hairStyle == before.hairStyle);
+                pav.setCategory(6);
+                CHECK(opts->count() == 4);
                 if (argc > 12) pav.grab().save(QString::fromLocal8Bit(argv[12]));
                 pav.reject();
                 if (argc > 13) {  // folha com variações, para conferir o desenho

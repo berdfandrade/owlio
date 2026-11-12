@@ -2,6 +2,153 @@
 <!DOCTYPE TS>
 <TS version="2.1" language="pt_BR">
 <context>
+    <name></name>
+    <message>
+        <source>Feminine</source>
+        <translation>Feminino</translation>
+    </message>
+    <message>
+        <source>Masculine</source>
+        <translation>Masculino</translation>
+    </message>
+    <message>
+        <source>Neutral</source>
+        <translation>Neutro</translation>
+    </message>
+    <message>
+        <source>Normal</source>
+        <translation>Normal</translation>
+    </message>
+    <message>
+        <source>Happy</source>
+        <translation>Feliz</translation>
+    </message>
+    <message>
+        <source>Wide</source>
+        <translation>Arregalados</translation>
+    </message>
+    <message>
+        <source>Lashes</source>
+        <translation>Cílios</translation>
+    </message>
+    <message>
+        <source>Smile</source>
+        <translation>Sorriso</translation>
+    </message>
+    <message>
+        <source>Open</source>
+        <translation>Aberta</translation>
+    </message>
+    <message>
+        <source>Smirk</source>
+        <translation>De lado</translation>
+    </message>
+    <message>
+        <source>Bald</source>
+        <translation>Careca</translation>
+    </message>
+    <message>
+        <source>Short</source>
+        <translation>Curto</translation>
+    </message>
+    <message>
+        <source>Messy</source>
+        <translation>Bagunçado</translation>
+    </message>
+    <message>
+        <source>Long</source>
+        <translation>Comprido</translation>
+    </message>
+    <message>
+        <source>Bob</source>
+        <translation>Chanel</translation>
+    </message>
+    <message>
+        <source>Bun</source>
+        <translation>Coque</translation>
+    </message>
+    <message>
+        <source>Mohawk</source>
+        <translation>Moicano</translation>
+    </message>
+    <message>
+        <source>Afro</source>
+        <translation>Black power</translation>
+    </message>
+    <message>
+        <source>Side part</source>
+        <translation>Repartido de lado</translation>
+    </message>
+    <message>
+        <source>None</source>
+        <translation>Nenhum</translation>
+    </message>
+    <message>
+        <source>Mustache</source>
+        <translation>Bigode</translation>
+    </message>
+    <message>
+        <source>Beard</source>
+        <translation>Barba</translation>
+    </message>
+    <message>
+        <source>Round glasses</source>
+        <translation>Óculos redondos</translation>
+    </message>
+    <message>
+        <source>Sunglasses</source>
+        <translation>Óculos escuros</translation>
+    </message>
+    <message>
+        <source>T-shirt</source>
+        <translation>Camiseta</translation>
+    </message>
+    <message>
+        <source>Collar</source>
+        <translation>Gola</translation>
+    </message>
+    <message>
+        <source>Suit and tie</source>
+        <translation>Terno e gravata</translation>
+    </message>
+    <message>
+        <source>Hoodie</source>
+        <translation>Moletom</translation>
+    </message>
+    <message>
+        <source>Sand</source>
+        <translation>Areia</translation>
+    </message>
+    <message>
+        <source>Sky</source>
+        <translation>Céu</translation>
+    </message>
+    <message>
+        <source>Mint</source>
+        <translation>Menta</translation>
+    </message>
+    <message>
+        <source>Pink</source>
+        <translation>Rosa</translation>
+    </message>
+    <message>
+        <source>Lavender</source>
+        <translation>Lavanda</translation>
+    </message>
+    <message>
+        <source>Night</source>
+        <translation>Noite</translation>
+    </message>
+    <message>
+        <source>White</source>
+        <translation>Branco</translation>
+    </message>
+    <message>
+        <source>Sun</source>
+        <translation>Sol</translation>
+    </message>
+</context>
+<context>
     <name>AvatarButton</name>
     <message>
         <source>Click to choose a photo</source>
@@ -1091,176 +1238,8 @@ Deseja salvá-las?</translation>
         <translation>Criar avatar</translation>
     </message>
     <message>
-        <source>Feminine</source>
-        <translation>Feminino</translation>
-    </message>
-    <message>
-        <source>Masculine</source>
-        <translation>Masculino</translation>
-    </message>
-    <message>
-        <source>Neutral</source>
-        <translation>Neutro</translation>
-    </message>
-    <message>
-        <source>Very light</source>
-        <translation>Muito clara</translation>
-    </message>
-    <message>
-        <source>Light</source>
-        <translation>Clara</translation>
-    </message>
-    <message>
-        <source>Medium</source>
-        <translation>Média</translation>
-    </message>
-    <message>
-        <source>Tan</source>
-        <translation>Morena</translation>
-    </message>
-    <message>
-        <source>Brown</source>
-        <translation>Castanho</translation>
-    </message>
-    <message>
-        <source>Bald</source>
-        <translation>Careca</translation>
-    </message>
-    <message>
-        <source>Short</source>
-        <translation>Curto</translation>
-    </message>
-    <message>
-        <source>Messy</source>
-        <translation>Bagunçado</translation>
-    </message>
-    <message>
-        <source>Long</source>
-        <translation>Comprido</translation>
-    </message>
-    <message>
-        <source>Bob</source>
-        <translation>Chanel</translation>
-    </message>
-    <message>
-        <source>Bun</source>
-        <translation>Coque</translation>
-    </message>
-    <message>
-        <source>Mohawk</source>
-        <translation>Moicano</translation>
-    </message>
-    <message>
-        <source>Afro</source>
-        <translation>Black power</translation>
-    </message>
-    <message>
-        <source>Black</source>
-        <translation>Preto</translation>
-    </message>
-    <message>
-        <source>Light brown</source>
-        <translation>Castanho-claro</translation>
-    </message>
-    <message>
-        <source>Blond</source>
-        <translation>Loiro</translation>
-    </message>
-    <message>
-        <source>Red</source>
-        <translation>Vermelho</translation>
-    </message>
-    <message>
-        <source>Gray</source>
-        <translation>Grisalho</translation>
-    </message>
-    <message>
-        <source>Blue</source>
-        <translation>Azul</translation>
-    </message>
-    <message>
-        <source>Pink</source>
-        <translation>Rosa</translation>
-    </message>
-    <message>
-        <source>None</source>
-        <translation>Nenhum</translation>
-    </message>
-    <message>
-        <source>Mustache</source>
-        <translation>Bigode</translation>
-    </message>
-    <message>
-        <source>Beard</source>
-        <translation>Barba</translation>
-    </message>
-    <message>
-        <source>Round glasses</source>
-        <translation>Óculos redondos</translation>
-    </message>
-    <message>
-        <source>Sunglasses</source>
-        <translation>Óculos escuros</translation>
-    </message>
-    <message>
-        <source>Green</source>
-        <translation>Verde</translation>
-    </message>
-    <message>
-        <source>Yellow</source>
-        <translation>Amarelo</translation>
-    </message>
-    <message>
-        <source>Purple</source>
-        <translation>Roxo</translation>
-    </message>
-    <message>
-        <source>White</source>
-        <translation>Branco</translation>
-    </message>
-    <message>
-        <source>Orange</source>
-        <translation>Laranja</translation>
-    </message>
-    <message>
-        <source>Sand</source>
-        <translation>Areia</translation>
-    </message>
-    <message>
-        <source>Sky</source>
-        <translation>Céu</translation>
-    </message>
-    <message>
-        <source>Mint</source>
-        <translation>Menta</translation>
-    </message>
-    <message>
-        <source>Lavender</source>
-        <translation>Lavanda</translation>
-    </message>
-    <message>
-        <source>Night</source>
-        <translation>Noite</translation>
-    </message>
-    <message>
-        <source>Sun</source>
-        <translation>Sol</translation>
-    </message>
-    <message>
-        <source>Body</source>
-        <translation>Corpo</translation>
-    </message>
-    <message>
-        <source>Skin tone</source>
-        <translation>Tom de pele</translation>
-    </message>
-    <message>
         <source>Hair</source>
         <translation>Cabelo</translation>
-    </message>
-    <message>
-        <source>Hair color</source>
-        <translation>Cor do cabelo</translation>
     </message>
     <message>
         <source>Facial hair</source>
@@ -1279,10 +1258,6 @@ Deseja salvá-las?</translation>
         <translation>Fundo</translation>
     </message>
     <message>
-        <source>Surprise Me</source>
-        <translation>Surpreenda-me</translation>
-    </message>
-    <message>
         <source>Use Avatar</source>
         <translation>Usar avatar</translation>
     </message>
@@ -1291,17 +1266,32 @@ Deseja salvá-las?</translation>
         <translation>Cancelar</translation>
     </message>
     <message>
-        <source>Deep</source>
-        <translation>Escura</translation>
+        <source>Face</source>
+        <translation>Rosto</translation>
     </message>
     <message>
-        <source>Very deep</source>
-        <translation>Muito escura</translation>
+        <source>Eyes</source>
+        <translation>Olhos</translation>
     </message>
     <message>
-        <source>Red</source>
-        <comment>hair</comment>
-        <translation>Ruivo</translation>
+        <source>Mouth</source>
+        <translation>Boca</translation>
+    </message>
+    <message>
+        <source>Random</source>
+        <translation>Aleatório</translation>
+    </message>
+    <message>
+        <source>Reset</source>
+        <translation>Recomeçar</translation>
+    </message>
+    <message>
+        <source>Undo</source>
+        <translation>Desfazer</translation>
+    </message>
+    <message>
+        <source>Redo</source>
+        <translation>Refazer</translation>
     </message>
 </context>
 <context>

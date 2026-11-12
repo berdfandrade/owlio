@@ -56,5 +56,14 @@
   <file>icons/idioma.svg</file>
   <file>icons/enviar.svg</file>
   <file>icons/avatar.svg</file>
+  <file>icons/rosto-avatar.svg</file>
+  <file>icons/boca.svg</file>
+  <file>icons/cabelo.svg</file>
+  <file>icons/barba.svg</file>
+  <file>icons/oculos.svg</file>
+  <file>icons/roupa.svg</file>
+  <file>icons/fundo.svg</file>
+  <file>icons/aleatorio.svg</file>
+  <file>icons/redefinir.svg</file>
   <file>themes/estilo.qss</file>
 </qresource></RCC>
