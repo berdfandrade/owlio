@@ -27,7 +27,11 @@ public:
 
     explicit PagePainter(const Editor& ed) : ed_(ed) {}
 
+    // Fonte das páginas: a escolhida nas configurações (monoespaçada, sempre 12 pt na grade de
+    // 10 colunas por polegada) ou a melhor Courier instalada.
     static QString fontFamily();
+    static QString defaultFontFamily();
+    static void setPreferredFontFamily(const QString& family);  // vazio = automática
     QRawFont rawFont(double ppi);
 
     void paintPage(QPainter& p, int page, QPointF origin, double ppi, const Extras& ex);
@@ -42,6 +46,7 @@ private:
 
     const Editor& ed_;
     std::map<int, QRawFont> fonts_;
+    int fontGeneration_ = -1;
 };
 
 // O que imprimir / exportar.

@@ -13,7 +13,9 @@
 
 #include "mainwindow.h"
 #include "theme.h"
+#include "pagepainter.h"
 #include <QFile>
+#include <QFontDatabase>
 #include <QLineEdit>
 #include <QLinearGradient>
 #include <QPainter>
@@ -69,7 +71,7 @@ int main(int argc, char* argv[]) {
     QApplication app(argc, argv);
     QApplication::setOrganizationName("OwlioTest");
     QApplication::setApplicationName("OwlioTest");
-    QApplication::setStyle(QStyleFactory::create("Fusion"));
+    QApplication::setStyle(ThemeManager::createStyle());
     QApplication::setWindowIcon(QIcon(":/owlio.png"));
     ThemeManager::instance().init();
     i18n::install(app, "en");
@@ -378,8 +380,50 @@ int main(int argc, char* argv[]) {
             CHECK(settings.scriptLanguage() == ScriptLanguage::English);
             CHECK(settings.autosaveMinutes() == 5);
             CHECK(settings.keepBackups());
+            CHECK(settings.scriptFont().isEmpty());
+            CHECK(settings.interfaceFont().isEmpty());
+            CHECK(settings.interfaceFontSize() == ThemeManager::kDefaultFontSize);
+            CHECK(!settings.reopenLastScript());
             if (argc > 7) settings.grab().save(QString::fromLocal8Bit(argv[7]));
+            settings.showPage(2);
+            QTest::qWait(100);
+            if (argc > 10) settings.grab().save(QString::fromLocal8Bit(argv[10]));
             settings.reject();
+
+            // ---- Fonte das páginas: qualquer monoespaçada, sem mudar a paginação.
+            const int pagesBefore = ed.layout().pageCount;
+            const QString autoFont = PagePainter::fontFamily();
+            PagePainter::setPreferredFontFamily("DejaVu Sans Mono");
+            if (QFontDatabase::families().contains("DejaVu Sans Mono"))
+                CHECK(PagePainter::fontFamily() == "DejaVu Sans Mono");
+            CHECK(ed.layout().pageCount == pagesBefore);
+            PagePainter::setPreferredFontFamily(QString());
+            CHECK(PagePainter::fontFamily() == autoFont);
+
+            // ---- Todo item de menu tem ícone.
+            for (QAction* top : w.menuBar()->actions()) {
+                if (!top->menu()) continue;
+                for (QAction* a : top->menu()->actions()) {
+                    if (a->isSeparator()) continue;
+                    if (a->icon().isNull()) std::printf("Menu item without icon: %s\n", qPrintable(a->text()));
+                    CHECK(!a->icon().isNull());
+                }
+            }
+
+            // ---- Botão da barra lateral esconde e mostra os dois painéis.
+            CHECK(w.sidebarVisible() && w.sidebarAction()->isChecked());
+            w.sidebarAction()->trigger();
+            QTest::qWait(50);
+            CHECK(!w.sidebarVisible() && !w.sidebarAction()->isChecked());
+            CHECK(w.findChild<QDockWidget*>("scenes")->isHidden());
+            w.sidebarAction()->trigger();
+            QTest::qWait(50);
+            CHECK(w.sidebarVisible() && w.sidebarAction()->isChecked());
+            w.findChild<QDockWidget*>("scenes")->hide();
+            w.findChild<QDockWidget*>("characters")->hide();
+            QTest::qWait(50);
+            CHECK(!w.sidebarAction()->isChecked());
+            w.setSidebarVisible(true);
 
             // ---- Salvamento automático, backups e recuperação
             const QString scriptPath = w.currentPath();

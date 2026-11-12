@@ -77,7 +77,7 @@ src/
   characterdialog.*   character sheet window
   titlepagedialog.*   title page editor with live preview
   printdialog.*       print / export PDF window with sheet previews
-  settingsdialog.*    settings window (language, script conventions, theme, saving)
+  settingsdialog.*    settings window in pages (General, Appearance, Script, Saving), incl. interface and page fonts
   i18n.*              UI language, script conventions, translator install
   autosave.*          crash-recovery copies (QLockFile) and dated backups
   avatars.*           character photo import, cache, circular drawing
@@ -183,7 +183,7 @@ Font: first installed of Courier Prime, Courier Final Draft, …, Nimbus Mono PS
 | characterdialog.cpp | character sheet: photo, fields, stats box, scene cards; merge confirmation on rename | 4475 |
 | titlepagedialog.cpp | title page fields + `TitlePagePreview` (own private Editor) | 2574 |
 | printdialog.cpp | printer/PDF toggle, range, copies, watermark, `SheetPreview` | 3417 |
-| settingsdialog.cpp | language, script conventions, theme, autosave interval, backups | 1702 |
+| settingsdialog.cpp | paged settings: language, reopen last, theme, interface font/size, conventions, page font, scene numbers, autosave, backups | 1702 |
 
 Dialogs read the editor via `const Editor&` and expose getters; `MainWindow` applies results.
 
@@ -259,7 +259,7 @@ sequenceDiagram
 - **Styling**: QSS by `objectName` (Portuguese names: `primarioBotao`, `secao`, `perigo`, `link`, `tituloDialogo`, `subtituloDialogo`, `ficha`...). Colors come from `@tokens`. Custom-painted widgets read `ThemeManager::instance().colors()`.
 - **Icons**: SVGs in `resources/icons` use `currentColor`; register actions with `iconAction()` so they recolor on theme change.
 - **i18n**: English source strings; plurals as `tr("%n scene(s)", "", n)`; strings from the Qt-free core go through `QT_TRANSLATE_NOOP`/`QCoreApplication::translate` (see `i18n.cpp`).
-- **Settings keys** (`QSettings`, org/app "Owlio"): `language`, `scriptLanguage` (en/pt), `theme`, `autosaveMinutes` (default 5), `keepBackups` (default true), `geometry`, `windowState`, `zoom`, `lastDir`, `lastImageDir`.
+- **Settings keys** (`QSettings`, org/app "Owlio"): `language`, `scriptLanguage` (en/pt), `theme`, `autosaveMinutes` (default 5), `keepBackups` (default true), `geometry`, `windowState`, `zoom`, `lastDir`, `lastImageDir`, `uiFont`/`uiFontSize` (ThemeManager::setInterfaceFont), `scriptFont` (PagePainter::setPreferredFontFamily; empty = best Courier), `sceneNumbers`, `reopenLast`, `lastFile`.
 
 ## Gotchas
 

@@ -54,6 +54,7 @@
 #include "sceneboard.h"
 #include "fdx.h"
 #include "fountain.h"
+#include "pagepainter.h"
 #include "scriptview.h"
 #include "theme.h"
 
@@ -227,6 +228,8 @@ MainWindow::MainWindow() {
     restoreGeometry(s.value("geometry").toByteArray());
     restoreState(s.value("windowState").toByteArray());
     view_->setZoom(s.value("zoom", 1.0).toDouble());
+    sceneNumsAct_->setChecked(s.value("sceneNumbers", false).toBool());
+    syncSidebarAction();
     if (!s.contains("geometry")) {
         resize(1320, 900);
         resizeDocks({findChild<QDockWidget*>("scenes")}, {290}, Qt::Horizontal);
@@ -258,6 +261,13 @@ QAction* MainWindow::iconAction(QAction* a, const QString& icon) {
 
 void MainWindow::refreshIcons() {
     ThemeManager& tm = ThemeManager::instance();
+    if (themeToggleAct_) themeToggleAct_->setIcon(tm.icon(tm.colors().dark ? "claro" : "escuro"));
+    // Cabeçalhos dos painéis têm fonte própria (espaçamento entre letras): acompanham a da interface.
+    for (QLabel* h : findChildren<QLabel*>("tituloPainel")) {
+        QFont f = QApplication::font();
+        f.setLetterSpacing(QFont::AbsoluteSpacing, 1.2);
+        h->setFont(f);
+    }
     for (auto it = actionIcons_.begin(); it != actionIcons_.end(); ++it) {
         QColor color;
         if (it.key()->property("primario").toBool()) color = tm.colors().accentText;
@@ -282,17 +292,18 @@ void MainWindow::buildActions() {
     openAct->setShortcut(QKeySequence::Open);
     QAction* saveAct = iconAction(file->addAction(tr("&Save"), this, &MainWindow::save), "salvar");
     saveAct->setShortcut(QKeySequence::Save);
-    QAction* saveAsAct = file->addAction(tr("Save &As..."), this, &MainWindow::saveAs);
+    QAction* saveAsAct = iconAction(file->addAction(tr("Save &As..."), this, &MainWindow::saveAs), "salvar-como");
     saveAsAct->setShortcut(QKeySequence::SaveAs);
     file->addSeparator();
     QAction* pdfAct = iconAction(file->addAction(tr("Export &PDF..."), this, &MainWindow::exportPdf), "pdf");
     pdfAct->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_E));
-    file->addAction(tr("Export to Final Draft (.fdx)..."), this, &MainWindow::exportFdx);
+    iconAction(file->addAction(tr("Export to Final Draft (.fdx)..."), this, &MainWindow::exportFdx), "exportar");
     QAction* printAct = iconAction(file->addAction(tr("&Print..."), this, &MainWindow::print), "imprimir");
     printAct->setShortcut(QKeySequence::Print);
-    file->addAction(tr("&Backups..."), this, &MainWindow::browseBackups);
     file->addSeparator();
-    file->addAction(tr("&Quit"), this, &QWidget::close)->setShortcut(QKeySequence::Quit);
+    iconAction(file->addAction(tr("&Backups..."), this, &MainWindow::browseBackups), "historico");
+    file->addSeparator();
+    iconAction(file->addAction(tr("&Quit"), this, &QWidget::close), "sair")->setShortcut(QKeySequence::Quit);
 
     // ---- Editar
     QMenu* edit = menuBar()->addMenu(tr("&Edit"));
@@ -302,23 +313,23 @@ void MainWindow::buildActions() {
     redoAct_->setShortcuts({QKeySequence::Redo, QKeySequence(Qt::CTRL | Qt::Key_Y)});
     edit->addSeparator();
     // No Beat Board, colar cria beats e "selecionar tudo" seleciona os beats; nos cartões não há texto.
-    edit->addAction(tr("Cu&t"), this, [this] { if (viewMode() == ViewMode::Script) view_->cut(); })
-        ->setShortcut(QKeySequence::Cut);
-    edit->addAction(tr("&Copy"), this, [this] { if (viewMode() == ViewMode::Script) view_->copy(); })
-        ->setShortcut(QKeySequence::Copy);
-    edit->addAction(tr("&Paste"), this, [this] {
+    iconAction(edit->addAction(tr("Cu&t"), this, [this] { if (viewMode() == ViewMode::Script) view_->cut(); }),
+               "recortar")->setShortcut(QKeySequence::Cut);
+    iconAction(edit->addAction(tr("&Copy"), this, [this] { if (viewMode() == ViewMode::Script) view_->copy(); }),
+               "copiar")->setShortcut(QKeySequence::Copy);
+    iconAction(edit->addAction(tr("&Paste"), this, [this] {
         if (viewMode() == ViewMode::Beats) beats_->pasteFromClipboard();
         else if (viewMode() == ViewMode::Script) view_->paste();
-    })->setShortcut(QKeySequence::Paste);
-    edit->addAction(tr("Select &All"), this, [this] {
+    }), "colar")->setShortcut(QKeySequence::Paste);
+    iconAction(edit->addAction(tr("Select &All"), this, [this] {
         if (viewMode() == ViewMode::Beats) beats_->selectAllBeats();
         else if (viewMode() == ViewMode::Script) view_->selectAll();
-    })->setShortcut(QKeySequence::SelectAll);
+    }), "selecionar")->setShortcut(QKeySequence::SelectAll);
     edit->addSeparator();
     QAction* findAct = iconAction(edit->addAction(tr("&Find and Replace..."), this, &MainWindow::showFind), "localizar");
     findAct->setShortcut(QKeySequence::Find);
     edit->addSeparator();
-    QAction* settingsAct = edit->addAction(tr("Se&ttings..."), this, &MainWindow::showSettings);
+    QAction* settingsAct = iconAction(edit->addAction(tr("Se&ttings..."), this, &MainWindow::showSettings), "configuracoes");
     settingsAct->setShortcuts({QKeySequence::Preferences, QKeySequence(Qt::CTRL | Qt::Key_Comma)});
     settingsAct->setMenuRole(QAction::PreferencesRole);
 
@@ -334,12 +345,12 @@ void MainWindow::buildActions() {
         elementActions_.append(a);
     }
     fmt->addSeparator();
-    dualAct_ = fmt->addAction(tr("&Dual Dialogue"), this, [this] {
+    dualAct_ = iconAction(fmt->addAction(tr("&Dual Dialogue"), this, [this] {
         if (!view_->toggleDualDialogue())
             statusBar()->showMessage(tr("Dual dialogue needs two speeches in a row: put the cursor in one of them."),
                                      4000);
         onCursorMoved();
-    });
+    }), "dialogo-duplo");
     dualAct_->setCheckable(true);
     dualAct_->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_D));
     dualAct_->setToolTip(tr("Puts this speech side by side with the one before it"));
@@ -347,9 +358,12 @@ void MainWindow::buildActions() {
     // ---- Documento
     QMenu* docMenu = menuBar()->addMenu(tr("&Document"));
     QAction* titleAct = iconAction(docMenu->addAction(tr("&Title Page..."), this, &MainWindow::editTitlePage), "rosto");
-    QAction* sceneNums = docMenu->addAction(tr("&Number Scenes"));
-    sceneNums->setCheckable(true);
-    connect(sceneNums, &QAction::toggled, view_, &ScriptView::setSceneNumbers);
+    sceneNumsAct_ = iconAction(docMenu->addAction(tr("&Number Scenes")), "numerar");
+    sceneNumsAct_->setCheckable(true);
+    connect(sceneNumsAct_, &QAction::toggled, this, [this](bool on) {
+        view_->setSceneNumbers(on);
+        QSettings().setValue("sceneNumbers", on);
+    });
 
     // ---- Exibir
     QMenu* viewMenu = menuBar()->addMenu(tr("&View"));
@@ -375,12 +389,13 @@ void MainWindow::buildActions() {
     QMenu* themeMenu = viewMenu->addMenu(tr("&Theme"));
     actionIcons_.insert(themeMenu->menuAction(), "tema");
     auto* themeGroup = new QActionGroup(this);
-    const std::pair<QString, ThemeManager::Mode> modes[] = {
-        {tr("Follow System"), ThemeManager::Mode::System},
-        {tr("Light"), ThemeManager::Mode::Light},
-        {tr("Dark"), ThemeManager::Mode::Dark}};
-    for (const auto& [label, mode] : modes) {
-        QAction* a = themeMenu->addAction(label, this, [mode] { ThemeManager::instance().setMode(mode); });
+    const std::tuple<QString, ThemeManager::Mode, const char*> modes[] = {
+        {tr("Follow System"), ThemeManager::Mode::System, "sistema"},
+        {tr("Light"), ThemeManager::Mode::Light, "claro"},
+        {tr("Dark"), ThemeManager::Mode::Dark, "escuro"}};
+    for (const auto& [label, mode, icon] : modes) {
+        QAction* a = iconAction(themeMenu->addAction(label, this, [mode] { ThemeManager::instance().setMode(mode); }),
+                                icon);
         a->setCheckable(true);
         a->setChecked(ThemeManager::instance().mode() == mode);
         a->setData(static_cast<int>(mode));
@@ -396,16 +411,62 @@ void MainWindow::buildActions() {
     focusAct->setToolTip(tr("Focus mode — dims everything except the current passage (Ctrl+Shift+F)"));
     connect(focusAct, &QAction::toggled, view_, &ScriptView::setFocusMode);
     viewMenu->addSeparator();
-    viewMenu->addAction(tr("Zoom In"), view_, &ScriptView::zoomIn)->setShortcuts({QKeySequence::ZoomIn, QKeySequence(Qt::CTRL | Qt::Key_Equal)});
-    viewMenu->addAction(tr("Zoom Out"), view_, &ScriptView::zoomOut)->setShortcut(QKeySequence::ZoomOut);
-    viewMenu->addAction(tr("Zoom 100%"), view_, &ScriptView::zoomReset)->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_0));
+    iconAction(viewMenu->addAction(tr("Zoom In"), view_, &ScriptView::zoomIn), "zoom-mais")
+        ->setShortcuts({QKeySequence::ZoomIn, QKeySequence(Qt::CTRL | Qt::Key_Equal)});
+    iconAction(viewMenu->addAction(tr("Zoom Out"), view_, &ScriptView::zoomOut), "zoom-menos")
+        ->setShortcut(QKeySequence::ZoomOut);
+    iconAction(viewMenu->addAction(tr("Zoom 100%"), view_, &ScriptView::zoomReset), "zoom-100")
+        ->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_0));
     viewMenu->addSeparator();
-    for (QDockWidget* d : findChildren<QDockWidget*>()) viewMenu->addAction(d->toggleViewAction());
+
+    // Barra lateral: um botão esconde ou mostra os dois painéis; cada um também tem o seu item.
+    sidebarAct_ = iconAction(viewMenu->addAction(tr("Show &Sidebar")), "painel");
+    sidebarAct_->setCheckable(true);
+    sidebarAct_->setChecked(true);
+    sidebarAct_->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Backslash));
+    connect(sidebarAct_, &QAction::triggered, this, &MainWindow::setSidebarVisible);
+    for (QDockWidget* d : findChildren<QDockWidget*>()) {
+        QAction* a = d->toggleViewAction();
+        iconAction(a, d->objectName() == "scenes" ? "cenas" : "personagens");
+        viewMenu->addAction(a);
+        connect(d, &QDockWidget::visibilityChanged, this, &MainWindow::syncSidebarAction);
+    }
 
     // ---- Ajuda
     QMenu* help = menuBar()->addMenu(tr("&Help"));
-    help->addAction(tr("&Keyboard Shortcuts"), this, &MainWindow::showShortcuts)->setShortcut(QKeySequence::HelpContents);
-    help->addAction(tr("&About Owlio"), this, &MainWindow::about);
+    iconAction(help->addAction(tr("&Keyboard Shortcuts"), this, &MainWindow::showShortcuts), "teclado")
+        ->setShortcut(QKeySequence::HelpContents);
+    iconAction(help->addAction(tr("&About Owlio"), this, &MainWindow::about), "sobre")
+        ->setMenuRole(QAction::AboutRole);
+
+    // ---- Cantos da barra de menus: a marca à esquerda, atalhos rápidos à direita.
+    auto* brand = new QLabel;
+    brand->setObjectName("marca");
+    brand->setPixmap(QIcon(":/owlio.png").pixmap(QSize(20, 20), devicePixelRatio()));
+    brand->setToolTip(QStringLiteral("Owlio"));
+    menuBar()->setCornerWidget(brand, Qt::TopLeftCorner);
+    auto* quick = new QWidget;
+    quick->setObjectName("cantoMenu");
+    auto* ql = new QHBoxLayout(quick);
+    ql->setContentsMargins(0, 0, 6, 0);
+    ql->setSpacing(2);
+    QAction* themeToggle = new QAction(tr("Switch Between Light and Dark"), this);
+    connect(themeToggle, &QAction::triggered, this, [] {
+        ThemeManager& tm = ThemeManager::instance();
+        tm.setMode(tm.colors().dark ? ThemeManager::Mode::Light : ThemeManager::Mode::Dark);
+    });
+    themeToggleAct_ = themeToggle;
+    for (QAction* a : {themeToggle, settingsAct}) {
+        auto* b = new QToolButton;
+        b->setObjectName("botaoMenu");
+        b->setDefaultAction(a);
+        b->setIconSize(QSize(16, 16));
+        b->setAutoRaise(true);
+        b->setToolButtonStyle(Qt::ToolButtonIconOnly);
+        b->setCursor(Qt::PointingHandCursor);
+        ql->addWidget(b);
+    }
+    menuBar()->setCornerWidget(quick, Qt::TopRightCorner);
 
     // ---- Barra de ferramentas
     QToolBar* tb = addToolBar(tr("Main"));
@@ -425,6 +486,9 @@ void MainWindow::buildActions() {
     tip(undoAct_, tr("Undo"));
     tip(redoAct_, tr("Redo"));
     tip(findAct, tr("Find and Replace"));
+    tip(sidebarAct_, tr("Show or hide the sidebar"));
+    tb->addAction(sidebarAct_);
+    tb->addSeparator();
     for (QAction* a : {newAct, openAct, saveAct}) tb->addAction(a);
     tb->addSeparator();
     tb->addAction(undoAct_);
@@ -489,6 +553,21 @@ void MainWindow::buildActions() {
     statusBar()->addPermanentWidget(zoomCombo_);
 }
 
+
+void MainWindow::setSidebarVisible(bool visible) {
+    for (QDockWidget* d : findChildren<QDockWidget*>()) d->setVisible(visible);
+    sidebarAct_->setChecked(visible);
+}
+
+bool MainWindow::sidebarVisible() const {
+    for (QDockWidget* d : findChildren<QDockWidget*>())
+        if (!d->isHidden()) return true;
+    return false;
+}
+
+void MainWindow::syncSidebarAction() {
+    if (sidebarAct_) sidebarAct_->setChecked(sidebarVisible());
+}
 
 // ------------------------------------------------------------ arquivos
 
@@ -748,6 +827,7 @@ void MainWindow::showShortcuts() {
     html += row("Ctrl+Shift+C / Ctrl+Shift+R", tr("Index cards / script"));
     html += row("Ctrl+Shift+F", tr("Focus mode"));
     html += row("Ctrl+,", tr("Settings"));
+    html += row("Ctrl+\\", tr("Show or hide the sidebar"));
     html += row(tr("Ctrl+wheel / Ctrl+= / Ctrl+-"), tr("Zoom"));
     html += "</table><h3>" + tr("Index cards") + "</h3><table cellpadding=3>";
     html += row(tr("Drag"), tr("Reorders scenes (the whole scene text moves with the card)"));
@@ -772,10 +852,20 @@ void MainWindow::showSettings() {
     SettingsDialog dlg(this);
     if (dlg.exec() != QDialog::Accepted) return;
 
-    ThemeManager::instance().setMode(dlg.themeMode());
-    QSettings().setValue("autosaveMinutes", dlg.autosaveMinutes());
-    QSettings().setValue("keepBackups", dlg.keepBackups());
+    QSettings s;
+    s.setValue("autosaveMinutes", dlg.autosaveMinutes());
+    s.setValue("keepBackups", dlg.keepBackups());
+    s.setValue("reopenLast", dlg.reopenLastScript());
+    s.setValue("uiFont", dlg.interfaceFont());
+    s.setValue("uiFontSize", dlg.interfaceFontSize());
     applySaveSettings();
+    ThemeManager::instance().setInterfaceFont(dlg.interfaceFont(), dlg.interfaceFontSize());
+    ThemeManager::instance().setMode(dlg.themeMode());
+    if (dlg.scriptFont() != s.value("scriptFont").toString()) {
+        PagePainter::setPreferredFontFamily(dlg.scriptFont());
+        view_->viewport()->update();
+    }
+    sceneNumsAct_->setChecked(dlg.numberScenes());
     if (dlg.scriptLanguage() != editor_.scriptLanguage()) {
         i18n::setScriptLanguage(dlg.scriptLanguage());
         editor_.setScriptLanguage(dlg.scriptLanguage());
@@ -986,6 +1076,10 @@ void MainWindow::refreshPanels() {
 
 
 void MainWindow::updateTitle() {
+    if (!path_.isEmpty() && path_ != rememberedPath_) {
+        rememberedPath_ = path_;
+        QSettings().setValue("lastFile", path_);
+    }
     QString name = path_.isEmpty() ? tr("Untitled") : QFileInfo(path_).fileName();
     std::string t = editor_.doc().titleValue("Title");
     QString full = name + "[*]";

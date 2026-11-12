@@ -39,7 +39,11 @@ O idioma oficial do Owlio é o inglês. A interface em **português do Brasil** 
 
 ## Visual e temas
 
-- Tema **claro** e **escuro**, seguindo o sistema por padrão (Exibir → Tema, ou Configurações).
+- Tema **claro** e **escuro**, seguindo o sistema por padrão (Exibir → Tema, Configurações, ou o botão no canto da barra de menus).
+- **Configurações** em páginas (Geral, Aparência, Roteiro, Salvamento): idioma da interface, reabrir o último roteiro ao iniciar, tema, **fonte e tamanho da interface**, convenções do roteiro, **fonte das páginas** (qualquer fonte monoespaçada instalada, sempre em 12 pt na grade de 10 caracteres por polegada, então o número de páginas não muda) e salvamento.
+- Todo item de menu tem ícone; os que estão ligados (modo atual, elemento, modo foco) ficam na cor de destaque.
+- **Barra lateral** com cenas e personagens; o botão à esquerda da barra de ferramentas (Ctrl+\\) esconde ou mostra os dois painéis.
+- Janela de impressão e PDF com a prévia das folhas uma embaixo da outra.
 - Ícones SVG próprios (`resources/icons`), recoloridos automaticamente para cada tema.
 - Painéis em cartões: cenas com número, página e quem fala, e personagens com avatar.
 - **Modo foco** (Ctrl+Shift+F): esmaece tudo menos o trecho atual. Numa fala, o personagem, os parentéticos e o diálogo ficam em destaque juntos.

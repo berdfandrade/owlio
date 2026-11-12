@@ -2,6 +2,7 @@
 
 #include <QFontDatabase>
 #include <QGlyphRun>
+#include <QSettings>
 #include <QStringList>
 #include <algorithm>
 #include <cmath>
@@ -12,7 +13,12 @@ QString toQ(const std::u32string& s) {
 }
 }  // namespace
 
-QString PagePainter::fontFamily() {
+namespace {
+QString& cachedFamily() { static QString f; return f; }
+int& generation() { static int g = 0; return g; }
+}  // namespace
+
+QString PagePainter::defaultFontFamily() {
     static QString family;
     if (!family.isEmpty()) return family;
     const QStringList available = QFontDatabase::families();
@@ -36,7 +42,26 @@ QString PagePainter::fontFamily() {
     return family;
 }
 
+QString PagePainter::fontFamily() {
+    QString& family = cachedFamily();
+    if (family.isEmpty()) {
+        const QString wanted = QSettings().value("scriptFont").toString();
+        family = !wanted.isEmpty() && QFontDatabase::families().contains(wanted) ? wanted : defaultFontFamily();
+    }
+    return family;
+}
+
+void PagePainter::setPreferredFontFamily(const QString& family) {
+    QSettings().setValue("scriptFont", family);
+    cachedFamily().clear();
+    ++generation();
+}
+
 QRawFont PagePainter::rawFont(double ppi) {
+    if (fontGeneration_ != generation()) {
+        fonts_.clear();
+        fontGeneration_ = generation();
+    }
     int key = static_cast<int>(std::lround(ppi * 100));
     auto it = fonts_.find(key);
     if (it != fonts_.end()) return it->second;

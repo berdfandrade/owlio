@@ -8,10 +8,13 @@
 #include <QMenu>
 #include <QPainter>
 #include <QPalette>
+#include <QProxyStyle>
+#include <QStyleFactory>
 #include <QSettings>
 #include <QStyleHints>
 #include <QSvgRenderer>
 #include <QTimer>
+#include <algorithm>
 
 namespace {
 
@@ -79,21 +82,28 @@ QPalette paletteFor(const ThemeColors& c) {
 
 }  // namespace
 
+namespace {
+class OwlioStyle : public QProxyStyle {
+public:
+    OwlioStyle() : QProxyStyle(QStyleFactory::create("Fusion")) {}
+    int styleHint(StyleHint hint, const QStyleOption* opt, const QWidget* w, QStyleHintReturn* ret) const override {
+        if (hint == SH_UnderlineShortcut) return 0;
+        return QProxyStyle::styleHint(hint, opt, w, ret);
+    }
+};
+}  // namespace
+
+QStyle* ThemeManager::createStyle() { return new OwlioStyle; }
+
 ThemeManager& ThemeManager::instance() {
     static ThemeManager tm;
     return tm;
 }
 
 void ThemeManager::init() {
-    // Fonte de interface moderna, se existir no sistema.
-    const QStringList fams = QFontDatabase::families();
-    for (const char* f : {"Inter", "Inter Variable", "Cantarell", "Ubuntu", "Noto Sans"}) {
-        if (fams.contains(QString::fromUtf8(f))) {
-            QFont font(QString::fromUtf8(f));
-            font.setPointSizeF(10);
-            QApplication::setFont(font);
-            break;
-        }
+    {
+        QSettings s;
+        setInterfaceFont(s.value("uiFont").toString(), s.value("uiFontSize", kDefaultFontSize).toDouble());
     }
 
     // Menus com cantos arredondados de verdade: janela translúcida e sem moldura.
@@ -120,6 +130,26 @@ void ThemeManager::init() {
         livePath_.clear();
     }
     apply();
+}
+
+QString ThemeManager::defaultInterfaceFamily() {
+    // Fonte de interface moderna, se existir no sistema.
+    static QString family;
+    if (!family.isNull()) return family;
+    family = QString("");
+    const QStringList fams = QFontDatabase::families();
+    for (const char* f : {"Inter", "Inter Variable", "Cantarell", "Ubuntu", "Noto Sans"})
+        if (fams.contains(QString::fromUtf8(f))) return family = QString::fromUtf8(f);
+    return family;
+}
+
+void ThemeManager::setInterfaceFont(const QString& family, double pointSize) {
+    QString f = family;
+    if (f.isEmpty() || !QFontDatabase::families().contains(f)) f = defaultInterfaceFamily();
+    QFont font = f.isEmpty() ? QFontDatabase::systemFont(QFontDatabase::GeneralFont) : QFont(f);
+    font.setPointSizeF(std::clamp(pointSize, 8.0, 16.0));
+    QApplication::setFont(font);
+    if (!qApp->styleSheet().isEmpty()) apply();  // repole os widgets com a nova fonte
 }
 
 void ThemeManager::setMode(Mode m, bool persist) {
@@ -195,6 +225,9 @@ QIcon ThemeManager::icon(const QString& name, const QColor& color) const {
     for (int s : {16, 18, 20, 24, 32, 36, 40, 48}) {
         icon.addPixmap(render(normal, s), QIcon::Normal);
         icon.addPixmap(render(disabled, s), QIcon::Disabled);
+        // Ligado (modo atual, elemento atual, foco…): na cor de destaque, nos menus e na barra.
+        icon.addPixmap(render(colors_.accent, s), QIcon::Normal, QIcon::On);
+        icon.addPixmap(render(disabled, s), QIcon::Disabled, QIcon::On);
     }
     return icon;
 }
