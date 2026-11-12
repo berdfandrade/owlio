@@ -490,6 +490,47 @@ static void testBeatBoard() {
     CHECK(odd.board.beats[0].w >= 80 && odd.board.flows.empty());
 }
 
+static void testRelations() {
+    Editor e;
+    Document d;
+    d.paragraphs = {{Element::SceneHeading, U"INT. A - DIA"}, {Element::Character, U"HELENA"},
+                    {Element::Dialogue, U"Oi."},          {Element::Character, U"RUI (V.O.)"},
+                    {Element::Dialogue, U"Oi, mana."}};
+    e.setDocument(d);
+    RelationMap m;
+    m.nodes = {{U"HELENA", 10.5, -20}, {U"RUI", 300, 40}};
+    m.links = {{U"HELENA", U"RUI", RelationKind::Family, U"irmãos */ gêmeos"}};
+    e.setRelations(m);
+    CHECK(e.canUndo());
+    const Document back = parseFountain(writeFountain(e.doc()));
+    CHECK(back.paragraphs.size() == d.paragraphs.size());
+    CHECK(back.relations.nodes.size() == 2 && back.relations.links.size() == 1);
+    if (const CharacterNode* n = back.relations.node(U"HELENA")) CHECK(n->x == 10.5 && n->y == -20);
+    if (const Relationship* r = back.relations.link(U"RUI", U"HELENA"))
+        CHECK(r->kind == RelationKind::Family && r->label == U"irmãos */ gêmeos");
+    else CHECK(false);
+
+    // Renomear leva junto o lugar no mapa e as ligações.
+    CharacterInfo rui;
+    rui.name = U"RAUL";
+    CHECK(e.setCharacter(U"RUI", rui) == 1);
+    CHECK(e.doc().paragraphs[3].text == U"RAUL (V.O.)");
+    CHECK(e.doc().relations.node(U"RAUL") && !e.doc().relations.node(U"RUI"));
+    CHECK(e.doc().relations.link(U"HELENA", U"RAUL") != nullptr);
+    e.undo();
+    CHECK(e.doc().relations.node(U"RUI") && e.doc().paragraphs[3].text == U"RUI (V.O.)");
+    e.undo();
+    CHECK(e.doc().relations.empty());
+
+    // Ligações estranhas no arquivo são descartadas.
+    const Document odd = parseFountain(
+        "INT. A - DIA\n\n/* owlio-relations\nnode: 1 2 ANA\nnode: x y BIA\nlink: ANA\nwith: ANA\n"
+        "link: ANA\nwith: BIA\nkind: love\nlink: BIA\nwith: ANA\n*/\n");
+    CHECK(odd.relations.nodes.size() == 1 && odd.relations.links.size() == 1);
+    CHECK(odd.relations.links[0].kind == RelationKind::Love);
+    CHECK(odd.paragraphs.size() == 1);
+}
+
 int main() {
     testScenes();
     testFountain();
@@ -499,6 +540,7 @@ int main() {
     testCharacters();
     testDualDialogue();
     testBeatBoard();
+    testRelations();
     if (failures == 0) std::printf("All tests passed.\n");
     return failures == 0 ? 0 : 1;
 }

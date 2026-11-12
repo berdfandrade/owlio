@@ -28,6 +28,9 @@ set(CMAKE_AUTORCC ON)
 
 set(UI_SOURCES
   src/pixelavatar.cpp src/pixelavatar.h
+  src/castdialog.cpp src/castdialog.h
+  src/relationmap.cpp src/relationmap.h
+  src/timeline.cpp src/timeline.h
   src/mainwindow.cpp src/mainwindow.h
   src/scriptview.cpp src/scriptview.h
   src/pagepainter.cpp src/pagepainter.h

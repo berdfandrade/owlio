@@ -44,6 +44,10 @@
 #include "printdialog.h"
 #include "sceneboard.h"
 #include "titlepagedialog.h"
+#include "castdialog.h"
+#include "relationmap.h"
+#include "timeline.h"
+#include <QTreeWidget>
 #include "scriptview.h"
 
 static int failures = 0;
@@ -413,31 +417,44 @@ int main(int argc, char* argv[]) {
                 // Trocar uma cor e um estilo de cabelo, desfazer e refazer.
                 const PixelAvatar before = pav.avatar();
                 auto swatches = pav.findChildren<QToolButton*>("corAvatar");
-                CHECK(swatches.size() == 8);  // começa pelo cabelo: cores do cabelo
+                CHECK(swatches.size() == 12);  // começa pelo cabelo: cores do cabelo
                 const int target = before.hairColor == 3 ? 4 : 3;
                 swatches[target]->click();
                 QTest::qWait(20);
                 CHECK(pav.avatar().hairColor == target);
                 auto* opts = pav.findChild<QListWidget*>("opcoesAvatar");
-                CHECK(opts && opts->count() == 9);
+                CHECK(opts && opts->count() == 15);
                 emit opts->itemClicked(opts->item(7));
                 CHECK(pav.avatar().hairStyle == 7);
                 QPushButton* undoB = nullptr;
                 for (QPushButton* pb : pav.findChildren<QPushButton*>())
-                    if (pb->text() == "Undo") undoB = pb;
+                    if (pb->toolTip() == "Undo") undoB = pb;
                 CHECK(undoB);
                 if (undoB) { undoB->click(); undoB->click(); }
                 CHECK(pav.avatar().hairColor == before.hairColor && pav.avatar().hairStyle == before.hairStyle);
-                pav.setCategory(6);
-                CHECK(opts->count() == 4);
+                pav.setCategory(8);
+                CHECK(opts->count() == 7);
+                // O tipo de corpo fica à vista, fora das categorias.
+                QToolButton* masc = pav.findChild<QToolButton*>("corpoMeio");
+                CHECK(masc && masc->isVisible());
+                if (masc) masc->click();
+                CHECK(pav.avatar().body == 1 && masc && masc->isChecked());
+                QTest::qWait(60);
                 if (argc > 12) pav.grab().save(QString::fromLocal8Bit(argv[12]));
                 pav.reject();
                 if (argc > 13) {  // folha com variações, para conferir o desenho
-                    QImage sheet(8 * 100, 3 * 100, QImage::Format_RGB32);
+                    QImage sheet(8 * 100, 5 * 100, QImage::Format_RGB32);
                     sheet.fill(Qt::white);
                     QPainter sp(&sheet);
                     for (int i = 0; i < 24; ++i)
                         sp.drawImage((i % 8) * 100 + 2, (i / 8) * 100 + 2, PixelAvatar::random(i * 7919u + 3).render(96));
+                    for (int i = 0; i < 15; ++i) {  // todos os cabelos
+                        PixelAvatar h = PixelAvatar::random(11);
+                        h.hairStyle = i;
+                        h.hat = 0;
+                        h.glasses = 0;
+                        sp.drawImage((i % 8) * 100 + 2, 300 + (i / 8) * 100 + 2, h.render(96));
+                    }
                     sp.end();
                     sheet.save(QString::fromLocal8Bit(argv[13]));
                 }
@@ -644,6 +661,99 @@ int main(int argc, char* argv[]) {
             }
             const_cast<Editor&>(ed).markSaved();
         }
+    }
+
+    // ---- Personagens, mapa de relações e linha do tempo
+    {
+        const_cast<Editor&>(ed).markSaved();
+        CHECK(w.openFile("examples/the_last_show.fountain"));
+        const auto chars = ed.characters();
+        CHECK(chars.size() >= 3);
+        if (chars.size() >= 3) {
+            const QString a = QString::fromStdU32String(chars[0].first);
+            const QString b = QString::fromStdU32String(chars[1].first);
+            const QString third = QString::fromStdU32String(chars[2].first);
+            const int cues = chars[1].second;
+
+            // Edição na tabela vale para o roteiro inteiro.
+            CastDialog cast(const_cast<Editor*>(&ed), &w);
+            cast.resize(1040, 640);
+            cast.show();
+            QTest::qWait(100);
+            CHECK(cast.table()->topLevelItemCount() >= 3);
+            CHECK(cast.editCell(b, 2, "34"));
+            CHECK(ed.doc().character(b.toStdU32String()) && ed.doc().character(b.toStdU32String())->age == U"34");
+            CHECK(cast.editCell(b, 0, "Bruna"));
+            CHECK(ed.characterStats(U"BRUNA").speeches == cues && ed.characterStats(b.toStdU32String()).speeches == 0);
+            CHECK(ed.doc().character(U"BRUNA") && ed.doc().character(U"BRUNA")->age == U"34");
+            CHECK(!cast.editCell("BRUNA", 0, "  "));  // nome vazio é recusado
+            QTest::qWait(60);
+            if (argc > 14) cast.grab().save(QString::fromLocal8Bit(argv[14]));
+            cast.reject();
+
+            // Mapa: ligar, arrastar e renomear sem perder as ligações.
+            w.resize(1400, 900);
+            w.setViewMode(MainWindow::ViewMode::Relations);
+            QTest::qWait(250);
+            RelationMapView* map = w.relationMap();
+            CHECK(w.viewMode() == MainWindow::ViewMode::Relations);
+            CHECK(map->names().contains(a) && map->names().contains("BRUNA"));
+            map->link(a, "BRUNA", RelationKind::Family, "siblings");
+            CHECK(ed.doc().relations.link(a.toStdU32String(), U"BRUNA") != nullptr);
+            // Arrastar do "+" de um personagem até outro abre a janela da ligação.
+            QTimer::singleShot(300, [] {
+                if (auto* d = qobject_cast<QDialog*>(QApplication::activeModalWidget())) d->accept();
+            });
+            const QPoint from = map->nodeCenter(third);
+            QTest::mouseMove(map, from);
+            QTest::mouseMove(map, map->handlePoint(third));
+            QTest::mousePress(map, Qt::LeftButton, {}, map->handlePoint(third));
+            QTest::mouseMove(map, map->nodeCenter(a));
+            QTest::mouseRelease(map, Qt::LeftButton, {}, map->nodeCenter(a));
+            QTest::qWait(400);
+            CHECK(ed.doc().relations.link(third.toStdU32String(), a.toStdU32String()) != nullptr);
+            // Arrastar um personagem grava a posição.
+            const QPoint c0 = map->nodeCenter(third);
+            QTest::mousePress(map, Qt::LeftButton, {}, c0);
+            QTest::mouseMove(map, c0 + QPoint(40, 20));
+            QTest::mouseMove(map, c0 + QPoint(80, 40));
+            QTest::mouseRelease(map, Qt::LeftButton, {}, c0 + QPoint(80, 40));
+            CHECK(map->nodeCenter(third) != c0);
+            CharacterInfo bia;
+            bia.name = U"BEATRIZ";
+            const_cast<Editor&>(ed).setCharacter(U"BRUNA", bia);
+            w.view()->refreshAfterExternalEdit();
+            CHECK(ed.doc().relations.link(a.toStdU32String(), U"BEATRIZ") != nullptr);
+            CHECK(map->names().contains("BEATRIZ") && !map->names().contains("BRUNA"));
+            map->zoomToFit();
+            QTest::qWait(150);
+            if (argc > 15) w.grab().save(QString::fromLocal8Bit(argv[15]));
+
+            // Linha do tempo: clicar numa cena abre o roteiro nela.
+            w.setViewMode(MainWindow::ViewMode::Timeline);
+            QTest::qWait(250);
+            TimelineView* tl = w.timeline();
+            CHECK(w.viewMode() == MainWindow::ViewMode::Timeline);
+            // Zoom nas páginas escritas (o roteiro de exemplo é curto).
+            QToolButton* fitW = tl->findChild<QToolButton*>("alternarLinha");
+            CHECK(fitW);
+            if (fitW && !fitW->isChecked()) fitW->click();
+            QTest::qWait(100);
+            if (argc > 16) w.grab().save(QString::fromLocal8Bit(argv[16]));
+            QPoint hit;
+            int idx = -1;
+            for (int y = 0; y < tl->canvas()->height() && idx < 0; y += 4)
+                for (int x = 200; x < tl->canvas()->width() && idx < 0; x += 6)
+                    if ((idx = tl->sceneAt(QPoint(x, y))) >= 0) hit = QPoint(x, y);
+            CHECK(idx >= 0);
+            if (idx >= 0) {
+                QTest::mouseClick(tl->canvas(), Qt::LeftButton, {}, hit);
+                CHECK(w.viewMode() == MainWindow::ViewMode::Script);
+                CHECK(ed.cursor().para == ed.sceneSummaries().at(idx).para);
+            }
+            if (fitW) fitW->setChecked(false);
+        }
+        const_cast<Editor&>(ed).markSaved();
     }
 
     std::printf(failures == 0 ? "UI test passed.\n" : "%d failure(s).\n", failures);

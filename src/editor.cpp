@@ -130,6 +130,7 @@ int Editor::setCharacter(const std::u32string& oldName, const CharacterInfo& in)
         CharacterInfo gone;
         gone.name = oldName;
         doc_.setCharacter(gone);  // remove a ficha antiga
+        doc_.relations.rename(oldName, info.name);
     }
     doc_.setCharacter(info);
     changed();
@@ -275,6 +276,26 @@ void Editor::removeFlows(const std::vector<FlowLine>& flows) {
     changed();
 }
 
+void Editor::setRelations(const RelationMap& map) {
+    auto sameNodes = [](const std::vector<CharacterNode>& x, const std::vector<CharacterNode>& y) {
+        if (x.size() != y.size()) return false;
+        for (size_t i = 0; i < x.size(); ++i)
+            if (x[i].name != y[i].name || x[i].x != y[i].x || x[i].y != y[i].y) return false;
+        return true;
+    };
+    auto sameLinks = [](const std::vector<Relationship>& x, const std::vector<Relationship>& y) {
+        if (x.size() != y.size()) return false;
+        for (size_t i = 0; i < x.size(); ++i)
+            if (x[i].a != y[i].a || x[i].b != y[i].b || x[i].kind != y[i].kind || x[i].label != y[i].label)
+                return false;
+        return true;
+    };
+    if (sameNodes(map.nodes, doc_.relations.nodes) && sameLinks(map.links, doc_.relations.links)) return;
+    beginEdit(EditKind::Other);
+    doc_.relations = map;
+    changed();
+}
+
 // ------------------------------------------------------------ undo
 
 void Editor::beginEdit(EditKind kind) {
@@ -282,7 +303,7 @@ void Editor::beginEdit(EditKind kind) {
     bool coalesce = kind != EditKind::Other && kind == lastKind_ &&
                     now - lastEditTime_ < std::chrono::milliseconds(1500) && !undo_.empty();
     if (!coalesce) {
-        undo_.push_back({doc_.paragraphs, doc_.titlePage, doc_.cast, doc_.board, cursor_, anchor_});
+        undo_.push_back({doc_.paragraphs, doc_.titlePage, doc_.cast, doc_.board, doc_.relations, cursor_, anchor_});
         if (undo_.size() > kMaxUndo) undo_.erase(undo_.begin());
     }
     redo_.clear();
@@ -300,13 +321,14 @@ void Editor::changed() {
 
 void Editor::undo() {
     if (undo_.empty()) return;
-    redo_.push_back({doc_.paragraphs, doc_.titlePage, doc_.cast, doc_.board, cursor_, anchor_});
+    redo_.push_back({doc_.paragraphs, doc_.titlePage, doc_.cast, doc_.board, doc_.relations, cursor_, anchor_});
     Snapshot s = std::move(undo_.back());
     undo_.pop_back();
     doc_.paragraphs = std::move(s.paragraphs);
     doc_.titlePage = std::move(s.titlePage);
     doc_.cast = std::move(s.cast);
     doc_.board = std::move(s.board);
+    doc_.relations = std::move(s.relations);
     cursor_ = s.cursor;
     anchor_ = s.anchor;
     lastKind_ = EditKind::None;
@@ -315,13 +337,14 @@ void Editor::undo() {
 
 void Editor::redo() {
     if (redo_.empty()) return;
-    undo_.push_back({doc_.paragraphs, doc_.titlePage, doc_.cast, doc_.board, cursor_, anchor_});
+    undo_.push_back({doc_.paragraphs, doc_.titlePage, doc_.cast, doc_.board, doc_.relations, cursor_, anchor_});
     Snapshot s = std::move(redo_.back());
     redo_.pop_back();
     doc_.paragraphs = std::move(s.paragraphs);
     doc_.titlePage = std::move(s.titlePage);
     doc_.cast = std::move(s.cast);
     doc_.board = std::move(s.board);
+    doc_.relations = std::move(s.relations);
     cursor_ = s.cursor;
     anchor_ = s.anchor;
     lastKind_ = EditKind::None;

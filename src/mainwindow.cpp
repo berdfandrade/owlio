@@ -54,6 +54,9 @@
 #include "titlepagedialog.h"
 #include "carddelegate.h"
 #include "sceneboard.h"
+#include "castdialog.h"
+#include "relationmap.h"
+#include "timeline.h"
 #include "fdx.h"
 #include "fountain.h"
 #include "pagepainter.h"
@@ -139,6 +142,17 @@ MainWindow::MainWindow() {
     stack_->addWidget(beats_);
     setCentralWidget(stack_);
     connect(beats_, &BeatBoardView::changed, this, [this] { view_->refreshAfterExternalEdit(); });
+    relations_ = new RelationMapView(&editor_, this);
+    stack_->addWidget(relations_);
+    connect(relations_, &RelationMapView::changed, this, [this] { view_->refreshAfterExternalEdit(); });
+    connect(relations_, &RelationMapView::openSheet, this, &MainWindow::editCharacter);
+    timeline_ = new TimelineView(&editor_, this);
+    stack_->addWidget(timeline_);
+    connect(timeline_, &TimelineView::openScene, this, [this](int para) {
+        setViewMode(ViewMode::Script);
+        view_->gotoParagraph(para);
+        view_->setFocus();
+    });
 
     connect(board_, &SceneBoard::openScene, this, [this](int para) {
         setCardsMode(false);
@@ -164,7 +178,7 @@ MainWindow::MainWindow() {
     sceneList_->setItemDelegate(new CardDelegate(CardDelegate::Scene, sceneList_));
     addDockWidget(Qt::LeftDockWidgetArea, makeDock(tr("Scenes"), "scenes", sceneList_));
     connect(sceneList_, &QListWidget::itemClicked, this, [this](QListWidgetItem* it) {
-        if (viewMode() == ViewMode::Beats) setViewMode(ViewMode::Script);
+        if (viewMode() != ViewMode::Script && viewMode() != ViewMode::Cards) setViewMode(ViewMode::Script);
         if (cardsMode()) board_->selectScene(sceneList_->row(it));
         else view_->gotoParagraph(it->data(Qt::UserRole).toInt());
     });
@@ -192,6 +206,8 @@ MainWindow::MainWindow() {
         })->setEnabled(hasPhoto);
         menu.addSeparator();
         menu.addAction(tr("Go to First Line"), this, [this, name] { gotoFirstLine(name); });
+        menu.addSeparator();
+        iconAction(menu.addAction(tr("Manage Characters..."), this, &MainWindow::showCast), "elenco");
         menu.exec(charList_->viewport()->mapToGlobal(pos));
     });
 
@@ -360,6 +376,9 @@ void MainWindow::buildActions() {
     // ---- Documento
     QMenu* docMenu = menuBar()->addMenu(tr("&Document"));
     QAction* titleAct = iconAction(docMenu->addAction(tr("&Title Page..."), this, &MainWindow::editTitlePage), "rosto");
+    QAction* castAct = iconAction(docMenu->addAction(tr("&Characters..."), this, &MainWindow::showCast), "elenco");
+    castAct->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_K));
+    docMenu->addSeparator();
     sceneNumsAct_ = iconAction(docMenu->addAction(tr("&Number Scenes")), "numerar");
     sceneNumsAct_->setCheckable(true);
     connect(sceneNumsAct_, &QAction::toggled, this, [this](bool on) {
@@ -379,7 +398,13 @@ void MainWindow::buildActions() {
     beatsModeAct_ = iconAction(viewMenu->addAction(tr("&Beat Board")), "quadro");
     beatsModeAct_->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_B));
     beatsModeAct_->setToolTip(tr("Free board for ideas, with images and flow lines  (Ctrl+Shift+B)"));
-    for (QAction* a : {scriptModeAct_, cardsModeAct_, beatsModeAct_}) {
+    relationsModeAct_ = iconAction(viewMenu->addAction(tr("&Relationships")), "relacoes");
+    relationsModeAct_->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_M));
+    relationsModeAct_->setToolTip(tr("Map of how the characters are connected  (Ctrl+Shift+M)"));
+    timelineModeAct_ = iconAction(viewMenu->addAction(tr("&Timeline")), "linha-tempo");
+    timelineModeAct_->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_L));
+    timelineModeAct_->setToolTip(tr("Timeline of the film: acts, scenes and who is in each one  (Ctrl+Shift+L)"));
+    for (QAction* a : {scriptModeAct_, cardsModeAct_, beatsModeAct_, relationsModeAct_, timelineModeAct_}) {
         a->setCheckable(true);
         modeGroup->addAction(a);
     }
@@ -387,6 +412,8 @@ void MainWindow::buildActions() {
     connect(scriptModeAct_, &QAction::triggered, this, [this] { setCardsMode(false); });
     connect(cardsModeAct_, &QAction::triggered, this, [this] { setCardsMode(true); });
     connect(beatsModeAct_, &QAction::triggered, this, [this] { setViewMode(ViewMode::Beats); });
+    connect(relationsModeAct_, &QAction::triggered, this, [this] { setViewMode(ViewMode::Relations); });
+    connect(timelineModeAct_, &QAction::triggered, this, [this] { setViewMode(ViewMode::Timeline); });
     viewMenu->addSeparator();
     QMenu* themeMenu = viewMenu->addMenu(tr("&Theme"));
     actionIcons_.insert(themeMenu->menuAction(), "tema");
@@ -496,7 +523,7 @@ void MainWindow::buildActions() {
     tb->addAction(undoAct_);
     tb->addAction(redoAct_);
     tb->addSeparator();
-    for (QAction* a : {scriptModeAct_, cardsModeAct_, beatsModeAct_}) {
+    for (QAction* a : {scriptModeAct_, cardsModeAct_, beatsModeAct_, relationsModeAct_, timelineModeAct_}) {
         tb->addAction(a);
         if (auto* b = qobject_cast<QToolButton*>(tb->widgetForAction(a))) {
             b->setObjectName("segmento");
@@ -971,6 +998,26 @@ void MainWindow::editCharacter(const QString& name) {
     }
 }
 
+void MainWindow::showCast() {
+    CastDialog dlg(&editor_, this);
+    dlg.resize(1040, 640);
+    auto refresh = [this, &dlg] {
+        view_->refreshAfterExternalEdit();
+        dlg.reload();
+    };
+    connect(&dlg, &CastDialog::changed, this, [this] { view_->refreshAfterExternalEdit(); });
+    connect(&dlg, &CastDialog::openSheet, this, [this, refresh](const QString& n) {
+        editCharacter(n);
+        refresh();
+    });
+    connect(&dlg, &CastDialog::choosePhoto, this, [this, refresh](const QString& n) {
+        chooseAvatar(n);
+        refresh();
+    });
+    connect(&dlg, &CastDialog::gotoFirstLine, this, &MainWindow::gotoFirstLine);
+    dlg.exec();
+}
+
 void MainWindow::gotoFirstLine(const QString& name) {
     const CharacterStats st = editor_.characterStats(name.toStdU32String());
     if (st.firstPara < 0) return;
@@ -984,6 +1031,8 @@ void MainWindow::gotoFirstLine(const QString& name) {
 MainWindow::ViewMode MainWindow::viewMode() const {
     if (stack_ && stack_->currentWidget() == board_) return ViewMode::Cards;
     if (stack_ && stack_->currentWidget() == beats_) return ViewMode::Beats;
+    if (stack_ && stack_->currentWidget() == relations_) return ViewMode::Relations;
+    if (stack_ && stack_->currentWidget() == timeline_) return ViewMode::Timeline;
     return ViewMode::Script;
 }
 
@@ -992,6 +1041,8 @@ void MainWindow::setViewMode(ViewMode mode) {
     scriptModeAct_->setChecked(script);
     cardsModeAct_->setChecked(mode == ViewMode::Cards);
     beatsModeAct_->setChecked(mode == ViewMode::Beats);
+    relationsModeAct_->setChecked(mode == ViewMode::Relations);
+    timelineModeAct_->setChecked(mode == ViewMode::Timeline);
     elementComboAct_->setVisible(script);
     for (QAction* a : elementActions_) a->setEnabled(script);
     if (dualAct_) dualAct_->setEnabled(script);
@@ -1011,6 +1062,16 @@ void MainWindow::setViewMode(ViewMode mode) {
             beats_->setFocus();
             break;
         }
+        case ViewMode::Relations:
+            stack_->setCurrentWidget(relations_);
+            relations_->reload();
+            relations_->setFocus();
+            break;
+        case ViewMode::Timeline:
+            timeline_->reload();
+            stack_->setCurrentWidget(timeline_);
+            timeline_->setFocus();
+            break;
         case ViewMode::Script:
             stack_->setCurrentWidget(view_);
             view_->refreshAfterExternalEdit();
@@ -1053,6 +1114,8 @@ void MainWindow::chooseAvatar(const QString& name) {
 void MainWindow::onDocumentChanged() {
     if (cardsMode()) board_->reload();
     if (viewMode() == ViewMode::Beats) beats_->reload();
+    if (viewMode() == ViewMode::Relations) relations_->reload();
+    if (viewMode() == ViewMode::Timeline) timeline_->reload();
     updateTitle();
     panelTimer_.start();
 }

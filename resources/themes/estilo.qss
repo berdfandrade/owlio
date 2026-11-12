@@ -69,6 +69,9 @@ QToolButton#primario {
     font-weight: 600;
 }
 QToolButton#primario:hover { background: @accentHover; }
+QToolButton#botaoQuadro { background: @surface; border: 1px solid @border; border-radius: 10px; padding: 0; }
+QToolButton#botaoQuadro:hover { background: @hover; }
+QToolButton#botaoQuadro:checked { background: @selected; border-color: @accent; }
 
 /* ---------- campos ---------- */
 QComboBox {
@@ -164,8 +167,23 @@ QListWidget#opcoesAvatar { background: @surface; border: 1px solid @border; bord
 QListWidget#opcoesAvatar::item { border: 2px solid transparent; border-radius: 12px; }
 QListWidget#opcoesAvatar::item:hover { background: @hover; }
 QListWidget#opcoesAvatar::item:selected { background: transparent; border-color: @accent; }
-QToolButton#corAvatar { border: 2px solid @border; border-radius: 15px; }
+QToolButton#corAvatar { border: 2px solid @border; border-radius: 16px; }
+QToolButton#corAvatar:hover { border-color: @text; }
 QToolButton#corAvatar:checked { border: 3px solid @accent; }
+QLabel#nomeAvatar { font-size: 15px; font-weight: 700; color: @text; }
+QLabel#rotuloAvatar { color: @muted; font-size: 11px; font-weight: 700; }
+QPushButton#botaoIconeAvatar { padding: 0; min-width: 38px; max-width: 38px; min-height: 38px; max-height: 38px; border-radius: 10px; }
+QToolButton#corpoEsq, QToolButton#corpoMeio, QToolButton#corpoDir {
+    background: @surface; border: 1px solid @border; color: @muted; padding: 0 14px; font-weight: 600;
+}
+QToolButton#corpoEsq { border-top-left-radius: 10px; border-bottom-left-radius: 10px; }
+QToolButton#corpoMeio { border-left: none; border-right: none; }
+QToolButton#corpoDir { border-top-right-radius: 10px; border-bottom-right-radius: 10px; }
+QToolButton#corpoEsq:hover, QToolButton#corpoMeio:hover, QToolButton#corpoDir:hover { background: @hover; color: @text; }
+QToolButton#corpoEsq:checked, QToolButton#corpoMeio:checked, QToolButton#corpoDir:checked {
+    background: @selected; color: @accent; border-color: @accent;
+}
+QToolButton#corpoMeio:checked { border-left: 1px solid @accent; border-right: 1px solid @accent; }
 QSpinBox {
     background: @surface; color: @text; border: 1px solid @border; border-radius: 8px;
     padding: 5px 8px; selection-background-color: @accent;
@@ -243,3 +261,24 @@ QScrollBar::add-page, QScrollBar::sub-page { background: transparent; }
 
 /* ---------- área das páginas ---------- */
 ScriptView { background: @canvas; border: none; }
+
+/* ---------- personagens, linha do tempo ---------- */
+QTreeWidget#tabelaElenco {
+    background: @surface; alternate-background-color: @window; color: @text;
+    border: 1px solid @border; border-radius: 12px; padding: 4px; outline: 0;
+}
+QTreeWidget#tabelaElenco::item { padding: 2px 6px; border: none; }
+QTreeWidget#tabelaElenco::item:hover { background: @hover; }
+QTreeWidget#tabelaElenco::item:selected { background: @selected; color: @text; }
+QTreeWidget#tabelaElenco QHeaderView::section {
+    background: @surface; color: @muted; border: none; border-bottom: 1px solid @border;
+    padding: 8px 8px; font-weight: 600;
+}
+QTreeWidget#tabelaElenco QLineEdit, QTreeWidget#tabelaElenco QComboBox { padding: 2px 6px; }
+QProgressBar#progressoFilme { background: @border; border: none; border-radius: 4px; }
+QProgressBar#progressoFilme::chunk { background: @accent; border-radius: 4px; }
+QToolButton#alternarLinha {
+    background: @surface; border: 1px solid @border; border-radius: 8px; padding: 6px 12px; color: @text;
+}
+QToolButton#alternarLinha:hover { background: @hover; }
+QToolButton#alternarLinha:checked { background: @selected; border-color: @accent; color: @accent; }

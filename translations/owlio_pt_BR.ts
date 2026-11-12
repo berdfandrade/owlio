@@ -2,153 +2,6 @@
 <!DOCTYPE TS>
 <TS version="2.1" language="pt_BR">
 <context>
-    <name></name>
-    <message>
-        <source>Feminine</source>
-        <translation>Feminino</translation>
-    </message>
-    <message>
-        <source>Masculine</source>
-        <translation>Masculino</translation>
-    </message>
-    <message>
-        <source>Neutral</source>
-        <translation>Neutro</translation>
-    </message>
-    <message>
-        <source>Normal</source>
-        <translation>Normal</translation>
-    </message>
-    <message>
-        <source>Happy</source>
-        <translation>Feliz</translation>
-    </message>
-    <message>
-        <source>Wide</source>
-        <translation>Arregalados</translation>
-    </message>
-    <message>
-        <source>Lashes</source>
-        <translation>Cílios</translation>
-    </message>
-    <message>
-        <source>Smile</source>
-        <translation>Sorriso</translation>
-    </message>
-    <message>
-        <source>Open</source>
-        <translation>Aberta</translation>
-    </message>
-    <message>
-        <source>Smirk</source>
-        <translation>De lado</translation>
-    </message>
-    <message>
-        <source>Bald</source>
-        <translation>Careca</translation>
-    </message>
-    <message>
-        <source>Short</source>
-        <translation>Curto</translation>
-    </message>
-    <message>
-        <source>Messy</source>
-        <translation>Bagunçado</translation>
-    </message>
-    <message>
-        <source>Long</source>
-        <translation>Comprido</translation>
-    </message>
-    <message>
-        <source>Bob</source>
-        <translation>Chanel</translation>
-    </message>
-    <message>
-        <source>Bun</source>
-        <translation>Coque</translation>
-    </message>
-    <message>
-        <source>Mohawk</source>
-        <translation>Moicano</translation>
-    </message>
-    <message>
-        <source>Afro</source>
-        <translation>Black power</translation>
-    </message>
-    <message>
-        <source>Side part</source>
-        <translation>Repartido de lado</translation>
-    </message>
-    <message>
-        <source>None</source>
-        <translation>Nenhum</translation>
-    </message>
-    <message>
-        <source>Mustache</source>
-        <translation>Bigode</translation>
-    </message>
-    <message>
-        <source>Beard</source>
-        <translation>Barba</translation>
-    </message>
-    <message>
-        <source>Round glasses</source>
-        <translation>Óculos redondos</translation>
-    </message>
-    <message>
-        <source>Sunglasses</source>
-        <translation>Óculos escuros</translation>
-    </message>
-    <message>
-        <source>T-shirt</source>
-        <translation>Camiseta</translation>
-    </message>
-    <message>
-        <source>Collar</source>
-        <translation>Gola</translation>
-    </message>
-    <message>
-        <source>Suit and tie</source>
-        <translation>Terno e gravata</translation>
-    </message>
-    <message>
-        <source>Hoodie</source>
-        <translation>Moletom</translation>
-    </message>
-    <message>
-        <source>Sand</source>
-        <translation>Areia</translation>
-    </message>
-    <message>
-        <source>Sky</source>
-        <translation>Céu</translation>
-    </message>
-    <message>
-        <source>Mint</source>
-        <translation>Menta</translation>
-    </message>
-    <message>
-        <source>Pink</source>
-        <translation>Rosa</translation>
-    </message>
-    <message>
-        <source>Lavender</source>
-        <translation>Lavanda</translation>
-    </message>
-    <message>
-        <source>Night</source>
-        <translation>Noite</translation>
-    </message>
-    <message>
-        <source>White</source>
-        <translation>Branco</translation>
-    </message>
-    <message>
-        <source>Sun</source>
-        <translation>Sol</translation>
-    </message>
-</context>
-<context>
     <name>AvatarButton</name>
     <message>
         <source>Click to choose a photo</source>
@@ -351,6 +204,142 @@ Arraste o + da borda de um beat até outro para traçar uma linha de fluxo.</tra
     <message>
         <source>Change image</source>
         <translation>Trocar imagem</translation>
+    </message>
+</context>
+<context>
+    <name>CastDialog</name>
+    <message>
+        <source>Protagonist</source>
+        <translation>Protagonista</translation>
+    </message>
+    <message>
+        <source>Antagonist</source>
+        <translation>Antagonista</translation>
+    </message>
+    <message>
+        <source>Supporting</source>
+        <translation>Coadjuvante</translation>
+    </message>
+    <message>
+        <source>Minor</source>
+        <translation>Secundário</translation>
+    </message>
+    <message>
+        <source>Extra</source>
+        <translation>Figurante</translation>
+    </message>
+    <message>
+        <source>Characters</source>
+        <translation>Personagens</translation>
+    </message>
+    <message>
+        <source>Double-click a cell to edit it. Changes apply to the whole script: a new name renames every cue, the sheet and the relationship map.</source>
+        <translation>Clique duas vezes numa célula para editar. As mudanças valem para o roteiro inteiro: um nome novo renomeia todas as deixas, a ficha e o mapa de relações.</translation>
+    </message>
+    <message>
+        <source>Search characters…</source>
+        <translation>Buscar personagens…</translation>
+    </message>
+    <message>
+        <source>New Character…</source>
+        <translation>Novo personagem…</translation>
+    </message>
+    <message>
+        <source>Character</source>
+        <translation>Personagem</translation>
+    </message>
+    <message>
+        <source>Role</source>
+        <translation>Papel</translation>
+    </message>
+    <message>
+        <source>Age</source>
+        <translation>Idade</translation>
+    </message>
+    <message>
+        <source>Occupation</source>
+        <translation>Ocupação</translation>
+    </message>
+    <message>
+        <source>Speeches</source>
+        <translation>Falas</translation>
+    </message>
+    <message>
+        <source>Scenes</source>
+        <translation>Cenas</translation>
+    </message>
+    <message>
+        <source>Words</source>
+        <translation>Palavras</translation>
+    </message>
+    <message>
+        <source>Open Sheet…</source>
+        <translation>Abrir ficha…</translation>
+    </message>
+    <message>
+        <source>Create Avatar…</source>
+        <translation>Criar avatar…</translation>
+    </message>
+    <message>
+        <source>Upload Photo…</source>
+        <translation>Enviar foto…</translation>
+    </message>
+    <message>
+        <source>Go to First Line</source>
+        <translation>Ir para a primeira fala</translation>
+    </message>
+    <message>
+        <source>Clear Sheet</source>
+        <translation>Limpar ficha</translation>
+    </message>
+    <message>
+        <source>Erase role, age, notes and photo. The cues in the script stay.</source>
+        <translation>Apaga papel, idade, anotações e foto. As deixas do roteiro ficam.</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation>Fechar</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n character(s)</source>
+        <translation>
+            <numerusform>%n personagem</numerusform>
+            <numerusform>%n personagens</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>%n speech(es)</source>
+        <translation>
+            <numerusform>%n fala</numerusform>
+            <numerusform>%n falas</numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>Rename Character</source>
+        <translation>Renomear personagem</translation>
+    </message>
+    <message>
+        <source>There is already a character called %1. Merge %2 into %1?</source>
+        <translation>Já existe um personagem chamado %1. Juntar %2 com %1?</translation>
+    </message>
+    <message numerus="yes">
+        <source>%1 renamed to %2 in %n cue(s).</source>
+        <translation>
+            <numerusform>%1 virou %2 em %n deixa.</numerusform>
+            <numerusform>%1 virou %2 em %n deixas.</numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>New Character</source>
+        <translation>Novo personagem</translation>
+    </message>
+    <message>
+        <source>Name:</source>
+        <translation>Nome:</translation>
+    </message>
+    <message>
+        <source>Erase the sheet of %1 (role, age, notes and photo)? The cues stay in the script.</source>
+        <translation>Apagar a ficha de %1 (papel, idade, anotações e foto)? As deixas continuam no roteiro.</translation>
     </message>
 </context>
 <context>
@@ -1230,6 +1219,30 @@ Deseja salvá-las?</translation>
         <source>Close</source>
         <translation>Fechar</translation>
     </message>
+    <message>
+        <source>Manage Characters...</source>
+        <translation>Gerenciar personagens...</translation>
+    </message>
+    <message>
+        <source>&amp;Characters...</source>
+        <translation>&amp;Personagens...</translation>
+    </message>
+    <message>
+        <source>&amp;Relationships</source>
+        <translation>&amp;Relações</translation>
+    </message>
+    <message>
+        <source>Map of how the characters are connected  (Ctrl+Shift+M)</source>
+        <translation>Mapa de como os personagens se ligam  (Ctrl+Shift+M)</translation>
+    </message>
+    <message>
+        <source>&amp;Timeline</source>
+        <translation>&amp;Linha do tempo</translation>
+    </message>
+    <message>
+        <source>Timeline of the film: acts, scenes and who is in each one  (Ctrl+Shift+L)</source>
+        <translation>Linha do tempo do filme: atos, cenas e quem está em cada uma  (Ctrl+Shift+L)</translation>
+    </message>
 </context>
 <context>
     <name>PixelAvatarDialog</name>
@@ -1292,6 +1305,363 @@ Deseja salvá-las?</translation>
     <message>
         <source>Redo</source>
         <translation>Refazer</translation>
+    </message>
+    <message>
+        <source>Skin tone</source>
+        <translation>Tom de pele</translation>
+    </message>
+    <message>
+        <source>Eye color</source>
+        <translation>Cor dos olhos</translation>
+    </message>
+    <message>
+        <source>Brows</source>
+        <translation>Sobrancelhas</translation>
+    </message>
+    <message>
+        <source>Hair color</source>
+        <translation>Cor do cabelo</translation>
+    </message>
+    <message>
+        <source>Lip color</source>
+        <translation>Cor dos lábios</translation>
+    </message>
+    <message>
+        <source>Hat</source>
+        <translation>Chapéu</translation>
+    </message>
+    <message>
+        <source>Hat color</source>
+        <translation>Cor do chapéu</translation>
+    </message>
+    <message>
+        <source>Clothing color</source>
+        <translation>Cor da roupa</translation>
+    </message>
+    <message>
+        <source>Body type</source>
+        <translation>Tipo de corpo</translation>
+    </message>
+    <message>
+        <source>Feminine</source>
+        <translation>Feminino</translation>
+    </message>
+    <message>
+        <source>Masculine</source>
+        <translation>Masculino</translation>
+    </message>
+    <message>
+        <source>Plain</source>
+        <translation>Sem detalhes</translation>
+    </message>
+    <message>
+        <source>Blush</source>
+        <translation>Blush</translation>
+    </message>
+    <message>
+        <source>Freckles</source>
+        <translation>Sardas</translation>
+    </message>
+    <message>
+        <source>Beauty mark</source>
+        <translation>Pinta</translation>
+    </message>
+    <message>
+        <source>Scar</source>
+        <translation>Cicatriz</translation>
+    </message>
+    <message>
+        <source>Wrinkles</source>
+        <translation>Rugas</translation>
+    </message>
+    <message>
+        <source>Normal</source>
+        <translation>Normal</translation>
+    </message>
+    <message>
+        <source>Happy</source>
+        <translation>Feliz</translation>
+    </message>
+    <message>
+        <source>Wide</source>
+        <translation>Arregalados</translation>
+    </message>
+    <message>
+        <source>Lashes</source>
+        <translation>Cílios</translation>
+    </message>
+    <message>
+        <source>Sleepy</source>
+        <translation>Sonolento</translation>
+    </message>
+    <message>
+        <source>Closed</source>
+        <translation>Fechado</translation>
+    </message>
+    <message>
+        <source>Natural</source>
+        <translation>Natural</translation>
+    </message>
+    <message>
+        <source>Thick</source>
+        <translation>Grossa</translation>
+    </message>
+    <message>
+        <source>Thin</source>
+        <translation>Fina</translation>
+    </message>
+    <message>
+        <source>Raised</source>
+        <translation>Erguida</translation>
+    </message>
+    <message>
+        <source>Angry</source>
+        <translation>Brava</translation>
+    </message>
+    <message>
+        <source>Worried</source>
+        <translation>Preocupada</translation>
+    </message>
+    <message>
+        <source>Smile</source>
+        <translation>Sorriso</translation>
+    </message>
+    <message>
+        <source>Neutral</source>
+        <comment>mouth</comment>
+        <translation>Neutra</translation>
+    </message>
+    <message>
+        <source>Laugh</source>
+        <translation>Rindo</translation>
+    </message>
+    <message>
+        <source>Smirk</source>
+        <translation>De lado</translation>
+    </message>
+    <message>
+        <source>Sad</source>
+        <translation>Triste</translation>
+    </message>
+    <message>
+        <source>Grin</source>
+        <translation>Dentes à mostra</translation>
+    </message>
+    <message>
+        <source>Full lips</source>
+        <translation>Lábios cheios</translation>
+    </message>
+    <message>
+        <source>Bald</source>
+        <translation>Careca</translation>
+    </message>
+    <message>
+        <source>Short</source>
+        <translation>Curto</translation>
+    </message>
+    <message>
+        <source>Messy</source>
+        <translation>Bagunçado</translation>
+    </message>
+    <message>
+        <source>Long</source>
+        <translation>Comprido</translation>
+    </message>
+    <message>
+        <source>Bob</source>
+        <translation>Chanel</translation>
+    </message>
+    <message>
+        <source>Bun</source>
+        <translation>Coque</translation>
+    </message>
+    <message>
+        <source>Ponytail</source>
+        <translation>Rabo de cavalo</translation>
+    </message>
+    <message>
+        <source>Mohawk</source>
+        <translation>Moicano</translation>
+    </message>
+    <message>
+        <source>Afro</source>
+        <translation>Black power</translation>
+    </message>
+    <message>
+        <source>Side part</source>
+        <translation>Repartido de lado</translation>
+    </message>
+    <message>
+        <source>Curly</source>
+        <translation>Cacheado</translation>
+    </message>
+    <message>
+        <source>Braids</source>
+        <translation>Tranças</translation>
+    </message>
+    <message>
+        <source>Buzz cut</source>
+        <translation>Raspado</translation>
+    </message>
+    <message>
+        <source>Long waves</source>
+        <translation>Ondulado longo</translation>
+    </message>
+    <message>
+        <source>Quiff</source>
+        <translation>Topete</translation>
+    </message>
+    <message>
+        <source>None</source>
+        <comment>facial hair</comment>
+        <translation>Sem barba</translation>
+    </message>
+    <message>
+        <source>Stubble</source>
+        <translation>Barba por fazer</translation>
+    </message>
+    <message>
+        <source>Mustache</source>
+        <translation>Bigode</translation>
+    </message>
+    <message>
+        <source>Goatee</source>
+        <translation>Cavanhaque</translation>
+    </message>
+    <message>
+        <source>Beard</source>
+        <translation>Barba</translation>
+    </message>
+    <message>
+        <source>Full beard</source>
+        <translation>Barba cheia</translation>
+    </message>
+    <message>
+        <source>None</source>
+        <comment>glasses</comment>
+        <translation>Sem óculos</translation>
+    </message>
+    <message>
+        <source>Round glasses</source>
+        <translation>Óculos redondos</translation>
+    </message>
+    <message>
+        <source>Square glasses</source>
+        <translation>Óculos quadrados</translation>
+    </message>
+    <message>
+        <source>Sunglasses</source>
+        <translation>Óculos escuros</translation>
+    </message>
+    <message>
+        <source>Monocle</source>
+        <translation>Monóculo</translation>
+    </message>
+    <message>
+        <source>Eye patch</source>
+        <translation>Tapa-olho</translation>
+    </message>
+    <message>
+        <source>None</source>
+        <comment>hat</comment>
+        <translation>Sem chapéu</translation>
+    </message>
+    <message>
+        <source>Beanie</source>
+        <translation>Gorro</translation>
+    </message>
+    <message>
+        <source>Cap</source>
+        <translation>Boné</translation>
+    </message>
+    <message>
+        <source>Fedora</source>
+        <translation>Chapéu</translation>
+    </message>
+    <message>
+        <source>Headband</source>
+        <translation>Faixa</translation>
+    </message>
+    <message>
+        <source>Bow</source>
+        <translation>Laço</translation>
+    </message>
+    <message>
+        <source>Crown</source>
+        <translation>Coroa</translation>
+    </message>
+    <message>
+        <source>T-shirt</source>
+        <translation>Camiseta</translation>
+    </message>
+    <message>
+        <source>Collar shirt</source>
+        <translation>Camisa</translation>
+    </message>
+    <message>
+        <source>Suit and tie</source>
+        <translation>Terno e gravata</translation>
+    </message>
+    <message>
+        <source>Hoodie</source>
+        <translation>Moletom</translation>
+    </message>
+    <message>
+        <source>Turtleneck</source>
+        <translation>Gola alta</translation>
+    </message>
+    <message>
+        <source>Strap top</source>
+        <translation>Blusa de alcinha</translation>
+    </message>
+    <message>
+        <source>Jacket</source>
+        <translation>Jaqueta</translation>
+    </message>
+    <message>
+        <source>Sand</source>
+        <translation>Areia</translation>
+    </message>
+    <message>
+        <source>Sky</source>
+        <translation>Céu</translation>
+    </message>
+    <message>
+        <source>Mint</source>
+        <translation>Menta</translation>
+    </message>
+    <message>
+        <source>Pink</source>
+        <translation>Rosa</translation>
+    </message>
+    <message>
+        <source>Lavender</source>
+        <translation>Lavanda</translation>
+    </message>
+    <message>
+        <source>Night</source>
+        <translation>Noite</translation>
+    </message>
+    <message>
+        <source>White</source>
+        <translation>Branco</translation>
+    </message>
+    <message>
+        <source>Sun</source>
+        <translation>Sol</translation>
+    </message>
+    <message>
+        <source>Sunset</source>
+        <translation>Pôr do sol</translation>
+    </message>
+    <message>
+        <source>Forest</source>
+        <translation>Floresta</translation>
+    </message>
+    <message>
+        <source>Neutral</source>
+        <comment>body</comment>
+        <translation>Neutro</translation>
     </message>
 </context>
 <context>
@@ -1419,6 +1789,117 @@ Deseja salvá-las?</translation>
     <message>
         <source>Double-click to write this beat.</source>
         <translation>Duplo clique para escrever este beat.</translation>
+    </message>
+</context>
+<context>
+    <name>RelationDialog</name>
+    <message>
+        <source>Family</source>
+        <translation>Família</translation>
+    </message>
+    <message>
+        <source>Love</source>
+        <translation>Amor</translation>
+    </message>
+    <message>
+        <source>Friendship</source>
+        <translation>Amizade</translation>
+    </message>
+    <message>
+        <source>Conflict</source>
+        <translation>Conflito</translation>
+    </message>
+    <message>
+        <source>Work</source>
+        <translation>Trabalho</translation>
+    </message>
+    <message>
+        <source>Other</source>
+        <translation>Outra</translation>
+    </message>
+    <message>
+        <source>Relationship</source>
+        <translation>Relação</translation>
+    </message>
+    <message>
+        <source>%1 and %2</source>
+        <translation>%1 e %2</translation>
+    </message>
+    <message>
+        <source>e.g. sisters, ex-husband, boss</source>
+        <translation>ex.: irmãs, ex-marido, chefe</translation>
+    </message>
+    <message>
+        <source>Type:</source>
+        <translation>Tipo:</translation>
+    </message>
+    <message>
+        <source>Label:</source>
+        <translation>Rótulo:</translation>
+    </message>
+    <message>
+        <source>Save</source>
+        <translation>Salvar</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>Cancelar</translation>
+    </message>
+    <message>
+        <source>Remove Link</source>
+        <translation>Remover ligação</translation>
+    </message>
+</context>
+<context>
+    <name>RelationMapView</name>
+    <message>
+        <source>Show who shares scenes</source>
+        <translation>Mostrar quem divide cenas</translation>
+    </message>
+    <message>
+        <source>Arrange in a circle</source>
+        <translation>Arrumar em círculo</translation>
+    </message>
+    <message>
+        <source>Fit to window</source>
+        <translation>Caber na janela</translation>
+    </message>
+    <message>
+        <source>Characters show up here as soon as they speak in the script.
+Then drag from the + of one character to another to link them.</source>
+        <translation>Os personagens aparecem aqui assim que falam no roteiro.
+Depois, arraste do + de um personagem até outro para ligar os dois.</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n speech(es)</source>
+        <translation>
+            <numerusform>%n fala</numerusform>
+            <numerusform>%n falas</numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>Open Character Sheet...</source>
+        <translation>Abrir ficha do personagem...</translation>
+    </message>
+    <message>
+        <source>Link To</source>
+        <translation>Ligar a</translation>
+    </message>
+    <message>
+        <source>Edit Relationship...</source>
+        <translation>Editar relação...</translation>
+    </message>
+    <message>
+        <source>Remove Link</source>
+        <translation>Remover ligação</translation>
+    </message>
+    <message>
+        <source>Arrange in a Circle</source>
+        <translation>Arrumar em círculo</translation>
+    </message>
+    <message>
+        <source>Fit to Window</source>
+        <translation>Caber na janela</translation>
     </message>
 </context>
 <context>
@@ -1707,6 +2188,129 @@ Escreva um cabeçalho (INT. ou EXT.) no roteiro e ele aparece aqui como cartão.
     <message>
         <source>Nothing to print.</source>
         <translation>Nada para imprimir.</translation>
+    </message>
+</context>
+<context>
+    <name>TimelineView</name>
+    <message>
+        <source>Page %1 · %2 page(s)</source>
+        <translation>Página %1 · %2 página(s)</translation>
+    </message>
+    <message>
+        <source>p. 1</source>
+        <translation>p. 1</translation>
+    </message>
+    <message>
+        <source>Pages</source>
+        <translation>Páginas</translation>
+    </message>
+    <message>
+        <source>Structure</source>
+        <translation>Estrutura</translation>
+    </message>
+    <message>
+        <source>Act I</source>
+        <translation>Ato I</translation>
+    </message>
+    <message>
+        <source>Setup</source>
+        <translation>Apresentação</translation>
+    </message>
+    <message>
+        <source>Act II</source>
+        <translation>Ato II</translation>
+    </message>
+    <message>
+        <source>Confrontation</source>
+        <translation>Confronto</translation>
+    </message>
+    <message>
+        <source>Act III</source>
+        <translation>Ato III</translation>
+    </message>
+    <message>
+        <source>Resolution</source>
+        <translation>Resolução</translation>
+    </message>
+    <message>
+        <source>Inciting incident</source>
+        <translation>Incidente incitante</translation>
+    </message>
+    <message>
+        <source>Plot point 1</source>
+        <translation>Ponto de virada 1</translation>
+    </message>
+    <message>
+        <source>Midpoint</source>
+        <translation>Ponto médio</translation>
+    </message>
+    <message>
+        <source>Plot point 2</source>
+        <translation>Ponto de virada 2</translation>
+    </message>
+    <message>
+        <source>Climax</source>
+        <translation>Clímax</translation>
+    </message>
+    <message>
+        <source>Scenes</source>
+        <translation>Cenas</translation>
+    </message>
+    <message>
+        <source>Characters</source>
+        <translation>Personagens</translation>
+    </message>
+    <message numerus="yes">
+        <source>Written: %n page(s)</source>
+        <translation>
+            <numerusform>Escrito: %n página</numerusform>
+            <numerusform>Escrito: %n páginas</numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>Timeline</source>
+        <translation>Linha do tempo</translation>
+    </message>
+    <message>
+        <source> pages</source>
+        <translation> páginas</translation>
+    </message>
+    <message>
+        <source>Planned length. One page is about one minute of screen time.</source>
+        <translation>Duração planejada. Uma página dá mais ou menos um minuto de tela.</translation>
+    </message>
+    <message>
+        <source>Zoom to Written Pages</source>
+        <translation>Só as páginas escritas</translation>
+    </message>
+    <message>
+        <source>Planned length:</source>
+        <translation>Duração planejada:</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n page(s)</source>
+        <translation>
+            <numerusform>%n página</numerusform>
+            <numerusform>%n páginas</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>about %n minute(s)</source>
+        <translation>
+            <numerusform>cerca de %n minuto</numerusform>
+            <numerusform>cerca de %n minutos</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>%n scene(s)</source>
+        <translation>
+            <numerusform>%n cena</numerusform>
+            <numerusform>%n cenas</numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>%1% of the planned length</source>
+        <translation>%1% da duração planejada</translation>
     </message>
 </context>
 <context>
