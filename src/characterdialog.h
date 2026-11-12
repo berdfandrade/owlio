@@ -57,6 +57,7 @@ private:
     AvatarButton* avatar_;
     QPushButton* removePhoto_;
     QLabel* nameLabel_;
+    QLabel* roleLabel_;
     QLineEdit* name_;
     QComboBox* role_;
     QLineEdit* age_;

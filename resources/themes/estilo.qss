@@ -135,10 +135,11 @@ QLineEdit#campoTitulo { font-size: 15px; font-weight: 600; padding: 8px 10px; }
 QWidget#painelLateral { background: @surface; border-left: 1px solid @border; }
 QFrame#ficha { background: @canvas; border-radius: 14px; }
 QLabel#nomeFicha { font-size: 17px; font-weight: 700; color: @text; }
-QFrame#ficha QListWidget { background: transparent; }
-QFrame#ficha QListWidget::item { padding: 5px 6px; border-radius: 6px; color: @text; }
-QFrame#ficha QListWidget::item:hover { background: @hover; }
-QFrame#ficha QListWidget::item:selected { background: @selected; color: @text; }
+QFrame#ficha QListWidget { background: transparent; padding: 0; }
+QFrame#estatisticas { background: @surface; border: 1px solid @border; border-radius: 10px; }
+QFrame#estatisticas QLabel { color: @text; background: transparent; }
+QFrame#divisor { background: @border; margin: 4px 0; }
+QLabel#papelFicha { color: @accent; font-weight: 600; }
 QPushButton#perigo { color: #e5484d; background: transparent; border-color: transparent; }
 QPushButton#perigo:hover { background: @hover; }
 QPushButton#primarioBotao { background: @accent; color: @accentText; border-color: @accent; font-weight: 600; }
