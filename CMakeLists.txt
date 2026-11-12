@@ -16,7 +16,12 @@ add_library(owlio_core STATIC
   src/editor.cpp
 )
 target_include_directories(owlio_core PUBLIC src)
-target_compile_options(owlio_core PRIVATE -Wall -Wextra)
+if(MSVC)
+  set(OWLIO_WARNINGS /W4 /utf-8)
+else()
+  set(OWLIO_WARNINGS -Wall -Wextra)
+endif()
+target_compile_options(owlio_core PRIVATE ${OWLIO_WARNINGS})
 
 add_executable(owlio_tests tests/tests.cpp)
 target_link_libraries(owlio_tests PRIVATE owlio_core)
@@ -52,7 +57,12 @@ set(UI_LIBS owlio_core Qt6::Widgets Qt6::PrintSupport Qt6::Svg)
 
 add_executable(owlio src/main.cpp ${UI_SOURCES})
 target_link_libraries(owlio PRIVATE ${UI_LIBS})
-target_compile_options(owlio PRIVATE -Wall -Wextra)
+target_compile_options(owlio PRIVATE ${OWLIO_WARNINGS})
+if(WIN32)
+  # Sem janela de console e com o ícone no .exe.
+  set_target_properties(owlio PROPERTIES WIN32_EXECUTABLE ON)
+  target_sources(owlio PRIVATE resources/owlio.rc)
+endif()
 
 # Teste de interface: envia teclas reais para a janela (QTest).
 find_package(Qt6 REQUIRED COMPONENTS Test)
@@ -67,3 +77,12 @@ qt_add_translations(TARGETS owlio owlio_gui_test
   RESOURCE_PREFIX "/i18n"
   LUPDATE_OPTIONS -no-obsolete -locations none
 )
+
+# Instalação. No Windows, o windeployqt copia DLLs, plugins e traduções do Qt para junto do .exe:
+#   cmake --install build --prefix dist   e depois   iscc packaging/owlio.iss
+include(GNUInstallDirs)
+install(TARGETS owlio RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+if(WIN32)
+  qt_generate_deploy_app_script(TARGET owlio OUTPUT_SCRIPT owlio_deploy NO_UNSUPPORTED_PLATFORM_ERROR)
+  install(SCRIPT ${owlio_deploy})
+endif()
