@@ -51,7 +51,6 @@ public:
     int revision() const { return revision_; }
     bool modified() const { return modified_; }
     void markSaved() { modified_ = false; }
-    void markModified() { modified_ = true; ++revision_; }
     void setTitleValue(const std::string& key, const std::string& value);
     void setAvatar(const std::u32string& name, const std::string& base64);  // vazio remove
     ScriptLanguage scriptLanguage() const { return lang_; }
@@ -91,10 +90,6 @@ public:
     void backspace(bool word);
     void deleteForward(bool word);
     void setElement(Element e);
-    // Diálogo duplo da fala onde está o cursor: liga (ao lado da fala anterior ou da seguinte)
-    // ou desliga. Retorna false se não houver duas falas seguidas.
-    bool toggleDualDialogue();
-    bool isDualDialogue() const;
     void deleteSelection();
     std::string copySelection() const;  // texto (Fountain quando atravessa parágrafos)
     void paste(const std::string& utf8);
@@ -146,7 +141,6 @@ private:
     void moveTo(Pos p, bool select, bool keepColumn = false);
     void moveVertical(int lines, bool select);
     std::vector<std::u32string> candidates() const;
-    int speechCue(int para) const;  // deixa (Personagem) da fala que contém `para`, ou -1
 
     Document doc_;
     Pos cursor_, anchor_;

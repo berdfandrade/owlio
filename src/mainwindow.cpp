@@ -5,8 +5,6 @@
 #include <QComboBox>
 #include <QDate>
 #include <QDialog>
-#include <QDir>
-#include <QLocale>
 #include <QDialogButtonBox>
 #include <QDockWidget>
 #include <QFile>
@@ -208,11 +206,6 @@ MainWindow::MainWindow() {
     panelTimer_.setSingleShot(true);
     panelTimer_.setInterval(250);
     connect(&panelTimer_, &QTimer::timeout, this, &MainWindow::refreshPanels);
-    recoveryTimer_.setInterval(20 * 1000);
-    connect(&recoveryTimer_, &QTimer::timeout, this, &MainWindow::writeRecoveryNow);
-    recoveryTimer_.start();
-    connect(&autosaveTimer_, &QTimer::timeout, this, &MainWindow::autosaveNow);
-    applySaveSettings();
     connect(view_, &ScriptView::documentChanged, this, &MainWindow::onDocumentChanged);
     connect(view_, &ScriptView::cursorMoved, this, &MainWindow::onCursorMoved);
     connect(&ThemeManager::instance(), &ThemeManager::changed, this, &MainWindow::refreshIcons);
@@ -285,7 +278,6 @@ void MainWindow::buildActions() {
     file->addAction(tr("Export to Final Draft (.fdx)..."), this, &MainWindow::exportFdx);
     QAction* printAct = iconAction(file->addAction(tr("&Print..."), this, &MainWindow::print), "imprimir");
     printAct->setShortcut(QKeySequence::Print);
-    file->addAction(tr("&Backups..."), this, &MainWindow::browseBackups);
     file->addSeparator();
     file->addAction(tr("&Quit"), this, &QWidget::close)->setShortcut(QKeySequence::Quit);
 
@@ -319,16 +311,6 @@ void MainWindow::buildActions() {
         elementGroup->addAction(a);
         elementActions_.append(a);
     }
-    fmt->addSeparator();
-    dualAct_ = fmt->addAction(tr("&Dual Dialogue"), this, [this] {
-        if (!view_->toggleDualDialogue())
-            statusBar()->showMessage(tr("Dual dialogue needs two speeches in a row: put the cursor in one of them."),
-                                     4000);
-        onCursorMoved();
-    });
-    dualAct_->setCheckable(true);
-    dualAct_->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_D));
-    dualAct_->setToolTip(tr("Puts this speech side by side with the one before it"));
 
     // ---- Documento
     QMenu* docMenu = menuBar()->addMenu(tr("&Document"));
@@ -489,7 +471,6 @@ void MainWindow::newFile() {
     d.paragraphs.push_back({Element::SceneHeading, U""});
     editor_.setDocument(d);
     path_.clear();
-    clearRecovery();
     view_->refresh();
     updateTitle();
 }
@@ -513,7 +494,6 @@ bool MainWindow::openFile(const QString& path) {
     Document d = path.endsWith(".fdx", Qt::CaseInsensitive) ? parseFdx(data) : parseFountain(data);
     editor_.setDocument(std::move(d));
     path_ = path;
-    clearRecovery();
     QSettings().setValue("lastDir", QFileInfo(path).absolutePath());
     view_->refresh();
     updateTitle();
@@ -521,22 +501,17 @@ bool MainWindow::openFile(const QString& path) {
     return true;
 }
 
-std::string MainWindow::serialize(const QString& path) const {
-    return path.endsWith(".fdx", Qt::CaseInsensitive) ? writeFdx(editor_.doc()) : writeFountain(editor_.doc());
-}
-
-bool MainWindow::writeTo(const QString& path, bool quiet) {
+bool MainWindow::writeTo(const QString& path) {
     QSaveFile f(path);
     if (!f.open(QIODevice::WriteOnly)) {
-        if (quiet) statusBar()->showMessage(tr("Could not save %1: %2").arg(path, f.errorString()), 6000);
-        else QMessageBox::critical(this, tr("Error"), tr("Could not save %1:\n%2").arg(path, f.errorString()));
+        QMessageBox::critical(this, tr("Error"), tr("Could not save %1:\n%2").arg(path, f.errorString()));
         return false;
     }
-    const std::string data = serialize(path);
+    const std::string data = path.endsWith(".fdx", Qt::CaseInsensitive) ? writeFdx(editor_.doc())
+                                                                         : writeFountain(editor_.doc());
     f.write(data.data(), static_cast<qint64>(data.size()));
     if (!f.commit()) {
-        if (quiet) statusBar()->showMessage(tr("Failed to write %1.").arg(path), 6000);
-        else QMessageBox::critical(this, tr("Error"), tr("Failed to write %1.").arg(path));
+        QMessageBox::critical(this, tr("Error"), tr("Failed to write %1.").arg(path));
         return false;
     }
     return true;
@@ -544,97 +519,11 @@ bool MainWindow::writeTo(const QString& path, bool quiet) {
 
 bool MainWindow::save() {
     if (path_.isEmpty()) return saveAs();
-    return saveNow(false);
-}
-
-bool MainWindow::saveNow(bool automatic) {
-    if (path_.isEmpty() || !writeTo(path_, automatic)) return false;
+    if (!writeTo(path_)) return false;
     editor_.markSaved();
-    clearRecovery();
-    if (QSettings().value("keepBackups", true).toBool())
-        autosave::backup(path_, QByteArray::fromStdString(serialize(path_)), automatic);
     updateTitle();
-    statusBar()->showMessage(automatic ? tr("Saved automatically.") : tr("Saved."), 2000);
+    statusBar()->showMessage(tr("Saved."), 2000);
     return true;
-}
-
-// ------------------------------------------------------------ salvamento automático e recuperação
-
-void MainWindow::applySaveSettings() {
-    const int minutes = QSettings().value("autosaveMinutes", 5).toInt();
-    if (minutes > 0) autosaveTimer_.start(minutes * 60 * 1000);
-    else autosaveTimer_.stop();
-}
-
-void MainWindow::autosaveNow() {
-    // Só salva no próprio arquivo quando ele já existe; sem título, fica a cópia de recuperação.
-    if (editor_.modified() && !path_.isEmpty()) saveNow(true);
-}
-
-void MainWindow::writeRecoveryNow() {
-    if (!editor_.modified()) {
-        if (recoveryRevision_ >= 0) clearRecovery();
-        return;
-    }
-    if (editor_.revision() == recoveryRevision_) return;
-    session_.write(QByteArray::fromStdString(writeFountain(editor_.doc())), path_);
-    recoveryRevision_ = editor_.revision();
-}
-
-void MainWindow::clearRecovery() {
-    session_.clear();
-    recoveryRevision_ = -1;
-}
-
-void MainWindow::offerRecovery() {
-    for (const autosave::Recovery& r : autosave::orphans()) {
-        const QString name = r.originalPath.isEmpty() ? tr("an untitled script") : QFileInfo(r.originalPath).fileName();
-        QMessageBox box(QMessageBox::Warning, tr("Recover Unsaved Changes"),
-                        tr("Owlio closed before saving your changes to %1.").arg(name), QMessageBox::NoButton, this);
-        box.setInformativeText(tr("The last copy was kept on %1. Do you want to recover it?")
-                                   .arg(QLocale().toString(r.when, QLocale::ShortFormat)));
-        QPushButton* recoverBtn = box.addButton(tr("Recover"), QMessageBox::AcceptRole);
-        QPushButton* discardBtn = box.addButton(tr("Discard"), QMessageBox::DestructiveRole);
-        box.addButton(tr("Decide Later"), QMessageBox::RejectRole);
-        box.setDefaultButton(recoverBtn);
-        box.exec();
-        if (box.clickedButton() == recoverBtn) {
-            if (!maybeSave()) return;
-            recover(r);
-            return;  // uma janela, um roteiro: as outras cópias ficam para o próximo início
-        }
-        if (box.clickedButton() != discardBtn) return;
-        autosave::discard(r);
-    }
-}
-
-void MainWindow::recover(const autosave::Recovery& r) {
-    QFile f(r.file);
-    if (!f.open(QIODevice::ReadOnly)) return;
-    editor_.setDocument(parseFountain(f.readAll().toStdString()));
-    f.close();
-    path_ = r.originalPath;
-    editor_.markModified();  // ainda não foi salvo no arquivo original
-    autosave::discard(r);
-    recoveryRevision_ = -1;
-    writeRecoveryNow();  // a cópia agora pertence a esta janela
-    view_->refresh();
-    updateTitle();
-    statusBar()->showMessage(tr("Changes recovered. Save to keep them."), 5000);
-}
-
-void MainWindow::browseBackups() {
-    QString dir = path_.isEmpty() ? autosave::backupRoot() : autosave::backupDir(path_);
-    if (!QFileInfo::exists(dir)) dir = autosave::backupRoot();
-    QDir().mkpath(dir);
-    const QString p = QFileDialog::getOpenFileName(this, tr("Open a Backup"), dir,
-                                                   tr("Scripts (*.fountain *.fdx);;All files (*)"));
-    if (p.isEmpty() || !maybeSave() || !openFile(p)) return;
-    // Abre como cópia sem título, para não sobrescrever o backup ao salvar.
-    path_.clear();
-    editor_.markModified();
-    updateTitle();
-    statusBar()->showMessage(tr("Opened a copy of the backup. Use Save As to keep it."), 6000);
 }
 
 bool MainWindow::saveAs() {
@@ -755,9 +644,6 @@ void MainWindow::showSettings() {
     if (dlg.exec() != QDialog::Accepted) return;
 
     ThemeManager::instance().setMode(dlg.themeMode());
-    QSettings().setValue("autosaveMinutes", dlg.autosaveMinutes());
-    QSettings().setValue("keepBackups", dlg.keepBackups());
-    applySaveSettings();
     if (dlg.scriptLanguage() != editor_.scriptLanguage()) {
         i18n::setScriptLanguage(dlg.scriptLanguage());
         editor_.setScriptLanguage(dlg.scriptLanguage());
@@ -817,7 +703,6 @@ void MainWindow::setCardsMode(bool cards) {
     cardsModeAct_->setChecked(cards);
     elementComboAct_->setVisible(!cards);
     for (QAction* a : elementActions_) a->setEnabled(!cards);
-    if (dualAct_) dualAct_->setEnabled(!cards);
     if (cards == cardsMode()) return;
     if (cards) {
         board_->reload();
@@ -872,7 +757,6 @@ void MainWindow::onCursorMoved() {
     const int el = static_cast<int>(editor_.currentElement());
     elementCombo_->setCurrentIndex(el);
     for (int i = 0; i < elementActions_.size(); ++i) elementActions_[i]->setChecked(i == el);
-    if (dualAct_) dualAct_->setChecked(editor_.isDualDialogue());
     undoAct_->setEnabled(editor_.canUndo());
     redoAct_->setEnabled(editor_.canRedo());
 
@@ -960,7 +844,6 @@ void MainWindow::updateTitle() {
 
 void MainWindow::closeEvent(QCloseEvent* e) {
     if (!maybeSave()) { e->ignore(); return; }
-    clearRecovery();  // fechamento normal: nada a recuperar
     QSettings s;
     s.setValue("geometry", saveGeometry());
     s.setValue("windowState", saveState());

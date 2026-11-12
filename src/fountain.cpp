@@ -301,10 +301,8 @@ Document parseFountain(const std::string& utf8In, bool parseTitlePage) {
         }
         if (l[0] == U'@') {
             std::u32string name = trim(l.substr(1));
-            const bool dual = !name.empty() && name.back() == U'^';
-            if (dual) name = trim(name.substr(0, name.size() - 1));
+            if (!name.empty() && name.back() == U'^') name = trim(name.substr(0, name.size() - 1));
             doc.paragraphs.push_back({Element::Character, name});
-            doc.paragraphs.back().dual = dual;
             inDialogue = !nextBlank;
             continue;
         }
@@ -325,10 +323,8 @@ Document parseFountain(const std::string& utf8In, bool parseTitlePage) {
         }
         if (prevBlank && !nextBlank && looksLikeCharacterCue(l)) {
             std::u32string name = l;
-            const bool dual = !name.empty() && name.back() == U'^';
-            if (dual) name = trim(name.substr(0, name.size() - 1));
+            if (!name.empty() && name.back() == U'^') name = trim(name.substr(0, name.size() - 1));
             doc.paragraphs.push_back({Element::Character, name});
-            doc.paragraphs.back().dual = dual;
             inDialogue = true;
             continue;
         }
@@ -358,9 +354,7 @@ std::string writeFountain(const Document& doc, bool writeTitlePage) {
 
     bool first = true;
     Element prev = Element::Action;
-    const std::vector<int> sides = dualSides(doc);
-    for (size_t pi = 0; pi < doc.paragraphs.size(); ++pi) {
-        const Paragraph& p = doc.paragraphs[pi];
+    for (const auto& p : doc.paragraphs) {
         std::u32string t = trim(p.text);
         if (t.empty() && p.type != Element::Dialogue) continue;
 
@@ -386,7 +380,6 @@ std::string writeFountain(const Document& doc, bool writeTitlePage) {
             case Element::Character:
                 line = toUpper(t);
                 if (!looksLikeCharacterCue(line) || looksLikeSceneHeading(line)) line = U"@" + line;
-                if (sides[pi] == 2) line += U" ^";  // diálogo duplo
                 break;
             case Element::Parenthetical:
                 line = t;

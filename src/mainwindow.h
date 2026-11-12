@@ -3,7 +3,6 @@
 #include <QMainWindow>
 #include <QTimer>
 
-#include "autosave.h"
 #include "editor.h"
 
 class QComboBox;
@@ -28,12 +27,6 @@ public:
     bool cardsMode() const;
     void setCardsMode(bool cards);
     const Editor& editor() const { return editor_; }
-    // Oferece as cópias de recuperação deixadas por execuções que não fecharam direito.
-    void offerRecovery();
-    void recover(const autosave::Recovery& r);  // abre a cópia nesta janela
-    void writeRecoveryNow();                    // o que o timer faz a cada 20 s
-    void autosaveNow();                         // o que o timer de salvamento automático faz
-    QString currentPath() const { return path_; }
 
 protected:
     void closeEvent(QCloseEvent* e) override;
@@ -58,16 +51,11 @@ private slots:
     void editCharacter(const QString& characterName);
     void gotoFirstLine(const QString& characterName);
     void showSettings();
-    void browseBackups();
 
 private:
     void buildActions();
     bool maybeSave();
-    bool writeTo(const QString& path, bool quiet = false);
-    std::string serialize(const QString& path) const;
-    bool saveNow(bool automatic);
-    void applySaveSettings();
-    void clearRecovery();
+    bool writeTo(const QString& path);
     QString suggestedPdfPath() const;
     void openPrintDialog(bool pdf);
     void updateTitle();
@@ -84,10 +72,6 @@ private:
     QAction* elementComboAct_ = nullptr;
     QString path_;
     QTimer panelTimer_;
-    QTimer recoveryTimer_;
-    QTimer autosaveTimer_;
-    autosave::Session session_;
-    int recoveryRevision_ = -1;
 
     QListWidget* sceneList_ = nullptr;
     QListWidget* charList_ = nullptr;
@@ -97,7 +81,6 @@ private:
     QLabel* sceneLabel_ = nullptr;
     QLabel* wordLabel_ = nullptr;
     QList<QAction*> elementActions_;
-    QAction* dualAct_ = nullptr;
     QAction* undoAct_ = nullptr;
     QAction* redoAct_ = nullptr;
     FindDialog* findDialog_ = nullptr;

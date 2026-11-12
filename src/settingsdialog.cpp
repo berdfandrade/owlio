@@ -1,18 +1,12 @@
 #include "settingsdialog.h"
 
-#include <QCheckBox>
 #include <QComboBox>
-#include <QDesktopServices>
-#include <QDir>
-#include <QSettings>
-#include <QUrl>
 #include <QDialogButtonBox>
 #include <QFormLayout>
 #include <QLabel>
 #include <QPushButton>
 #include <QVBoxLayout>
 
-#include "autosave.h"
 #include "i18n.h"
 
 namespace {
@@ -79,35 +73,15 @@ SettingsDialog::SettingsDialog(QWidget* parent) : QDialog(parent) {
     auto* f3 = makeForm();
     f3->addRow(tr("Theme"), theme_);
 
-    // ---- Salvamento
-    autosave_ = new QComboBox;
-    autosave_->addItem(tr("Off"), 0);
-    autosave_->addItem(tr("Every minute"), 1);
-    autosave_->addItem(tr("Every 5 minutes"), 5);
-    autosave_->addItem(tr("Every 10 minutes"), 10);
-    autosave_->setCurrentIndex(std::max(0, autosave_->findData(QSettings().value("autosaveMinutes", 5).toInt())));
-    backups_ = new QCheckBox(tr("Keep a dated backup copy every time the script is saved"));
-    backups_->setChecked(QSettings().value("keepBackups", true).toBool());
-    auto* openBackups = new QPushButton(tr("Open Backups Folder"));
-    openBackups->setObjectName("link");
-    connect(openBackups, &QPushButton::clicked, this, [] {
-        QDir().mkpath(autosave::backupRoot());
-        QDesktopServices::openUrl(QUrl::fromLocalFile(autosave::backupRoot()));
-    });
-    auto* f4 = makeForm();
-    f4->addRow(tr("Save automatically"), autosave_);
-    f4->addRow(QString(), backups_);
-    f4->addRow(QString(), openBackups);
-
-    for (QComboBox* c : {language_, script_, theme_, autosave_}) c->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    for (QComboBox* c : {language_, script_, theme_}) c->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
 
     // Rótulos das três seções com a mesma largura, para os campos alinharem.
     int labelWidth = 0;
-    for (QFormLayout* f : {f1, f2, f3, f4})
+    for (QFormLayout* f : {f1, f2, f3})
         for (int r = 0; r < f->rowCount(); ++r)
             if (auto* l = f->itemAt(r, QFormLayout::LabelRole))
                 labelWidth = std::max(labelWidth, l->widget()->sizeHint().width());
-    for (QFormLayout* f : {f1, f2, f3, f4})
+    for (QFormLayout* f : {f1, f2, f3})
         for (int r = 0; r < f->rowCount(); ++r)
             if (auto* l = f->itemAt(r, QFormLayout::LabelRole)) l->widget()->setMinimumWidth(labelWidth);
 
@@ -134,20 +108,12 @@ SettingsDialog::SettingsDialog(QWidget* parent) : QDialog(parent) {
     root->addSpacing(10);
     root->addWidget(sectionLabel(tr("Appearance")));
     root->addLayout(f3);
-    root->addSpacing(10);
-    root->addWidget(sectionLabel(tr("Saving")));
-    root->addLayout(f4);
-    root->addWidget(hint(tr("Untitled scripts are not saved automatically, but if Owlio closes unexpectedly "
-                            "your unsaved changes are offered back the next time it starts.")));
     root->addSpacing(18);
     root->addStretch(1);
     root->addWidget(bb);
     // Só depois de estar na janela: antes disso o QDialog escolheria outro botão padrão.
     bb->button(QDialogButtonBox::Save)->setDefault(true);
 }
-
-int SettingsDialog::autosaveMinutes() const { return autosave_->currentData().toInt(); }
-bool SettingsDialog::keepBackups() const { return backups_->isChecked(); }
 
 QString SettingsDialog::uiLanguage() const { return language_->currentData().toString(); }
 

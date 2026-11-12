@@ -338,86 +338,6 @@ static void testScenes() {
     CHECK(e.doc().paragraphs[sc[1].para].synopsis.empty());
 }
 
-static void testDualDialogue() {
-    Document d;
-    d.paragraphs = {{Element::SceneHeading, U"INT. BAR - NOITE"},
-                    {Element::Character, U"ANA"},
-                    {Element::Dialogue, U"Você de novo?"},
-                    {Element::Character, U"BETO"},
-                    {Element::Parenthetical, U"(ao mesmo tempo)"},
-                    {Element::Dialogue, U"Eu de novo. Mas desta vez trouxe o dinheiro, juro."},
-                    {Element::Action, U"Os dois riem."}};
-    Editor e;
-    e.setDocument(d);
-    CHECK(!e.isDualDialogue());
-
-    // Cursor na segunda fala: liga o diálogo duplo.
-    e.setCursor({5, 0});
-    CHECK(e.toggleDualDialogue());
-    CHECK(e.doc().paragraphs[3].dual);
-    CHECK(e.isDualDialogue());
-    CHECK(dualSides(e.doc()) == std::vector<int>({0, 1, 1, 2, 2, 2, 0}));
-
-    // Leiaute: as duas falas começam na mesma linha, em colunas diferentes.
-    const Layout& L = e.layout();
-    const LayoutLine& ana = L.lines[L.paraLines[1].front()];
-    const LayoutLine& beto = L.lines[L.paraLines[3].front()];
-    CHECK(ana.row == beto.row && ana.page == beto.page);
-    CHECK(ana.col < 40 && beto.col > 45);
-    for (int li : L.paraLines[5]) CHECK(L.lines[li].col == 46 && L.lines[li].row > beto.row);
-    for (int li : L.paraLines[2]) CHECK(L.lines[li].col == 15);
-    // A ação seguinte vem depois da coluna mais longa (a da direita), com uma linha em branco.
-    int lowest = 0;
-    for (int k = 1; k <= 5; ++k)
-        for (int li : L.paraLines[k]) lowest = std::max(lowest, L.lines[li].row);
-    CHECK(L.lines[L.paraLines[6].front()].row == lowest + 2);
-
-    // Fountain e FDX de ida e volta.
-    const std::string fountain = writeFountain(e.doc());
-    CHECK(fountain.find("BETO ^") != std::string::npos);
-    Document f = parseFountain(fountain);
-    CHECK(f.paragraphs.size() == 7 && f.paragraphs[3].dual && !f.paragraphs[1].dual);
-    const std::string fdx = writeFdx(e.doc());
-    CHECK(fdx.find("<DualDialogue>") != std::string::npos);
-    Document x = parseFdx(fdx);
-    CHECK(x.paragraphs.size() == 7);
-    if (x.paragraphs.size() == 7) {
-        CHECK(x.paragraphs[3].type == Element::Character && x.paragraphs[3].dual);
-        CHECK(x.paragraphs[1].type == Element::Character && !x.paragraphs[1].dual);
-        CHECK(x.paragraphs[5].text == d.paragraphs[5].text);
-        CHECK(x.paragraphs[6].type == Element::Action);
-    }
-
-    // Na fala da esquerda, desliga o par; desfazer volta.
-    e.setCursor({2, 0});
-    CHECK(e.toggleDualDialogue());
-    CHECK(!e.doc().paragraphs[3].dual && !e.isDualDialogue());
-    e.undo();
-    CHECK(e.doc().paragraphs[3].dual);
-    e.undo();
-    CHECK(!e.doc().paragraphs[3].dual);
-
-    // Na primeira fala, liga com a seguinte.
-    e.setCursor({1, 0});
-    CHECK(e.toggleDualDialogue());
-    CHECK(e.doc().paragraphs[3].dual);
-
-    // Fora de uma fala, ou sem fala vizinha, não faz nada.
-    e.setCursor({6, 0});
-    CHECK(!e.toggleDualDialogue());
-    Editor solo;
-    Document s1;
-    s1.paragraphs = {{Element::Character, U"ANA"}, {Element::Dialogue, U"Oi."}, {Element::Action, U"Fim."}};
-    solo.setDocument(s1);
-    solo.setCursor({1, 0});
-    CHECK(!solo.toggleDualDialogue());
-
-    // "^" num arquivo sem fala anterior é ignorado no leiaute.
-    Document lone = parseFountain("INT. A - DIA\n\nANA ^\nOi.\n");
-    CHECK(lone.paragraphs.size() == 3 && lone.paragraphs[1].dual);
-    CHECK(dualSides(lone) == std::vector<int>({0, 0, 0}));
-}
-
 int main() {
     testScenes();
     testFountain();
@@ -425,7 +345,6 @@ int main() {
     testWrapAndLayout();
     testEditor();
     testCharacters();
-    testDualDialogue();
     if (failures == 0) std::printf("All tests passed.\n");
     return failures == 0 ? 0 : 1;
 }

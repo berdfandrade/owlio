@@ -123,10 +123,7 @@ Pos ScriptView::posFromPoint(QPointF pt) const {
             if (l.page > pg && best >= 0) break;
             continue;
         }
-        // Linhas na mesma altura (diálogo duplo): desempata pela coluna.
-        const int len = static_cast<int>(L.lineText(ed_->doc(), static_cast<int>(li)).size());
-        const int dx = col < l.col ? l.col - col : (col > l.col + len ? col - l.col - len : 0);
-        int d = std::abs(l.row - row) * 1000 + dx;
+        int d = std::abs(l.row - row);
         if (d < bestDist) { bestDist = d; best = static_cast<int>(li); }
     }
     if (best < 0) {
@@ -392,9 +389,6 @@ void ScriptView::contextMenuEvent(QContextMenuEvent* e) {
         a->setCheckable(true);
         a->setChecked(ed_->currentElement() == t);
     }
-    QAction* dual = menu.addAction(tr("Dual Dialogue"), this, [this] { toggleDualDialogue(); });
-    dual->setCheckable(true);
-    dual->setChecked(ed_->isDualDialogue());
     menu.exec(e->globalPos());
 }
 
@@ -436,14 +430,6 @@ void ScriptView::selectAll() {
     ed_->selectAll();
     viewport()->update();
     emit cursorMoved();
-}
-
-bool ScriptView::toggleDualDialogue() {
-    int r = ed_->revision();
-    const bool ok = ed_->toggleDualDialogue();
-    afterEdit(r);
-    setFocus();
-    return ok;
 }
 
 void ScriptView::setElement(Element e) {

@@ -39,7 +39,6 @@ set(UI_SOURCES
   src/characterdialog.cpp src/characterdialog.h
   src/settingsdialog.cpp src/settingsdialog.h
   src/i18n.cpp src/i18n.h
-  src/autosave.cpp src/autosave.h
   resources/owlio.qrc
 )
 set(UI_LIBS owlio_core Qt6::Widgets Qt6::PrintSupport Qt6::Svg)

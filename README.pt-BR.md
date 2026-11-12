@@ -13,7 +13,6 @@ O idioma oficial do Owlio é o inglês. A interface em **português do Brasil** 
 - **Páginas reais na tela**: Courier 12, US Letter, margens no padrão da indústria (1,5" à esquerda, 1" nas outras). O que você vê é exatamente o que sai no PDF.
 - **6 elementos**: Cabeçalho, Ação, Personagem, Parentético, Diálogo, Transição.
 - **Fluxo do Final Draft**: Enter e Tab escolhem o próximo elemento sozinhos; Ctrl+1…6 define o elemento.
-- **Diálogo duplo**: duas falas lado a lado, quando os personagens falam ao mesmo tempo. Com o cursor em qualquer uma das falas, use Formatar → Diálogo duplo (Ctrl+Shift+D). No Fountain fica salvo como `^`, no Final Draft como `<DualDialogue>`.
 - **Autocompletar (SmartType)**: nomes de personagens, locações, horários, extensões (V.O., O.S.) e transições.
 - **Paginação profissional**: cabeçalho e personagem nunca ficam sozinhos no pé da página, falas quebradas recebem (MORE) / NOME (CONT'D), e as páginas são numeradas.
 - **Convenções do roteiro** (Configurações): inglês, com (MORE)/(CONT'D), DAY, NIGHT e CUT TO:, ou português, com (MAIS)/(CONT.), DIA, NOITE e CORTA PARA:. Valem para a paginação e para as sugestões do autocompletar, independente do idioma da interface.
@@ -21,12 +20,6 @@ O idioma oficial do Owlio é o inglês. A interface em **português do Brasil** 
 - **Página de rosto** editada numa janela com prévia ao vivo: título, crédito, autores, fonte, versão, data, observações e contato.
 - **Janela de impressão e PDF** com miniaturas das folhas: impressora, cópias, intervalo de páginas, página de rosto, numeração de cenas e **marca d'água** opcional (por exemplo "RASCUNHO" ou o nome de quem recebe a cópia).
 - Navegador de cenas, lista de personagens, localizar/substituir, desfazer/refazer, numeração de cenas e zoom.
-
-## Salvamento e backups
-
-- **Salvamento automático**: roteiros que já têm arquivo são salvos sozinhos a cada 5 minutos (ou 1, 10, ou desligado, nas Configurações).
-- **Recuperação**: enquanto houver alterações não salvas, o Owlio guarda uma cópia a cada 20 segundos, inclusive de roteiros sem título. Se ele fechar de repente, oferece as alterações de volta no próximo início.
-- **Backups**: cada salvamento guarda também uma cópia com data e hora, até as 30 mais recentes de cada roteiro. Salvamentos automáticos geram no máximo um backup a cada 10 minutos. Arquivo → Backups abre um deles como cópia sem título, para o backup nunca ser sobrescrito.
 
 ## Tela de cartões
 
@@ -89,7 +82,7 @@ Linha de comando:
 ## Testes
 
 ```bash
-./build/owlio_tests          # núcleo: Fountain, FDX, paginação, edição, fichas, diálogo duplo
+./build/owlio_tests          # núcleo: Fountain, FDX, paginação, edição, fichas
 ./run.sh --help
 LD_LIBRARY_PATH=$HOME/Qt/6.8.3/gcc_64/lib:$HOME/Qt/extra/usr/lib/x86_64-linux-gnu ./build/owlio_gui_test
 ```
@@ -107,7 +100,6 @@ LD_LIBRARY_PATH=$HOME/Qt/6.8.3/gcc_64/lib:$HOME/Qt/extra/usr/lib/x86_64-linux-gn
 | `src/mainwindow.*` | Menus, barra de ferramentas, painéis |
 | `src/titlepagedialog.*`, `src/printdialog.*` | Janelas de página de rosto e de impressão/PDF, com prévia |
 | `src/characterdialog.*` | Janela da ficha do personagem |
-| `src/autosave.*` | Salvamento automático, cópias de recuperação e backups |
 | `src/settingsdialog.*`, `src/i18n.*` | Configurações, idioma da interface e carregamento das traduções |
 | `src/avatars.*` | Fotos dos personagens: importação, recorte, cache e desenho em círculo |
 | `src/theme.*` | Paleta, QSS com variáveis, ícones SVG recoloridos, claro/escuro |
