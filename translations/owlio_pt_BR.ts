@@ -17,6 +17,196 @@
     </message>
 </context>
 <context>
+    <name>BeatBoardView</name>
+    <message>
+        <source>New Beat</source>
+        <translation>Novo beat</translation>
+    </message>
+    <message>
+        <source>Add a beat in the middle of the board (or double-click the board)</source>
+        <translation>Adiciona um beat no meio do quadro (ou dê um duplo clique no quadro)</translation>
+    </message>
+    <message>
+        <source>Fit</source>
+        <translation>Enquadrar</translation>
+    </message>
+    <message>
+        <source>Zoom to show every beat</source>
+        <translation>Ajusta o zoom para mostrar todos os beats</translation>
+    </message>
+    <message>
+        <source>Beat Board</source>
+        <translation>Beat Board</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n beat(s)</source>
+        <translation>
+            <numerusform>%n beat</numerusform>
+            <numerusform>%n beats</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>%n flow line(s)</source>
+        <translation>
+            <numerusform>%n linha de fluxo</numerusform>
+            <numerusform>%n linhas de fluxo</numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>double-click to add, drag the + to connect, Ctrl+wheel to zoom</source>
+        <translation>duplo clique para adicionar, arraste o + para ligar, Ctrl+roda para o zoom</translation>
+    </message>
+    <message>
+        <source>Your beat board is empty.
+Double-click anywhere to add a beat, drop an image here, or paste one with Ctrl+V.
+Drag the + on the edge of a beat onto another to draw a flow line.</source>
+        <translation>Seu Beat Board está vazio.
+Dê um duplo clique em qualquer lugar para criar um beat, solte uma imagem aqui ou cole uma com Ctrl+V.
+Arraste o + da borda de um beat até outro para traçar uma linha de fluxo.</translation>
+    </message>
+    <message>
+        <source>Image for the Beat</source>
+        <translation>Imagem do beat</translation>
+    </message>
+    <message>
+        <source>Image</source>
+        <translation>Imagem</translation>
+    </message>
+    <message>
+        <source>Could not open the image:
+%1</source>
+        <translation>Não foi possível abrir a imagem:
+%1</translation>
+    </message>
+    <message>
+        <source>Edit Beat...</source>
+        <translation>Editar beat...</translation>
+    </message>
+    <message>
+        <source>Color</source>
+        <translation>Cor</translation>
+    </message>
+    <message>
+        <source>Change Image...</source>
+        <translation>Trocar imagem...</translation>
+    </message>
+    <message>
+        <source>Add Image...</source>
+        <translation>Pôr imagem...</translation>
+    </message>
+    <message>
+        <source>Remove Image</source>
+        <translation>Remover imagem</translation>
+    </message>
+    <message numerus="yes">
+        <source>Delete %n Beat(s)</source>
+        <translation>
+            <numerusform>Apagar %n beat</numerusform>
+            <numerusform>Apagar %n beats</numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>Delete Beat</source>
+        <translation>Apagar beat</translation>
+    </message>
+    <message>
+        <source>Delete Flow Line</source>
+        <translation>Apagar linha de fluxo</translation>
+    </message>
+    <message>
+        <source>New Beat Here</source>
+        <translation>Novo beat aqui</translation>
+    </message>
+    <message>
+        <source>Paste</source>
+        <translation>Colar</translation>
+    </message>
+    <message>
+        <source>Fit All Beats</source>
+        <translation>Enquadrar todos os beats</translation>
+    </message>
+</context>
+<context>
+    <name>BeatDialog</name>
+    <message>
+        <source>Beat</source>
+        <translation>Beat</translation>
+    </message>
+    <message>
+        <source>Choose Image…</source>
+        <translation>Escolher imagem…</translation>
+    </message>
+    <message>
+        <source>Remove</source>
+        <translation>Remover</translation>
+    </message>
+    <message>
+        <source>You can also drop images on the board or paste them with Ctrl+V.</source>
+        <translation>Você também pode soltar imagens no quadro ou colá-las com Ctrl+V.</translation>
+    </message>
+    <message>
+        <source>An idea, a moment or a turning point. Connect beats on the board with flow lines.</source>
+        <translation>Uma ideia, um momento ou uma virada. Ligue os beats no quadro com linhas de fluxo.</translation>
+    </message>
+    <message>
+        <source>Title, e.g. Helena misses the last show</source>
+        <translation>Título, ex.: Helena perde a última sessão</translation>
+    </message>
+    <message>
+        <source>What happens, why it matters, what changes…</source>
+        <translation>O que acontece, por que importa, o que muda…</translation>
+    </message>
+    <message>
+        <source>Title</source>
+        <translation>Título</translation>
+    </message>
+    <message>
+        <source>Description</source>
+        <translation>Descrição</translation>
+    </message>
+    <message>
+        <source>Color</source>
+        <translation>Cor</translation>
+    </message>
+    <message>
+        <source>Save</source>
+        <translation>Salvar</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>Cancelar</translation>
+    </message>
+    <message>
+        <source>Image for the Beat</source>
+        <translation>Imagem do beat</translation>
+    </message>
+    <message>
+        <source>Image</source>
+        <translation>Imagem</translation>
+    </message>
+    <message>
+        <source>Could not open the image:
+%1</source>
+        <translation>Não foi possível abrir a imagem:
+%1</translation>
+    </message>
+</context>
+<context>
+    <name>BeatImagePreview</name>
+    <message>
+        <source>Click to choose an image</source>
+        <translation>Clique para escolher uma imagem</translation>
+    </message>
+    <message>
+        <source>Add an image</source>
+        <translation>Pôr uma imagem</translation>
+    </message>
+    <message>
+        <source>Change image</source>
+        <translation>Trocar imagem</translation>
+    </message>
+</context>
+<context>
     <name>CharacterDialog</name>
     <message>
         <source>Character — %1</source>
@@ -865,6 +1055,14 @@ Deseja salvá-las?</translation>
         <source>Opened a copy of the backup. Use Save As to keep it.</source>
         <translation>Aberta uma cópia do backup. Use Salvar como para mantê-la.</translation>
     </message>
+    <message>
+        <source>&amp;Beat Board</source>
+        <translation>&amp;Beat Board</translation>
+    </message>
+    <message>
+        <source>Free board for ideas, with images and flow lines  (Ctrl+Shift+B)</source>
+        <translation>Quadro livre de ideias, com imagens e linhas de fluxo  (Ctrl+Shift+B)</translation>
+    </message>
 </context>
 <context>
     <name>PrintDialog</name>
@@ -984,6 +1182,13 @@ Deseja salvá-las?</translation>
     <message>
         <source>Could not write %1.</source>
         <translation>Não foi possível gravar %1.</translation>
+    </message>
+</context>
+<context>
+    <name>QObject</name>
+    <message>
+        <source>Double-click to write this beat.</source>
+        <translation>Duplo clique para escrever este beat.</translation>
     </message>
 </context>
 <context>

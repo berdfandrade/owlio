@@ -29,7 +29,8 @@ int main(int argc, char* argv[]) {
     QCommandLineOption themeOpt({"theme", "tema"}, "Force the theme for this run: light or dark.", "theme");
     QCommandLineOption langOpt({"language", "lang"}, "Interface language for this run: en or pt_BR.", "code");
     QCommandLineOption cardsOpt({"cards", "cartoes"}, "Open in the index cards view.");
-    for (const QCommandLineOption& o : {themeOpt, langOpt, cardsOpt, pdfOpt, shotOpt}) cli.addOption(o);
+    QCommandLineOption beatsOpt("beats", "Open in the beat board.");
+    for (const QCommandLineOption& o : {themeOpt, langOpt, cardsOpt, beatsOpt, pdfOpt, shotOpt}) cli.addOption(o);
     cli.addPositionalArgument("file", "A .fountain or .fdx script to open.");
     cli.process(app);
 
@@ -53,11 +54,12 @@ int main(int argc, char* argv[]) {
 
     w.show();
     if (cli.isSet(cardsOpt)) w.setCardsMode(true);
+    if (cli.isSet(beatsOpt)) w.setViewMode(MainWindow::ViewMode::Beats);
     if (!cli.isSet(shotOpt)) QTimer::singleShot(0, &w, [&w] { w.offerRecovery(); });
     if (cli.isSet(shotOpt)) {
         const QString out = cli.value(shotOpt);
         QTimer::singleShot(1200, &w, [&w, out] {
-            if (!w.cardsMode()) w.view()->setFocus();
+            if (w.viewMode() == MainWindow::ViewMode::Script) w.view()->setFocus();
             QApplication::processEvents();
             w.grab().save(out);
             QApplication::exit(0);

@@ -2,6 +2,30 @@
 <!DOCTYPE TS>
 <TS version="2.1" language="en">
 <context>
+    <name>BeatBoardView</name>
+    <message numerus="yes">
+        <source>%n beat(s)</source>
+        <translation>
+            <numerusform>%n beat</numerusform>
+            <numerusform>%n beats</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>%n flow line(s)</source>
+        <translation>
+            <numerusform>%n flow line</numerusform>
+            <numerusform>%n flow lines</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>Delete %n Beat(s)</source>
+        <translation>
+            <numerusform>Delete %n Beat</numerusform>
+            <numerusform>Delete %n Beats</numerusform>
+        </translation>
+    </message>
+</context>
+<context>
     <name>CharacterDialog</name>
     <message numerus="yes">
         <source>line(s)</source>

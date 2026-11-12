@@ -44,6 +44,15 @@ O idioma oficial do Owlio é o inglês. A interface em **português do Brasil** 
 - Painéis em cartões: cenas com número, página e quem fala, e personagens com avatar.
 - **Modo foco** (Ctrl+Shift+F): esmaece tudo menos o trecho atual. Numa fala, o personagem, os parentéticos e o diálogo ficam em destaque juntos.
 
+## Beat Board
+
+Um **quadro livre para ideias** (Exibir → Beat Board, Ctrl+Shift+B):
+
+- **Beats** são cartões com título, descrição, cor e uma **imagem** opcional. Arraste para mover, puxe o canto para redimensionar, duplo clique para editar. Duplo clique no quadro vazio cria um beat.
+- **Imagens**: solte arquivos de imagem no quadro, cole uma imagem com Ctrl+V ou escolha na janela do beat. Elas são reduzidas e guardadas em JPEG dentro do próprio roteiro.
+- **Linhas de fluxo** ligam um beat a outro: arraste o + da borda de um beat até o próximo. Clique numa linha e aperte Delete para apagá-la.
+- Espaço ou o botão do meio do mouse arrastam o quadro; Ctrl+roda dá zoom; "Enquadrar" mostra todos os beats. Tudo pode ser desfeito, e o quadro fica salvo dentro do `.fountain`, num bloco de comentário que outros apps Fountain ignoram.
+
 ## Fichas dos personagens
 
 Clique num personagem no painel lateral para abrir a ficha dele:
@@ -89,7 +98,7 @@ Linha de comando:
 ## Testes
 
 ```bash
-./build/owlio_tests          # núcleo: Fountain, FDX, paginação, edição, fichas, diálogo duplo
+./build/owlio_tests          # núcleo: Fountain, FDX, paginação, edição, fichas, diálogo duplo, beat board
 ./run.sh --help
 LD_LIBRARY_PATH=$HOME/Qt/6.8.3/gcc_64/lib:$HOME/Qt/extra/usr/lib/x86_64-linux-gnu ./build/owlio_gui_test
 ```
@@ -113,6 +122,7 @@ LD_LIBRARY_PATH=$HOME/Qt/6.8.3/gcc_64/lib:$HOME/Qt/extra/usr/lib/x86_64-linux-gn
 | `src/theme.*` | Paleta, QSS com variáveis, ícones SVG recoloridos, claro/escuro |
 | `src/carddelegate.*` | Cartões dos painéis de cenas e personagens |
 | `src/sceneboard.*` | Tela de cartões (quadro de cenas com arrastar e soltar) |
+| `src/beatboard.*`, `src/beatdialog.*` | Beat Board (quadro em QGraphicsView, beats, linhas de fluxo) e a janela do beat |
 | `translations/` | Traduções do Qt: `owlio_pt_BR.ts` (português) e `owlio_en.ts` (plurais em inglês) |
 
 O núcleo (`document`, `layout`, `editor`, `fountain`, `fdx`) não depende do Qt.

@@ -44,6 +44,7 @@
 #include <QStackedWidget>
 
 #include "avatars.h"
+#include "beatboard.h"
 #include "characterdialog.h"
 #include "i18n.h"
 #include "settingsdialog.h"
@@ -131,7 +132,10 @@ MainWindow::MainWindow() {
     stack_ = new QStackedWidget(this);
     stack_->addWidget(view_);
     stack_->addWidget(board_);
+    beats_ = new BeatBoardView(&editor_, this);
+    stack_->addWidget(beats_);
     setCentralWidget(stack_);
+    connect(beats_, &BeatBoardView::changed, this, [this] { view_->refreshAfterExternalEdit(); });
 
     connect(board_, &SceneBoard::openScene, this, [this](int para) {
         setCardsMode(false);
@@ -157,6 +161,7 @@ MainWindow::MainWindow() {
     sceneList_->setItemDelegate(new CardDelegate(CardDelegate::Scene, sceneList_));
     addDockWidget(Qt::LeftDockWidgetArea, makeDock(tr("Scenes"), "scenes", sceneList_));
     connect(sceneList_, &QListWidget::itemClicked, this, [this](QListWidgetItem* it) {
+        if (viewMode() == ViewMode::Beats) setViewMode(ViewMode::Script);
         if (cardsMode()) board_->selectScene(sceneList_->row(it));
         else view_->gotoParagraph(it->data(Qt::UserRole).toInt());
     });
@@ -296,10 +301,19 @@ void MainWindow::buildActions() {
     redoAct_ = iconAction(edit->addAction(tr("&Redo"), view_, &ScriptView::redo), "refazer");
     redoAct_->setShortcuts({QKeySequence::Redo, QKeySequence(Qt::CTRL | Qt::Key_Y)});
     edit->addSeparator();
-    edit->addAction(tr("Cu&t"), view_, &ScriptView::cut)->setShortcut(QKeySequence::Cut);
-    edit->addAction(tr("&Copy"), view_, &ScriptView::copy)->setShortcut(QKeySequence::Copy);
-    edit->addAction(tr("&Paste"), view_, &ScriptView::paste)->setShortcut(QKeySequence::Paste);
-    edit->addAction(tr("Select &All"), view_, &ScriptView::selectAll)->setShortcut(QKeySequence::SelectAll);
+    // No Beat Board, colar cria beats e "selecionar tudo" seleciona os beats; nos cartões não há texto.
+    edit->addAction(tr("Cu&t"), this, [this] { if (viewMode() == ViewMode::Script) view_->cut(); })
+        ->setShortcut(QKeySequence::Cut);
+    edit->addAction(tr("&Copy"), this, [this] { if (viewMode() == ViewMode::Script) view_->copy(); })
+        ->setShortcut(QKeySequence::Copy);
+    edit->addAction(tr("&Paste"), this, [this] {
+        if (viewMode() == ViewMode::Beats) beats_->pasteFromClipboard();
+        else if (viewMode() == ViewMode::Script) view_->paste();
+    })->setShortcut(QKeySequence::Paste);
+    edit->addAction(tr("Select &All"), this, [this] {
+        if (viewMode() == ViewMode::Beats) beats_->selectAllBeats();
+        else if (viewMode() == ViewMode::Script) view_->selectAll();
+    })->setShortcut(QKeySequence::SelectAll);
     edit->addSeparator();
     QAction* findAct = iconAction(edit->addAction(tr("&Find and Replace..."), this, &MainWindow::showFind), "localizar");
     findAct->setShortcut(QKeySequence::Find);
@@ -346,13 +360,17 @@ void MainWindow::buildActions() {
     cardsModeAct_ = iconAction(viewMenu->addAction(tr("&Cards")), "cartoes");
     cardsModeAct_->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_C));
     cardsModeAct_->setToolTip(tr("Scenes as index cards  (Ctrl+Shift+C)"));
-    for (QAction* a : {scriptModeAct_, cardsModeAct_}) {
+    beatsModeAct_ = iconAction(viewMenu->addAction(tr("&Beat Board")), "quadro");
+    beatsModeAct_->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_B));
+    beatsModeAct_->setToolTip(tr("Free board for ideas, with images and flow lines  (Ctrl+Shift+B)"));
+    for (QAction* a : {scriptModeAct_, cardsModeAct_, beatsModeAct_}) {
         a->setCheckable(true);
         modeGroup->addAction(a);
     }
     scriptModeAct_->setChecked(true);
     connect(scriptModeAct_, &QAction::triggered, this, [this] { setCardsMode(false); });
     connect(cardsModeAct_, &QAction::triggered, this, [this] { setCardsMode(true); });
+    connect(beatsModeAct_, &QAction::triggered, this, [this] { setViewMode(ViewMode::Beats); });
     viewMenu->addSeparator();
     QMenu* themeMenu = viewMenu->addMenu(tr("&Theme"));
     actionIcons_.insert(themeMenu->menuAction(), "tema");
@@ -412,7 +430,7 @@ void MainWindow::buildActions() {
     tb->addAction(undoAct_);
     tb->addAction(redoAct_);
     tb->addSeparator();
-    for (QAction* a : {scriptModeAct_, cardsModeAct_}) {
+    for (QAction* a : {scriptModeAct_, cardsModeAct_, beatsModeAct_}) {
         tb->addAction(a);
         if (auto* b = qobject_cast<QToolButton*>(tb->widgetForAction(a))) {
             b->setObjectName("segmento");
@@ -810,24 +828,41 @@ void MainWindow::gotoFirstLine(const QString& name) {
 
 // ------------------------------------------------------------ atualização da UI
 
-bool MainWindow::cardsMode() const { return stack_ && stack_->currentWidget() == board_; }
+MainWindow::ViewMode MainWindow::viewMode() const {
+    if (stack_ && stack_->currentWidget() == board_) return ViewMode::Cards;
+    if (stack_ && stack_->currentWidget() == beats_) return ViewMode::Beats;
+    return ViewMode::Script;
+}
 
-void MainWindow::setCardsMode(bool cards) {
-    scriptModeAct_->setChecked(!cards);
-    cardsModeAct_->setChecked(cards);
-    elementComboAct_->setVisible(!cards);
-    for (QAction* a : elementActions_) a->setEnabled(!cards);
-    if (dualAct_) dualAct_->setEnabled(!cards);
-    if (cards == cardsMode()) return;
-    if (cards) {
-        board_->reload();
-        stack_->setCurrentWidget(board_);
-        board_->selectScene(std::max(0, editor_.sceneIndexAt(editor_.cursor().para)));
-        board_->setFocus();
-    } else {
-        stack_->setCurrentWidget(view_);
-        view_->refreshAfterExternalEdit();
-        view_->setFocus();
+void MainWindow::setViewMode(ViewMode mode) {
+    const bool script = mode == ViewMode::Script;
+    scriptModeAct_->setChecked(script);
+    cardsModeAct_->setChecked(mode == ViewMode::Cards);
+    beatsModeAct_->setChecked(mode == ViewMode::Beats);
+    elementComboAct_->setVisible(script);
+    for (QAction* a : elementActions_) a->setEnabled(script);
+    if (dualAct_) dualAct_->setEnabled(script);
+    if (mode == viewMode()) return;
+    switch (mode) {
+        case ViewMode::Cards:
+            board_->reload();
+            stack_->setCurrentWidget(board_);
+            board_->selectScene(std::max(0, editor_.sceneIndexAt(editor_.cursor().para)));
+            board_->setFocus();
+            break;
+        case ViewMode::Beats: {
+            const bool first = beats_->beatCount() == 0;
+            beats_->reload();
+            stack_->setCurrentWidget(beats_);
+            if (first) beats_->zoomToFit();
+            beats_->setFocus();
+            break;
+        }
+        case ViewMode::Script:
+            stack_->setCurrentWidget(view_);
+            view_->refreshAfterExternalEdit();
+            view_->setFocus();
+            break;
     }
 }
 
@@ -864,6 +899,7 @@ void MainWindow::chooseAvatar(const QString& name) {
 
 void MainWindow::onDocumentChanged() {
     if (cardsMode()) board_->reload();
+    if (viewMode() == ViewMode::Beats) beats_->reload();
     updateTitle();
     panelTimer_.start();
 }

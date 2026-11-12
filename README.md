@@ -57,6 +57,13 @@ It also follows the keyboard-first flow screenwriters know from tools like Final
 - **Final Draft** (`.fdx`) import and export, including scene summaries.
 - **Print and PDF window** with page thumbnails: pick a printer and number of copies, a page range, whether to include the title page and scene numbers, and an optional diagonal **watermark** (for example "DRAFT", or the name of the person receiving the copy). PDFs embed their fonts.
 
+### Beat Board
+- A **free board for ideas**: press Ctrl+Shift+B (or the Beat Board button) and lay out beats anywhere, at any zoom.
+- **Beats** are cards with a title, a description, a color and an optional **image**. Drag to move, pull the corner to resize, double-click to edit. Double-click the empty board to add one.
+- **Images**: drop image files on the board, paste an image with Ctrl+V, or pick one in the beat window. They are shrunk and stored as JPEG inside the script file.
+- **Flow Lines** link one beat to another: drag the + on the edge of a beat onto the next beat. Click a line and press Delete to remove it.
+- Space or the middle mouse button pans; Ctrl+wheel zooms; Fit shows every beat. Every change can be undone, and the board is saved inside the `.fountain` file in a comment block that other Fountain apps ignore.
+
 ### Characters
 - **Character sheets**: click a character in the side panel to open their sheet, with a photo, name, role, age, occupation, characteristics and a synopsis.
 - The sheet also shows how many lines, scenes and words the character has, where they first appear, and every scene they speak in. Double-click a scene to jump to it.
@@ -73,6 +80,10 @@ It also follows the keyboard-first flow screenwriters know from tools like Final
 <p align="center">
   <img src="docs/screenshots/cards-dark.png" width="49%" alt="Index cards, dark theme">
   <img src="docs/screenshots/pdf-page.png" width="35%" alt="Exported PDF page">
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/beat-board.png" width="80%" alt="Beat Board with images and flow lines">
 </p>
 
 <p align="center">
@@ -95,6 +106,8 @@ It also follows the keyboard-first flow screenwriters know from tools like Final
 | **Ctrl+Shift+D** | Dual dialogue on or off for the speech under the cursor |
 | **Tab / Enter / →** | Accept the grey autocomplete suggestion |
 | **Ctrl+Shift+C / Ctrl+Shift+R** | Index cards / script view |
+| **Ctrl+Shift+B** | Beat Board |
+| **Double-click / Enter / Delete** (Beat Board) | Add or edit a beat / edit the selected beat / delete the selection |
 | **Ctrl+Shift+F** | Focus mode |
 | **Ctrl+Shift+E** | Export PDF |
 | **Ctrl+F** | Find and replace |
@@ -134,6 +147,7 @@ cmake --build build -j
 ```bash
 ./run.sh script.fountain                          # open a script
 ./run.sh script.fountain --cards                  # open straight into the index cards
+./run.sh script.fountain --beats                  # open straight into the Beat Board
 ./run.sh script.fountain --export-pdf script.pdf  # export without opening a window
 ./run.sh --theme dark                             # force the dark theme for this run (or light)
 ./run.sh --language pt_BR                         # Portuguese interface for this run
@@ -142,7 +156,7 @@ cmake --build build -j
 ## Tests
 
 ```bash
-./build/owlio_tests      # core: Fountain/FDX round-trips, pagination, editing, scene reordering, character sheets, dual dialogue
+./build/owlio_tests      # core: Fountain/FDX round-trips, pagination, editing, scene reordering, character sheets, dual dialogue, beat board
 ./run.sh --help
 LD_LIBRARY_PATH=$HOME/Qt/6.8.3/gcc_64/lib ./build/owlio_gui_test   # drives the real window with keyboard and mouse events
 ```
@@ -158,6 +172,7 @@ LD_LIBRARY_PATH=$HOME/Qt/6.8.3/gcc_64/lib ./build/owlio_gui_test   # drives the 
 | `src/pagepainter.*` | Draws pages to screen, PDF or printer with exact glyph positions |
 | `src/scriptview.*` | The page editor widget (keyboard, mouse, input methods, scrolling) |
 | `src/sceneboard.*` | The index cards board (grid, drag and drop) |
+| `src/beatboard.*`, `src/beatdialog.*` | The Beat Board (QGraphicsView canvas, beats, flow lines) and the beat window |
 | `src/mainwindow.*` | Menus, toolbar, side panels |
 | `src/titlepagedialog.*`, `src/printdialog.*` | Title page editor and print/PDF window, both with previews |
 | `src/characterdialog.*` | Character sheet window |

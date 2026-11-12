@@ -1,5 +1,6 @@
 // UI test: types a scene into the real window using Qt keyboard and mouse events.
 // Usage: owlio_gui_test [script.png] [menu.png] [cards.png] [title.png] [print.png] [character.png] [settings.png]
+//                       [beatboard.png] [beat.png]
 #include <QApplication>
 #include <QIcon>
 #include <QKeyEvent>
@@ -18,6 +19,8 @@
 #include <QPainter>
 #include <QTemporaryDir>
 
+#include <QClipboard>
+#include <QStatusBar>
 #include <QDir>
 #include <QDockWidget>
 #include <QListWidget>
@@ -27,6 +30,8 @@
 #include <QTranslator>
 
 #include "autosave.h"
+#include "beatboard.h"
+#include "beatdialog.h"
 #include "avatars.h"
 #include "characterdialog.h"
 #include "fountain.h"
@@ -413,6 +418,132 @@ int main(int argc, char* argv[]) {
                 CHECK(w.currentPath() == scriptPath);
                 CHECK(ed.doc().paragraphs.size() == sample.paragraphs.size());
                 CHECK(autosave::orphans().isEmpty());
+            }
+            const_cast<Editor&>(ed).markSaved();
+
+            // ---- Beat Board
+            // Depois das janelas modais a principal pode não estar ativa: dispara as ações pelo atalho delas.
+            auto shortcut = [&](const QKeySequence& k) {
+                for (QAction* a : w.findChildren<QAction*>())
+                    if (a->shortcuts().contains(k)) {
+                        a->trigger();
+                        return;
+                    }
+            };
+            shortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_B));
+            CHECK(w.viewMode() == MainWindow::ViewMode::Beats);
+            BeatBoardView* bb = w.beatBoard();
+            CHECK(bb->beatCount() == 6 && ed.doc().board.flows.size() == 5);
+            QWidget* bvp = bb->viewport();
+            auto bmouse = [&](QEvent::Type t, QPoint pos, Qt::MouseButtons buttons, Qt::MouseButton b = Qt::LeftButton) {
+                QMouseEvent ev(t, QPointF(pos), bvp->mapToGlobal(QPointF(pos)), b, buttons, Qt::NoModifier);
+                QApplication::sendEvent(bvp, &ev);
+            };
+            auto drag = [&](QPoint from, QPoint to) {
+                bmouse(QEvent::MouseButtonPress, from, Qt::LeftButton);
+                bmouse(QEvent::MouseMove, from + (to - from) / 3, Qt::LeftButton);
+                bmouse(QEvent::MouseMove, to, Qt::LeftButton);
+                bmouse(QEvent::MouseButtonRelease, to, Qt::NoButton);
+            };
+            auto click = [&](QPoint at) {
+                bmouse(QEvent::MouseButtonPress, at, Qt::LeftButton);
+                bmouse(QEvent::MouseButtonRelease, at, Qt::NoButton);
+            };
+            bb->zoomToFit();
+            QTest::qWait(150);
+
+            // Arrastar o beat 1 move o cartão e é um passo de desfazer.
+            const double x1 = ed.doc().board.beat(1)->x;
+            QPoint c1 = bb->beatCenter(1);
+            drag(c1, c1 + QPoint(0, -60));
+            CHECK(ed.doc().board.beat(1)->x == x1 && ed.doc().board.beat(1)->y < 0);
+            shortcut(QKeySequence(QKeySequence::Undo));
+            CHECK(ed.doc().board.beat(1)->y == 0);
+
+            // Ligar o beat 6 ao beat 1 arrastando a bolinha da borda.
+            click(bb->beatCenter(6));
+            CHECK(bb->selectedBeats() == QList<int>({6}));
+            drag(bb->connectorPoint(6), bb->beatCenter(1));
+            CHECK(ed.doc().board.flows.size() == 6);
+            CHECK(ed.doc().board.flows.back() == (FlowLine{6, 1}));
+
+            // Redimensionar pelo canto.
+            const double w6 = ed.doc().board.beat(6)->w;
+            drag(bb->resizePoint(6), bb->resizePoint(6) + QPoint(40, 30));
+            CHECK(ed.doc().board.beat(6)->w > w6);
+
+            // Duplo clique no vazio cria um beat e abre a janela dele.
+            bool sawBeatDialog = false;
+            QTimer::singleShot(300, &w, [&] {
+                auto* dlg = qobject_cast<BeatDialog*>(QApplication::activeModalWidget());
+                if (!dlg) return;
+                sawBeatDialog = true;
+                if (auto* t = dlg->findChild<QLineEdit*>()) t->setText("Interval");
+                if (auto* t = dlg->findChild<QPlainTextEdit*>()) t->setPlainText("Popcorn and silence.");
+                for (QPushButton* pb : dlg->findChildren<QPushButton*>()) CHECK(pb->isDefault() == (pb->text() == "Save"));
+                if (argc > 9) dlg->grab().save(QString::fromLocal8Bit(argv[9]));
+                for (QPushButton* pb : dlg->findChildren<QPushButton*>())
+                    if (pb->text() == "Save") QTest::mouseClick(pb, Qt::LeftButton);
+            });
+            const QPoint empty(bvp->width() - 60, bvp->height() - 40);
+            QMouseEvent dbl(QEvent::MouseButtonDblClick, QPointF(empty), bvp->mapToGlobal(QPointF(empty)), Qt::LeftButton,
+                            Qt::LeftButton, Qt::NoModifier);
+            QApplication::sendEvent(bvp, &dbl);
+            CHECK(sawBeatDialog);
+            CHECK(bb->beatCount() == 7);
+            const int interval = ed.doc().board.beats.back().id;
+            CHECK(ed.doc().board.beats.back().title == U"Interval");
+            CHECK(ed.doc().board.beats.back().text == U"Popcorn and silence.");
+
+            // Colar uma imagem cria um beat com ela.
+            QImage pasted(320, 200, QImage::Format_RGB32);
+            {
+                QPainter ip(&pasted);
+                QLinearGradient g(0, 0, 320, 200);
+                g.setColorAt(0, QColor("#1d4e89"));
+                g.setColorAt(0.55, QColor("#4fb0c6"));
+                g.setColorAt(1, QColor("#f6d7a7"));
+                ip.fillRect(pasted.rect(), g);
+            }
+            QApplication::clipboard()->setImage(pasted);
+            QTest::qWait(100);
+            QTest::keyClick(bb, Qt::Key_V, Qt::ControlModifier);
+            CHECK(bb->beatCount() == 8);
+            CHECK(ed.doc().board.beats.back().image != nullptr);
+
+            // Apagar com Delete; desfazer volta.
+            bb->selectBeat(interval);
+            QTest::keyClick(bb, Qt::Key_Delete);
+            CHECK(bb->beatCount() == 7 && !ed.doc().board.beat(interval));
+            shortcut(QKeySequence(QKeySequence::Undo));
+            CHECK(bb->beatCount() == 8);
+
+            // O quadro vai junto ao salvar e volta ao abrir.
+            Document reread = parseFountain(writeFountain(ed.doc()));
+            CHECK(reread.board.beats.size() == 8 && reread.board.flows.size() == 6);
+            CHECK(reread.board.beats.back().image && *reread.board.beats.back().image == *ed.doc().board.beats.back().image);
+
+            // Captura para o README: imagens em dois beats, organizados.
+            {
+                std::vector<Beat> tidy;
+                Beat last = ed.doc().board.beats.back();
+                last.x = 936; last.y = 0; last.w = 240; last.h = 366;
+                last.title = U"The real sea"; last.text = U"Where Helena is going.";
+                tidy.push_back(last);
+                Beat five = *ed.doc().board.beat(5);
+                five.image = std::make_shared<const std::string>(beatimage::fromImage(pasted.mirrored(true, false)));
+                five.h = 240;
+                tidy.push_back(five);
+                Beat iv = *ed.doc().board.beat(interval);
+                iv.x = 936; iv.y = 420; iv.h = 120;
+                tidy.push_back(iv);
+                const_cast<Editor&>(ed).updateBeats(tidy);
+                w.view()->refreshAfterExternalEdit();
+                bb->scene()->clearSelection();
+                bb->zoomToFit();
+                w.statusBar()->clearMessage();
+                QTest::qWait(250);
+                if (argc > 8) w.grab().save(QString::fromLocal8Bit(argv[8]));
             }
             const_cast<Editor&>(ed).markSaved();
         }

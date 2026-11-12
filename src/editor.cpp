@@ -215,6 +215,66 @@ bool Editor::toggleDualDialogue() {
     return true;
 }
 
+// ------------------------------------------------------------ Beat Board
+
+int Editor::addBeat(Beat b) {
+    beginEdit(EditKind::Other);
+    b.id = doc_.board.nextId();
+    doc_.board.beats.push_back(b);
+    changed();
+    return b.id;
+}
+
+void Editor::updateBeats(const std::vector<Beat>& beats) {
+    bool any = false;
+    for (const Beat& nb : beats)
+        for (const Beat& ob : doc_.board.beats)
+            if (ob.id == nb.id) {
+                const bool sameImage = ob.image == nb.image || (ob.image && nb.image && *ob.image == *nb.image);
+                if (ob.x != nb.x || ob.y != nb.y || ob.w != nb.w || ob.h != nb.h || ob.color != nb.color ||
+                    ob.title != nb.title || ob.text != nb.text || !sameImage)
+                    any = true;
+            }
+    if (!any) return;
+    beginEdit(EditKind::Other);
+    for (const Beat& nb : beats)
+        for (Beat& ob : doc_.board.beats)
+            if (ob.id == nb.id) ob = nb;
+    changed();
+}
+
+void Editor::removeBeats(const std::vector<int>& ids) {
+    auto gone = [&](int id) { return std::find(ids.begin(), ids.end(), id) != ids.end(); };
+    auto& bs = doc_.board.beats;
+    if (std::none_of(bs.begin(), bs.end(), [&](const Beat& b) { return gone(b.id); })) return;
+    beginEdit(EditKind::Other);
+    bs.erase(std::remove_if(bs.begin(), bs.end(), [&](const Beat& b) { return gone(b.id); }), bs.end());
+    auto& fs = doc_.board.flows;
+    fs.erase(std::remove_if(fs.begin(), fs.end(), [&](const FlowLine& f) { return gone(f.from) || gone(f.to); }),
+             fs.end());
+    changed();
+}
+
+bool Editor::addFlow(int from, int to) {
+    const BeatBoard& bb = doc_.board;
+    if (from == to || !bb.beat(from) || !bb.beat(to)) return false;
+    for (const FlowLine& f : bb.flows)
+        if ((f.from == from && f.to == to) || (f.from == to && f.to == from)) return false;
+    beginEdit(EditKind::Other);
+    doc_.board.flows.push_back({from, to});
+    changed();
+    return true;
+}
+
+void Editor::removeFlows(const std::vector<FlowLine>& flows) {
+    auto& fs = doc_.board.flows;
+    auto gone = [&](const FlowLine& f) { return std::find(flows.begin(), flows.end(), f) != flows.end(); };
+    if (std::none_of(fs.begin(), fs.end(), gone)) return;
+    beginEdit(EditKind::Other);
+    fs.erase(std::remove_if(fs.begin(), fs.end(), gone), fs.end());
+    changed();
+}
+
 // ------------------------------------------------------------ undo
 
 void Editor::beginEdit(EditKind kind) {
@@ -222,7 +282,7 @@ void Editor::beginEdit(EditKind kind) {
     bool coalesce = kind != EditKind::Other && kind == lastKind_ &&
                     now - lastEditTime_ < std::chrono::milliseconds(1500) && !undo_.empty();
     if (!coalesce) {
-        undo_.push_back({doc_.paragraphs, doc_.titlePage, doc_.cast, cursor_, anchor_});
+        undo_.push_back({doc_.paragraphs, doc_.titlePage, doc_.cast, doc_.board, cursor_, anchor_});
         if (undo_.size() > kMaxUndo) undo_.erase(undo_.begin());
     }
     redo_.clear();
@@ -240,12 +300,13 @@ void Editor::changed() {
 
 void Editor::undo() {
     if (undo_.empty()) return;
-    redo_.push_back({doc_.paragraphs, doc_.titlePage, doc_.cast, cursor_, anchor_});
+    redo_.push_back({doc_.paragraphs, doc_.titlePage, doc_.cast, doc_.board, cursor_, anchor_});
     Snapshot s = std::move(undo_.back());
     undo_.pop_back();
     doc_.paragraphs = std::move(s.paragraphs);
     doc_.titlePage = std::move(s.titlePage);
     doc_.cast = std::move(s.cast);
+    doc_.board = std::move(s.board);
     cursor_ = s.cursor;
     anchor_ = s.anchor;
     lastKind_ = EditKind::None;
@@ -254,12 +315,13 @@ void Editor::undo() {
 
 void Editor::redo() {
     if (redo_.empty()) return;
-    undo_.push_back({doc_.paragraphs, doc_.titlePage, doc_.cast, cursor_, anchor_});
+    undo_.push_back({doc_.paragraphs, doc_.titlePage, doc_.cast, doc_.board, cursor_, anchor_});
     Snapshot s = std::move(redo_.back());
     redo_.pop_back();
     doc_.paragraphs = std::move(s.paragraphs);
     doc_.titlePage = std::move(s.titlePage);
     doc_.cast = std::move(s.cast);
+    doc_.board = std::move(s.board);
     cursor_ = s.cursor;
     anchor_ = s.anchor;
     lastKind_ = EditKind::None;

@@ -63,6 +63,13 @@ public:
     int setCharacter(const std::u32string& oldName, const CharacterInfo& info);
     CharacterStats characterStats(const std::u32string& name) const;
 
+    // ---- Beat Board (cada chamada é um passo de desfazer)
+    int addBeat(Beat b);                                // devolve o id
+    void updateBeats(const std::vector<Beat>& beats);   // substitui pelos ids
+    void removeBeats(const std::vector<int>& ids);      // leva junto as linhas ligadas
+    bool addFlow(int from, int to);                     // false se repetida, invertida ou para si mesmo
+    void removeFlows(const std::vector<FlowLine>& flows);
+
     // ---- cursor e seleção
     Pos cursor() const { return cursor_; }
     Pos anchor() const { return anchor_; }
@@ -135,6 +142,7 @@ private:
         std::vector<Paragraph> paragraphs;
         std::vector<std::pair<std::string, std::string>> titlePage;
         std::vector<CharacterInfo> cast;
+        BeatBoard board;
         Pos cursor, anchor;
     };
 

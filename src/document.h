@@ -1,4 +1,5 @@
 #pragma once
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
@@ -43,12 +44,38 @@ struct CharacterInfo {
     bool blank() const;       // nada além do nome
 };
 
+// Beat Board: cartões livres de ideias num quadro, ligados por linhas de fluxo.
+struct Beat {
+    int id = 0;
+    double x = 0, y = 0;          // canto superior esquerdo, em pixels do quadro (zoom 100%)
+    double w = 220, h = 150;
+    std::string color = "#f2b13b";  // cor da faixa do cartão
+    std::u32string title;
+    std::u32string text;
+    // Imagem em base64 (JPEG/PNG). Compartilhada para que as cópias do desfazer não dupliquem os bytes.
+    std::shared_ptr<const std::string> image;
+};
+
+struct FlowLine {
+    int from = 0, to = 0;  // ids dos beats
+    bool operator==(const FlowLine& o) const { return from == o.from && to == o.to; }
+};
+
+struct BeatBoard {
+    std::vector<Beat> beats;
+    std::vector<FlowLine> flows;
+    bool empty() const { return beats.empty(); }
+    const Beat* beat(int id) const;
+    int nextId() const;  // maior id + 1
+};
+
 struct Document {
     std::vector<Paragraph> paragraphs;
     // Página de rosto (chave/valor, no estilo Fountain: Title, Credit, Author, Contact...)
     std::vector<std::pair<std::string, std::string>> titlePage;
     // Fichas dos personagens (só os que têm algo preenchido).
     std::vector<CharacterInfo> cast;
+    BeatBoard board;
 
     std::string titleValue(const std::string& key) const;
     void setTitleValue(const std::string& key, const std::string& value);
