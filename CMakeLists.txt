@@ -60,9 +60,10 @@ add_executable(owlio src/main.cpp ${UI_SOURCES})
 target_link_libraries(owlio PRIVATE ${UI_LIBS})
 target_compile_options(owlio PRIVATE ${OWLIO_WARNINGS})
 if(WIN32)
-  # Sem janela de console e com o ícone no .exe.
+  # Sem janela de console, com o ícone e os dados de versão no .exe.
   set_target_properties(owlio PROPERTIES WIN32_EXECUTABLE ON)
-  target_sources(owlio PRIVATE resources/owlio.rc)
+  configure_file(resources/owlio.rc.in ${CMAKE_BINARY_DIR}/owlio.rc @ONLY)
+  target_sources(owlio PRIVATE ${CMAKE_BINARY_DIR}/owlio.rc)
 endif()
 
 # Teste de interface: envia teclas reais para a janela (QTest).

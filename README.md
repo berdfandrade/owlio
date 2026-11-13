@@ -141,7 +141,7 @@ It also follows the keyboard-first flow screenwriters know from tools like Final
 
 ## Download
 
-A Windows installer (`Owlio-Setup-<version>.exe`) is attached to every [release](https://github.com/berdfandrade/owlio/releases). It installs for the current user without asking for administrator rights, adds Start menu and optional desktop shortcuts, and can open `.fountain` and `.fdx` files with Owlio. The installer is not signed yet, so Windows SmartScreen may warn about an unknown publisher: choose **More info → Run anyway**.
+A Windows installer (`Owlio-Setup-<version>.exe`) is attached to every [release](https://github.com/berdfandrade/owlio/releases). It installs for the current user without asking for administrator rights, adds Start menu and optional desktop shortcuts, and can open `.fountain` and `.fdx` files with Owlio. Release installers are being moved to free code signing through SignPath Foundation (see the [code signing policy](docs/CODE_SIGNING.md)). Until a signed release is out, Windows SmartScreen may warn about an unknown publisher: choose **More info → Run anyway**.
 
 ## Building
 
@@ -239,3 +239,9 @@ Owlio is young, and the page size is US Letter. On the roadmap:
 - A4 pages
 - Revision mode with colored pages
 - Reports (scenes, characters, locations)
+
+## License
+
+Owlio is free software under the [GNU General Public License v3.0](LICENSE).
+
+Free code signing provided by [SignPath.io](https://signpath.io), certificate by [SignPath Foundation](https://signpath.org).

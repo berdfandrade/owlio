@@ -15,6 +15,11 @@ AppName={#AppName}
 AppVersion={#AppVersion}
 AppVerName={#AppName} {#AppVersion}
 AppPublisher=Owlio
+AppPublisherURL=https://github.com/berdfandrade/owlio
+AppCopyright=Owlio contributors, GPL-3.0
+VersionInfoVersion={#AppVersion}
+VersionInfoProductName={#AppName}
+VersionInfoDescription={#AppName} Setup
 DefaultDirName={autopf}\{#AppName}
 DefaultGroupName={#AppName}
 DisableProgramGroupPage=yes
@@ -47,6 +52,7 @@ Name: "assoc"; Description: "{cm:AssocFiles}"
 
 [Files]
 Source: "..\dist\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\LICENSE"; DestDir: "{app}"; DestName: "LICENSE.txt"; Flags: ignoreversion
 
 [Icons]
 Name: "{autoprograms}\{#AppName}"; Filename: "{app}\{#AppExe}"

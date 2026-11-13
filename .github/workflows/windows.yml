@@ -1,6 +1,8 @@
 # Compila o Owlio no Windows e gera o instalador (Inno Setup).
 # Em todo PR: confere que compila e empacota; o instalador fica nos artefatos da execução.
-# Numa tag v*: publica o instalador numa release do GitHub.
+# Numa tag v*: assina o owlio.exe e o instalador pela SignPath Foundation (quando o segredo
+# SIGNPATH_API_TOKEN existe) e publica o instalador numa release do GitHub.
+# Configuração da SignPath: docs/CODE_SIGNING.md.
 name: Windows installer
 
 on:
@@ -11,10 +13,14 @@ on:
 
 permissions:
   contents: write
+  actions: read  # a SignPath baixa os artefatos da execução
 
 jobs:
   build:
     runs-on: windows-latest
+    env:
+      # Só assina releases, e só depois que o projeto foi aceito pela SignPath.
+      SIGN: ${{ startsWith(github.ref, 'refs/tags/v') && secrets.SIGNPATH_API_TOKEN != '' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -60,6 +66,29 @@ jobs:
           $p = Start-Process dist\bin\owlio.exe -ArgumentList "--export-pdf","$env:RUNNER_TEMP\check.pdf","examples\$((Get-ChildItem examples -Filter *.fountain)[0].Name)" -PassThru -Wait
           if ($p.ExitCode -ne 0 -or -not (Test-Path "$env:RUNNER_TEMP\check.pdf")) { throw "owlio.exe did not run from dist" }
 
+      # O owlio.exe é assinado antes de entrar no instalador; o instalador, depois.
+      - name: Upload owlio.exe for signing
+        if: env.SIGN == 'true'
+        id: unsigned-app
+        uses: actions/upload-artifact@v4
+        with:
+          name: owlio-exe-unsigned
+          path: dist/bin/owlio.exe
+
+      - name: Sign owlio.exe
+        if: env.SIGN == 'true'
+        uses: signpath/github-action-submit-signing-request@v2
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: owlio
+          signing-policy-slug: release-signing
+          artifact-configuration-slug: exe
+          github-artifact-id: ${{ steps.unsigned-app.outputs.artifact-id }}
+          wait-for-completion: true
+          wait-for-completion-timeout-in-seconds: 3600  # cada release espera a aprovação manual
+          output-artifact-directory: dist/bin
+
       - name: Build installer
         shell: pwsh
         run: |
@@ -70,6 +99,38 @@ jobs:
             $env:PATH += ";${env:ProgramFiles(x86)}\Inno Setup 6"
           }
           iscc /DAppVersion=${{ steps.version.outputs.value }} packaging\owlio.iss
+
+      - name: Upload installer for signing
+        if: env.SIGN == 'true'
+        id: unsigned-setup
+        uses: actions/upload-artifact@v4
+        with:
+          name: Owlio-Setup-unsigned
+          path: packaging/Output/*.exe
+
+      - name: Sign installer
+        if: env.SIGN == 'true'
+        uses: signpath/github-action-submit-signing-request@v2
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: owlio
+          signing-policy-slug: release-signing
+          artifact-configuration-slug: exe
+          github-artifact-id: ${{ steps.unsigned-setup.outputs.artifact-id }}
+          wait-for-completion: true
+          wait-for-completion-timeout-in-seconds: 3600
+          output-artifact-directory: packaging/Output
+
+      - name: Check signatures
+        if: env.SIGN == 'true'
+        shell: pwsh
+        run: |
+          foreach ($f in @("dist\bin\owlio.exe") + (Get-ChildItem packaging\Output\*.exe).FullName) {
+            $s = Get-AuthenticodeSignature $f
+            if ($s.Status -ne "Valid") { throw "$f is not signed: $($s.Status)" }
+            "$f signed by $($s.SignerCertificate.Subject)"
+          }
 
       - uses: actions/upload-artifact@v4
         with:
