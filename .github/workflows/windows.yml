@@ -54,7 +54,9 @@ jobs:
       - name: Check that the app starts
         shell: pwsh
         run: |
-          $env:QT_QPA_PLATFORM = "offscreen"
+          # Sem o Qt e o MinGW no PATH, para que falte DLL ou plugin apareça aqui, e não no usuário.
+          $env:PATH = "$env:SystemRoot\System32;$env:SystemRoot"
+          Remove-Item Env:QT_PLUGIN_PATH, Env:QML2_IMPORT_PATH -ErrorAction SilentlyContinue
           $p = Start-Process dist\bin\owlio.exe -ArgumentList "--export-pdf","$env:RUNNER_TEMP\check.pdf","examples\$((Get-ChildItem examples -Filter *.fountain)[0].Name)" -PassThru -Wait
           if ($p.ExitCode -ne 0 -or -not (Test-Path "$env:RUNNER_TEMP\check.pdf")) { throw "owlio.exe did not run from dist" }
 
