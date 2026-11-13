@@ -1,0 +1,83 @@
+# Compila o Owlio no Windows e gera o instalador (Inno Setup).
+# Em todo PR: confere que compila e empacota; o instalador fica nos artefatos da execução.
+# Numa tag v*: publica o instalador numa release do GitHub.
+name: Windows installer
+
+on:
+  pull_request:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: "6.8.3"
+          host: windows
+          target: desktop
+          arch: win64_mingw
+          tools: tools_mingw1310
+          cache: true
+
+      - name: Put MinGW on PATH
+        shell: pwsh
+        run: Add-Content $env:GITHUB_PATH "$env:RUNNER_WORKSPACE\Qt\Tools\mingw1310_64\bin"
+
+      - name: Version
+        id: version
+        shell: pwsh
+        run: |
+          if ($env:GITHUB_REF -like "refs/tags/v*") { $v = $env:GITHUB_REF_NAME.Substring(1) }
+          else { $v = (Select-String -Path CMakeLists.txt -Pattern 'project\(Owlio VERSION ([0-9.]+)').Matches[0].Groups[1].Value }
+          "value=$v" >> $env:GITHUB_OUTPUT
+
+      - name: Build
+        run: |
+          cmake -S . -B build -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release
+          cmake --build build --target owlio owlio_tests -j 4
+
+      - name: Core tests
+        run: build\owlio_tests.exe
+
+      - name: Install with Qt files
+        run: cmake --install build --prefix "${{ github.workspace }}/dist"  # o deploy do Qt exige caminho absoluto
+
+      - name: Check that the app starts
+        shell: pwsh
+        run: |
+          # Sem o Qt e o MinGW no PATH, para que falte DLL ou plugin apareça aqui, e não no usuário.
+          $env:PATH = "$env:SystemRoot\System32;$env:SystemRoot"
+          Remove-Item Env:QT_PLUGIN_PATH, Env:QML2_IMPORT_PATH -ErrorAction SilentlyContinue
+          $p = Start-Process dist\bin\owlio.exe -ArgumentList "--export-pdf","$env:RUNNER_TEMP\check.pdf","examples\$((Get-ChildItem examples -Filter *.fountain)[0].Name)" -PassThru -Wait
+          if ($p.ExitCode -ne 0 -or -not (Test-Path "$env:RUNNER_TEMP\check.pdf")) { throw "owlio.exe did not run from dist" }
+
+      - name: Build installer
+        shell: pwsh
+        run: |
+          if (-not (Get-Command iscc -ErrorAction SilentlyContinue)) {
+            $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+            if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress }
+            Add-Content $env:GITHUB_PATH "${env:ProgramFiles(x86)}\Inno Setup 6"
+            $env:PATH += ";${env:ProgramFiles(x86)}\Inno Setup 6"
+          }
+          iscc /DAppVersion=${{ steps.version.outputs.value }} packaging\owlio.iss
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Owlio-Setup-${{ steps.version.outputs.value }}
+          path: packaging/Output/*.exe
+
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: packaging/Output/*.exe
