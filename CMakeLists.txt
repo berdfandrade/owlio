@@ -79,7 +79,7 @@ qt_add_translations(TARGETS owlio owlio_gui_test
 )
 
 # Instalação. No Windows, o windeployqt copia DLLs, plugins e traduções do Qt para junto do .exe:
-#   cmake --install build --prefix dist   e depois   iscc packaging/owlio.iss
+#   cmake --install build --prefix "$PWD/dist" (caminho absoluto) e depois   iscc packaging/owlio.iss
 include(GNUInstallDirs)
 install(TARGETS owlio RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 if(WIN32)

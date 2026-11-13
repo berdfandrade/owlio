@@ -49,7 +49,7 @@ jobs:
         run: build\owlio_tests.exe
 
       - name: Install with Qt files
-        run: cmake --install build --prefix dist
+        run: cmake --install build --prefix "${{ github.workspace }}/dist"  # o deploy do Qt exige caminho absoluto
 
       - name: Check that the app starts
         shell: pwsh
