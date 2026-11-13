@@ -97,7 +97,7 @@ Para forçar um tema numa execução: `./run.sh --theme dark`.
 
 ## Baixar
 
-Cada [versão](https://github.com/berdfandrade/owlio/releases) traz um instalador para Windows (`Owlio-Setup-<versão>.exe`). Ele instala para o usuário atual sem pedir administrador, cria atalho no menu Iniciar (e na área de trabalho, se você quiser) e pode abrir arquivos `.fountain` e `.fdx` com o Owlio. O instalador ainda não é assinado, então o SmartScreen do Windows pode avisar de editor desconhecido: clique em **Mais informações → Executar assim mesmo**.
+Cada [versão](https://github.com/berdfandrade/owlio/releases) traz um instalador para Windows (`Owlio-Setup-<versão>.exe`). Ele instala para o usuário atual sem pedir administrador, cria atalho no menu Iniciar (e na área de trabalho, se você quiser) e pode abrir arquivos `.fountain` e `.fdx` com o Owlio. Os instaladores estão passando a ser assinados de graça pela SignPath Foundation (veja a [política de assinatura](docs/CODE_SIGNING.md)). Até sair uma versão assinada, o SmartScreen do Windows pode avisar de editor desconhecido: clique em **Mais informações → Executar assim mesmo**.
 
 ## Compilar
 
@@ -170,3 +170,9 @@ Todos os textos do código estão em inglês; o português vem de `translations/
 cmake --build build --target update_translations
 ~/Qt/6.8.3/gcc_64/bin/linguist translations/owlio_pt_BR.ts
 ```
+
+## Licença
+
+O Owlio é software livre sob a [GNU General Public License v3.0](LICENSE).
+
+Assinatura de código gratuita fornecida pela [SignPath.io](https://signpath.io), certificado da [SignPath Foundation](https://signpath.org).
