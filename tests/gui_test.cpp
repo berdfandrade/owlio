@@ -236,6 +236,23 @@ int main(int argc, char* argv[]) {
     QTest::keyClick(b, Qt::Key_Z, Qt::ControlModifier | Qt::ShiftModifier);
     CHECK(heading(0) == U"INT. ANA'S APARTMENT - NIGHT");
 
+    // Modo lista: uma faixa por cena, uma embaixo da outra; o alternador do cabeçalho troca o modo.
+    {
+        const QRectF gridToggle = b->cardRect(0);  // só para garantir que o quadro já tem tamanho
+        CHECK(!b->listMode() && gridToggle.width() > 0);
+        QWidget* bvp = b->viewport();
+        const QPointF listBtn(bvp->width() - 32 - 17, 24 + 15);  // botão "lista", à direita do cabeçalho
+        QTest::mouseClick(bvp, Qt::LeftButton, Qt::NoModifier, listBtn.toPoint());
+        CHECK(b->listMode());
+        const QRectF r0 = b->cardRect(0), r1 = b->cardRect(1);
+        CHECK(r1.top() > r0.bottom() && r0.left() == r1.left() && r0.height() < 100);
+        QTest::keyClick(b, Qt::Key_Home);
+        QTest::keyClick(b, Qt::Key_Down);
+        CHECK(b->selectedScene() == 1);
+        if (argc > 18) b->grab().save(QString::fromLocal8Bit(argv[18]));
+        b->setListMode(false);
+    }
+
     // Enter abre a cena selecionada no roteiro.
     QTest::keyClick(b, Qt::Key_End);
     QTest::keyClick(b, Qt::Key_Return);
@@ -436,7 +453,7 @@ int main(int argc, char* argv[]) {
                 pav.setCategory(8);
                 CHECK(opts->count() == 7);
                 // O tipo de corpo fica à vista, fora das categorias.
-                QToolButton* masc = pav.findChild<QToolButton*>("corpoMeio");
+                QToolButton* masc = pav.findChildren<QToolButton*>("corpo").value(1);
                 CHECK(masc && masc->isVisible());
                 if (masc) masc->click();
                 CHECK(pav.avatar().body == 1 && masc && masc->isChecked());
@@ -740,6 +757,8 @@ int main(int argc, char* argv[]) {
             QTest::qWait(250);
             TimelineView* tl = w.timeline();
             CHECK(w.viewMode() == MainWindow::ViewMode::Timeline);
+            // O cabeçalho da linha do tempo não pode travar a largura da barra lateral.
+            CHECK(tl->minimumSizeHint().width() < 900);
             // Zoom nas páginas escritas (o roteiro de exemplo é curto).
             QToolButton* fitW = tl->findChild<QToolButton*>("alternarLinha");
             CHECK(fitW);

@@ -11,6 +11,7 @@ class QLabel;
 class QListWidget;
 class QAction;
 class QDockWidget;
+class QToolButton;
 class QPagedPaintDevice;
 class ScriptView;
 class SceneBoard;
@@ -88,6 +89,7 @@ private:
     void refreshIcons();
     QAction* iconAction(QAction* a, const QString& icon);
     QDockWidget* makeDock(const QString& title, const QString& objectName, QWidget* content);
+    QToolButton* addDockButton(QDockWidget* dock, const QString& icon, const QString& tip);
 
     Editor editor_;
     ScriptView* view_ = nullptr;

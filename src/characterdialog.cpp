@@ -201,11 +201,13 @@ CharacterDialog::CharacterDialog(const Editor& ed, const QString& name, QWidget*
     avatar_ = new AvatarButton;
     connect(avatar_, &AvatarButton::clicked, this, &CharacterDialog::choosePhoto);
     ThemeManager& tm = ThemeManager::instance();
-    auto* choose = new QPushButton(tm.icon("enviar", tm.colors().accent), tr("Upload Photo…"));
-    choose->setObjectName("link");
+    auto* choose = new QPushButton(tm.icon("enviar", tm.colors().accent), tr("Upload Photo"));
+    choose->setToolTip(tr("Choose an image from your computer"));
+    choose->setObjectName("acaoFoto");
     connect(choose, &QPushButton::clicked, this, &CharacterDialog::choosePhoto);
-    auto* create = new QPushButton(tm.icon("avatar", tm.colors().accent), tr("Create Avatar…"));
-    create->setObjectName("link");
+    auto* create = new QPushButton(tm.icon("avatar", tm.colors().accent), tr("Create Avatar"));
+    create->setToolTip(tr("Build a pixel-art avatar for this character"));
+    create->setObjectName("acaoFoto");
     connect(create, &QPushButton::clicked, this, [this] {
         const QString n = name_->text().trimmed().toUpper();
         PixelAvatarDialog dlg(n.isEmpty() ? original_ : n, this);
@@ -220,12 +222,14 @@ CharacterDialog::CharacterDialog(const Editor& ed, const QString& name, QWidget*
         updatePhoto();
     });
     auto* photoButtons = new QHBoxLayout;
-    photoButtons->addStretch(1);
-    photoButtons->setSpacing(12);
-    photoButtons->addWidget(choose);
-    photoButtons->addWidget(create);
+    photoButtons->setSpacing(8);
+    for (QPushButton* b : {choose, create}) {
+        b->setIconSize(QSize(16, 16));
+        b->setMinimumHeight(36);
+        b->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+        photoButtons->addWidget(b);
+    }
     for (QPushButton* b : {choose, create, removePhoto_}) b->setCursor(Qt::PointingHandCursor);
-    photoButtons->addStretch(1);
 
     nameLabel_ = new QLabel;
     nameLabel_->setObjectName("nomeFicha");

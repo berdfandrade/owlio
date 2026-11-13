@@ -909,12 +909,12 @@ PixelAvatarDialog::PixelAvatarDialog(const QString& name, QWidget* parent) : QDi
     bodyTitle->setObjectName("rotuloAvatar");
     bodies_ = new QButtonGroup(this);
     auto* bodyRow = new QHBoxLayout;
-    bodyRow->setSpacing(0);
+    bodyRow->setSpacing(10);
     const std::pair<QString, const char*> bodyOpts[] = {
         {tr("Feminine"), "feminino"}, {tr("Masculine"), "masculino"}, {tr("Neutral", "body"), "neutro"}};
     for (int i = 0; i < 3; ++i) {
         auto* b = new QToolButton;
-        b->setObjectName(i == 0 ? "corpoEsq" : i == 2 ? "corpoDir" : "corpoMeio");
+        b->setObjectName("corpo");
         b->setCheckable(true);
         b->setText(bodyOpts[i].first);
         b->setIcon(tm.icon(bodyOpts[i].second));
