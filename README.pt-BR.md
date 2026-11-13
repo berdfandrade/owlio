@@ -26,7 +26,8 @@ O idioma oficial do Owlio é o inglês. A interface em **português do Brasil** 
 
 - **Salvamento automático**: roteiros que já têm arquivo são salvos sozinhos a cada 5 minutos (ou 1, 10, ou desligado, nas Configurações).
 - **Recuperação**: enquanto houver alterações não salvas, o Owlio guarda uma cópia a cada 20 segundos, inclusive de roteiros sem título. Se ele fechar de repente, oferece as alterações de volta no próximo início.
-- **Backups**: cada salvamento guarda também uma cópia com data e hora, até as 30 mais recentes de cada roteiro. Salvamentos automáticos geram no máximo um backup a cada 10 minutos. Arquivo → Backups abre um deles como cópia sem título, para o backup nunca ser sobrescrito.
+- **Backups**: cada salvamento guarda também uma cópia com data e hora, até as 30 mais recentes de cada roteiro. Salvamentos automáticos geram no máximo um backup a cada 10 minutos. Arquivo → Abrir arquivo de backup abre um deles como cópia sem título, para o backup nunca ser sobrescrito.
+- **Versões** (Arquivo → Versões, Ctrl+Shift+H, ou o botão de relógio na barra de ferramentas): uma máquina do tempo para o roteiro. Ela abre sobre a área do roteiro; em Configurações → Salvamento dá para abrir em tela cheia. Cada versão salva aparece empilhada em perspectiva sob um céu noturno, a mais nova na frente, com uma linha do tempo ao lado. Volte com as setas, a roda do mouse ou a linha do tempo, folheie com ← e → e clique em **Restaurar** para trazer aquela versão de volta. A restauração é uma edição comum, então Ctrl+Z volta para onde você estava.
 
 ## Tela de cartões
 
@@ -147,6 +148,7 @@ LD_LIBRARY_PATH=$HOME/Qt/6.8.3/gcc_64/lib:$HOME/Qt/extra/usr/lib/x86_64-linux-gn
 | `src/castdialog.*` | Janela de personagens (tabela editável do elenco) |
 | `src/pixelavatar.*` | Criador de avatar 16-bit |
 | `src/autosave.*` | Salvamento automático, cópias de recuperação e backups |
+| `src/versionbrowser.*` | Janela de versões: versões salvas empilhadas em perspectiva, com linha do tempo |
 | `src/settingsdialog.*`, `src/i18n.*` | Configurações, idioma da interface e carregamento das traduções |
 | `src/avatars.*` | Fotos dos personagens: importação, recorte, cache e desenho em círculo |
 | `src/theme.*` | Paleta, QSS com variáveis, ícones SVG recoloridos, claro/escuro |

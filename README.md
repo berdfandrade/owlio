@@ -63,7 +63,8 @@ It also follows the keyboard-first flow screenwriters know from tools like Final
 ### Saving and backups
 - **Autosave**: scripts that already have a file are saved automatically every 5 minutes (1 or 10 minutes, or off, in Settings).
 - **Crash recovery**: while there are unsaved changes, Owlio keeps a recovery copy every 20 seconds, untitled scripts included. If it closes unexpectedly, it offers the changes back the next time it starts.
-- **Backups**: every save also keeps a dated copy of the script, up to the 30 most recent per script. Automatic saves add at most one backup every 10 minutes. File → Backups opens one as an untitled copy, so the backup itself is never overwritten.
+- **Backups**: every save also keeps a dated copy of the script, up to the 30 most recent per script. Automatic saves add at most one backup every 10 minutes. File → Open Backup File opens one as an untitled copy, so the backup itself is never overwritten.
+- **Versions** (File → Versions, Ctrl+Shift+H, or the clock button in the toolbar): a time machine for your script. It opens over the script area; Settings → Saving can make it full screen instead. Every saved version is stacked in perspective under a night sky, newest in front, with a timeline on the side. Step back with the arrows, the mouse wheel or the timeline, flip pages with ← and →, and press **Restore** to bring that version back. The restore is a normal edit, so Ctrl+Z returns to where you were.
 
 ### Files
 - **Fountain** (`.fountain`) is the native format: plain text, open, and readable by many other screenwriting tools.
@@ -127,6 +128,7 @@ It also follows the keyboard-first flow screenwriters know from tools like Final
 | **Ctrl+Shift+B** | Beat Board |
 | **Ctrl+Shift+M** | Relationship map |
 | **Ctrl+Shift+L** | Timeline |
+| **Ctrl+Shift+H** | Versions (time machine) |
 | **Double-click / Enter / Delete** (Beat Board) | Add or edit a beat / edit the selected beat / delete the selection |
 | **Ctrl+Shift+F** | Focus mode |
 | **Ctrl+Shift+E** | Export PDF |
@@ -206,6 +208,7 @@ LD_LIBRARY_PATH=$HOME/Qt/6.8.3/gcc_64/lib ./build/owlio_gui_test   # drives the 
 | `src/castdialog.*` | Characters window (editable cast table) |
 | `src/pixelavatar.*` | 16-bit avatar creator |
 | `src/autosave.*` | Autosave, crash recovery copies and dated backups |
+| `src/versionbrowser.*` | Versions window: saved versions stacked in perspective, with a timeline |
 | `src/settingsdialog.*`, `src/i18n.*` | Settings window, interface language and translation loading |
 | `src/avatars.*` | Character photos: import, crop, cache and circular drawing |
 | `src/theme.*`, `resources/themes/estilo.qss` | Light/dark palettes, the Qt style sheet, recolored SVG icons |

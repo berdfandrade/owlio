@@ -57,6 +57,7 @@
 #include "castdialog.h"
 #include "relationmap.h"
 #include "timeline.h"
+#include "versionbrowser.h"
 #include "fdx.h"
 #include "fountain.h"
 #include "pagepainter.h"
@@ -349,7 +350,9 @@ void MainWindow::buildActions() {
     QAction* printAct = iconAction(file->addAction(tr("&Print..."), this, &MainWindow::print), "imprimir");
     printAct->setShortcut(QKeySequence::Print);
     file->addSeparator();
-    iconAction(file->addAction(tr("&Backups..."), this, &MainWindow::browseBackups), "historico");
+    QAction* versionsAct = iconAction(file->addAction(tr("&Versions..."), this, &MainWindow::browseVersions), "historico");
+    versionsAct->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_H));
+    iconAction(file->addAction(tr("Open &Backup File..."), this, &MainWindow::browseBackups), "abrir");
     file->addSeparator();
     iconAction(file->addAction(tr("&Quit"), this, &QWidget::close), "sair")->setShortcut(QKeySequence::Quit);
 
@@ -542,13 +545,14 @@ void MainWindow::buildActions() {
     tip(newAct, tr("New script"));
     tip(openAct, tr("Open"));
     tip(saveAct, tr("Save"));
+    tip(versionsAct, tr("Versions: go back in time to any saved version"));
     tip(undoAct_, tr("Undo"));
     tip(redoAct_, tr("Redo"));
     tip(findAct, tr("Find and Replace"));
     tip(sidebarAct_, tr("Show or hide the sidebar"));
     tb->addAction(sidebarAct_);
     tb->addSeparator();
-    for (QAction* a : {newAct, openAct, saveAct}) tb->addAction(a);
+    for (QAction* a : {newAct, openAct, saveAct, versionsAct}) tb->addAction(a);
     tb->addSeparator();
     tb->addAction(undoAct_);
     tb->addAction(redoAct_);
@@ -788,6 +792,18 @@ void MainWindow::recover(const autosave::Recovery& r) {
     statusBar()->showMessage(tr("Changes recovered. Save to keep them."), 5000);
 }
 
+void MainWindow::browseVersions() {
+    const int page = editor_.layout().pageOfPara(editor_.cursor().para);
+    const QString name = path_.isEmpty() ? tr("Untitled") : QFileInfo(path_).fileName();
+    VersionBrowser dlg(editor_, name, VersionBrowser::versionsOf(path_), page, this);
+    if (QSettings().value("versionsFullScreen", false).toBool()) dlg.setWindowState(Qt::WindowFullScreen);
+    else dlg.cover(centralWidget());
+    if (dlg.exec() != QDialog::Accepted || dlg.selected() == 0) return;
+    editor_.restoreContent(dlg.selectedDocument());
+    view_->refreshAfterExternalEdit();
+    statusBar()->showMessage(tr("Restored the version from %1. Ctrl+Z undoes it.").arg(dlg.label(dlg.selected())), 8000);
+}
+
 void MainWindow::browseBackups() {
     QString dir = path_.isEmpty() ? autosave::backupRoot() : autosave::backupDir(path_);
     if (!QFileInfo::exists(dir)) dir = autosave::backupRoot();
@@ -984,6 +1000,7 @@ void MainWindow::showSettings() {
     QSettings s;
     s.setValue("autosaveMinutes", dlg.autosaveMinutes());
     s.setValue("keepBackups", dlg.keepBackups());
+    s.setValue("versionsFullScreen", dlg.versionsFullScreen());
     s.setValue("reopenLast", dlg.reopenLastScript());
     s.setValue("uiFont", dlg.interfaceFont());
     s.setValue("uiFontSize", dlg.interfaceFontSize());

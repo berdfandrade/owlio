@@ -160,6 +160,15 @@ QPushButton#primarioBotao:disabled { background: @hover; color: @muted; border-c
 QPushButton#link { color: @accent; background: transparent; border: none; padding: 4px 0; min-width: 0; text-align: left; }
 QPushButton#link:hover { text-decoration: underline; }
 QPushButton#link { qproperty-iconSize: 15px 15px; }
+/* Máquina do tempo (versões): botões sobre o céu escuro, iguais nos dois temas. */
+QPushButton#versaoBotao, QPushButton#versaoRestaurar {
+    background: rgba(255, 255, 255, 0.12); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.28);
+    border-radius: 12px; font-weight: 600; padding: 0 18px;
+}
+QPushButton#versaoBotao:hover { background: rgba(255, 255, 255, 0.22); }
+QPushButton#versaoRestaurar { background: #3b6cf6; border-color: #6c8cff; }
+QPushButton#versaoRestaurar:hover { background: #2f5be0; }
+QPushButton#versaoRestaurar:disabled { background: rgba(255, 255, 255, 0.06); color: rgba(255, 255, 255, 0.35); border-color: rgba(255, 255, 255, 0.12); }
 /* Enviar foto / Criar avatar, na ficha do personagem. */
 QPushButton#acaoFoto {
     background: @surface; color: @text; border: 1px solid @border; border-radius: 10px;

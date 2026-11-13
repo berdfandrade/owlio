@@ -1,6 +1,6 @@
 // UI test: types a scene into the real window using Qt keyboard and mouse events.
 // Usage: owlio_gui_test [script.png] [menu.png] [cards.png] [title.png] [print.png] [character.png] [settings.png]
-//                       [beatboard.png] [beat.png]
+//                       [beatboard.png] [beat.png] … [cards-list.png] [versions.png]
 #include <QApplication>
 #include <QIcon>
 #include <QKeyEvent>
@@ -47,6 +47,7 @@
 #include "castdialog.h"
 #include "relationmap.h"
 #include "timeline.h"
+#include "versionbrowser.h"
 #include <QTreeWidget>
 #include <QComboBox>
 #include "scriptview.h"
@@ -811,6 +812,63 @@ int main(int argc, char* argv[]) {
             }
         }
         const_cast<Editor&>(ed).markSaved();
+    }
+
+    // ---- Versões (máquina do tempo): backups empilhados, escolher um e restaurar com desfazer.
+    {
+        QTemporaryDir tmp;
+        const QString script = tmp.filePath("versoes.fountain");
+        const QString dir = autosave::backupDir(script);
+        QDir().mkpath(dir);
+        auto put = [&](const QString& stamp, const char* text) {
+            QFile f(dir + "/versoes " + stamp + ".fountain");
+            if (f.open(QIODevice::WriteOnly)) f.write(text);
+        };
+        for (int k = 1; k <= 6; ++k)  // versões mais antigas, para a pilha ter fundo
+            put(QString("2026-11-0%1 10-00-00").arg(k), "INT. RASCUNHO - DIA\n\nIdeia solta.\n");
+        put("2026-11-10 09-15-00", "INT. VELHA - DIA\n\nPrimeira versão.\n");
+        put("2026-11-12 18-30-00", "INT. MEIO - NOITE\n\nSegunda versão.\n\nINT. OUTRA - DIA\n\nMais.\n");
+        const auto versions = VersionBrowser::versionsOf(script);
+        CHECK(versions.size() == 8 && versions[0].when.date() == QDate(2026, 11, 12));
+        Editor cur;
+        cur.setDocument(parseFountain("INT. AGORA - DIA\n\nVersão atual.\n"));
+        VersionBrowser vb(cur, "versoes.fountain", versions, 0);
+        vb.resize(1200, 800);
+        vb.show();
+        QTest::qWait(50);
+        CHECK(vb.count() == 9 && vb.selected() == 0);
+        QPushButton* restoreBtn = vb.findChild<QPushButton*>("versaoRestaurar");
+        CHECK(restoreBtn && !restoreBtn->isEnabled());
+        QTest::keyClick(&vb, Qt::Key_Up);
+        QTest::keyClick(&vb, Qt::Key_Up);
+        CHECK(vb.selected() == 2 && restoreBtn && restoreBtn->isEnabled());
+        // Arrastar ao longo da linha do tempo: de "Agora" (embaixo) até a versão mais antiga.
+        const QPoint railBottom(vb.width() - 80, vb.height() - 158), railTop(vb.width() - 80, 40);
+        QTest::mousePress(&vb, Qt::LeftButton, {}, railBottom);
+        CHECK(vb.selected() == 0);
+        QMouseEvent drag(QEvent::MouseMove, QPointF(railTop), vb.mapToGlobal(QPointF(railTop)), Qt::NoButton,
+                         Qt::LeftButton, Qt::NoModifier);
+        QApplication::sendEvent(&vb, &drag);
+        QTest::mouseRelease(&vb, Qt::LeftButton, {}, railTop);
+        CHECK(vb.selected() == vb.count() - 1);
+        vb.select(1);
+        QTest::qWait(500);
+        if (argc > 19) vb.grab().save(QString::fromLocal8Bit(argv[19]));
+        CHECK(vb.selected() == 1 && vb.selectedDocument().paragraphs.at(0).text == U"INT. MEIO - NOITE");
+        cur.restoreContent(vb.selectedDocument());
+        CHECK(cur.doc().paragraphs.size() == 4);
+        cur.undo();
+        CHECK(cur.doc().paragraphs.at(0).text == U"INT. AGORA - DIA");
+        vb.close();
+
+        // Por padrão cobre só a área do roteiro e acompanha o tamanho da janela principal.
+        VersionBrowser over(cur, "versoes.fountain", versions, 0, &w);
+        over.cover(w.centralWidget());
+        CHECK(over.size() == w.centralWidget()->size());
+        w.resize(w.width() + 40, w.height());
+        QTest::qWait(50);
+        CHECK(over.size() == w.centralWidget()->size());
+        QDir(dir).removeRecursively();
     }
 
     std::printf(failures == 0 ? "UI test passed.\n" : "%d failure(s).\n", failures);

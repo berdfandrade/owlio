@@ -552,6 +552,20 @@ static void testStructure() {
     CHECK(odd.structure.beats.size() == 1 && odd.structure.beats[0].at == 1.0);
 }
 
+static void testRestoreContent() {
+    Editor e;
+    e.setDocument(parseFountain("Title: Nova\n\nINT. CASA - DIA\n\nAna entra.\n\nINT. RUA - NOITE\n\nChove.\n"));
+    const Document old = parseFountain("Title: Velha\n\nINT. CASA - DIA\n\nAna sai.\n");
+    e.restoreContent(old);
+    CHECK(e.doc().paragraphs.size() == 2 && e.doc().paragraphs[1].text == U"Ana sai.");
+    CHECK(e.doc().titleValue("Title") == "Velha");
+    CHECK(e.modified() && e.canUndo());
+    e.undo();
+    CHECK(e.doc().paragraphs.size() == 4 && e.doc().titleValue("Title") == "Nova");
+    e.redo();
+    CHECK(e.doc().paragraphs[1].text == U"Ana sai.");
+}
+
 int main() {
     testScenes();
     testFountain();
@@ -563,6 +577,7 @@ int main() {
     testBeatBoard();
     testRelations();
     testStructure();
+    testRestoreContent();
     if (failures == 0) std::printf("All tests passed.\n");
     return failures == 0 ? 0 : 1;
 }

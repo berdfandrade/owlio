@@ -36,6 +36,7 @@ set(UI_SOURCES
   src/castdialog.cpp src/castdialog.h
   src/relationmap.cpp src/relationmap.h
   src/timeline.cpp src/timeline.h
+  src/versionbrowser.cpp src/versionbrowser.h
   src/mainwindow.cpp src/mainwindow.h
   src/scriptview.cpp src/scriptview.h
   src/pagepainter.cpp src/pagepainter.h

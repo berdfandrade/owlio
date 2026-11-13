@@ -1130,10 +1130,6 @@ Todas as deixas de %2 passam a ser de %1, e esta ficha substitui a dele.</transl
         <translation>Sem título</translation>
     </message>
     <message>
-        <source>&amp;Backups...</source>
-        <translation>&amp;Backups...</translation>
-    </message>
-    <message>
         <source>&amp;Dual Dialogue</source>
         <translation>&amp;Diálogo duplo</translation>
     </message>
@@ -1264,6 +1260,22 @@ Todas as deixas de %2 passam a ser de %1, e esta ficha substitui a dele.</transl
     <message>
         <source>Hide panel (View › Characters shows it again)</source>
         <translation>Esconder painel (Exibir › Personagens mostra de novo)</translation>
+    </message>
+    <message>
+        <source>&amp;Versions...</source>
+        <translation>&amp;Versões...</translation>
+    </message>
+    <message>
+        <source>Open &amp;Backup File...</source>
+        <translation>Abrir arquivo de &amp;backup...</translation>
+    </message>
+    <message>
+        <source>Versions: go back in time to any saved version</source>
+        <translation>Versões: volte no tempo para qualquer versão salva</translation>
+    </message>
+    <message>
+        <source>Restored the version from %1. Ctrl+Z undoes it.</source>
+        <translation>Versão de %1 restaurada. Ctrl+Z desfaz.</translation>
     </message>
 </context>
 <context>
@@ -2204,6 +2216,14 @@ Escreva um cabeçalho (INT. ou EXT.) no roteiro e ele aparece aqui como cartão.
         <source>Autosave, backups and crash recovery.</source>
         <translation>Salvamento automático, backups e recuperação após falhas.</translation>
     </message>
+    <message>
+        <source>Open Versions in full screen</source>
+        <translation>Abrir Versões em tela cheia</translation>
+    </message>
+    <message>
+        <source>Otherwise the Versions window covers only the script area.</source>
+        <translation>Se desligado, a janela de Versões cobre só a área do roteiro.</translation>
+    </message>
 </context>
 <context>
     <name>SheetPreview</name>
@@ -2799,6 +2819,63 @@ E-mail</translation>
     <message>
         <source>Type a title to create the title page.</source>
         <translation>Digite um título para criar a página de rosto.</translation>
+    </message>
+</context>
+<context>
+    <name>VersionBrowser</name>
+    <message>
+        <source>Versions</source>
+        <translation>Versões</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>Cancelar</translation>
+    </message>
+    <message>
+        <source>Restore</source>
+        <translation>Restaurar</translation>
+    </message>
+    <message>
+        <source>Today</source>
+        <translation>Hoje</translation>
+    </message>
+    <message>
+        <source>Yesterday</source>
+        <translation>Ontem</translation>
+    </message>
+    <message>
+        <source>Today (Now)</source>
+        <translation>Hoje (agora)</translation>
+    </message>
+    <message>
+        <source>Bring back the script as it was on %1. Ctrl+Z undoes it.</source>
+        <translation>Traz o roteiro de volta como estava em %1. Ctrl+Z desfaz.</translation>
+    </message>
+    <message>
+        <source>p. %1</source>
+        <translation>p. %1</translation>
+    </message>
+    <message>
+        <source>Now</source>
+        <translation>Agora</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n page(s)</source>
+        <translation>
+            <numerusform>%n página</numerusform>
+            <numerusform>%n páginas</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>%n scene(s)</source>
+        <translation>
+            <numerusform>%n cena</numerusform>
+            <numerusform>%n cenas</numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>No saved versions yet. Every time you save, Owlio keeps a version here.</source>
+        <translation>Ainda não há versões salvas. Cada vez que você salva, o Owlio guarda uma versão aqui.</translation>
     </message>
 </context>
 <context>
