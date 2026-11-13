@@ -45,6 +45,8 @@ public:
     // ---- documento
     const Document& doc() const { return doc_; }
     void setDocument(Document d);
+    // Troca o conteúdo pelo de outra versão do roteiro (um backup), como uma edição: um Ctrl+Z volta.
+    void restoreContent(const Document& d);
     const Layout& layout() const;
     const LayoutOptions& layoutOptions() const { return layoutOpt_; }
     void setLayoutOptions(const LayoutOptions& o) { layoutOpt_ = o; layoutDirty_ = true; ++revision_; }

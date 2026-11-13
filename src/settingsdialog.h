@@ -22,6 +22,7 @@ public:
     ThemeManager::Mode themeMode() const;
     int autosaveMinutes() const;  // 0 = desligado
     bool keepBackups() const;
+    bool versionsFullScreen() const;
     bool reopenLastScript() const;
     QString interfaceFont() const;  // vazio = padrão
     double interfaceFontSize() const;
@@ -48,5 +49,6 @@ private:
     QCheckBox* sceneNumbers_;
     QComboBox* autosave_;
     QCheckBox* backups_;
+    QCheckBox* versionsFull_;
     QLabel* restartNote_;
 };

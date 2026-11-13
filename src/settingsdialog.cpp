@@ -155,6 +155,9 @@ SettingsDialog::SettingsDialog(QWidget* parent) : QDialog(parent) {
     selectData(autosave_, settings.value("autosaveMinutes", 5).toInt());
     backups_ = new QCheckBox(tr("Keep a dated backup copy every time the script is saved"));
     backups_->setChecked(settings.value("keepBackups", true).toBool());
+    versionsFull_ = new QCheckBox(tr("Open Versions in full screen"));
+    versionsFull_->setToolTip(tr("Otherwise the Versions window covers only the script area."));
+    versionsFull_->setChecked(settings.value("versionsFullScreen", false).toBool());
     auto* openBackups = new QPushButton(tm.icon("historico", tm.colors().accent), tr("Open Backups Folder"));
     openBackups->setObjectName("link");
     openBackups->setCursor(Qt::PointingHandCursor);
@@ -165,6 +168,7 @@ SettingsDialog::SettingsDialog(QWidget* parent) : QDialog(parent) {
     auto* saveForm = makeForm();
     saveForm->addRow(tr("Save automatically"), autosave_);
     saveForm->addRow(QString(), backups_);
+    saveForm->addRow(QString(), versionsFull_);
     saveForm->addRow(QString(), openBackups);
 
     for (QComboBox* c : {language_, script_, theme_, uiFont_, scriptFont_, autosave_}) {
@@ -329,6 +333,7 @@ void SettingsDialog::showPage(int index) { nav_->setCurrentRow(std::clamp(index,
 
 int SettingsDialog::autosaveMinutes() const { return autosave_->currentData().toInt(); }
 bool SettingsDialog::keepBackups() const { return backups_->isChecked(); }
+bool SettingsDialog::versionsFullScreen() const { return versionsFull_->isChecked(); }
 bool SettingsDialog::reopenLastScript() const { return reopen_->isChecked(); }
 QString SettingsDialog::interfaceFont() const { return uiFont_->currentData().toString(); }
 double SettingsDialog::interfaceFontSize() const { return uiSize_->value(); }

@@ -72,6 +72,7 @@ private slots:
     void gotoFirstLine(const QString& characterName);
     void showSettings();
     void browseBackups();
+    void browseVersions();
     void showCast();
 
 private:

@@ -72,6 +72,18 @@ void Editor::setDocument(Document d) {
     ++revision_;
 }
 
+void Editor::restoreContent(const Document& d) {
+    beginEdit(EditKind::Other);
+    doc_.paragraphs = d.paragraphs;
+    doc_.titlePage = d.titlePage;
+    doc_.cast = d.cast;
+    doc_.board = d.board;
+    doc_.relations = d.relations;
+    doc_.structure = d.structure;
+    lastKind_ = EditKind::None;
+    changed();
+}
+
 const Layout& Editor::layout() const {
     if (layoutDirty_) {
         layout_ = computeLayout(doc_, layoutOpt_);
