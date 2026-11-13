@@ -18,7 +18,7 @@ O idioma oficial do Owlio é o inglês. A interface em **português do Brasil** 
 - **Paginação profissional**: cabeçalho e personagem nunca ficam sozinhos no pé da página, falas quebradas recebem (MORE) / NOME (CONT'D), e as páginas são numeradas.
 - **Convenções do roteiro** (Configurações): inglês, com (MORE)/(CONT'D), DAY, NIGHT e CUT TO:, ou português, com (MAIS)/(CONT.), DIA, NOITE e CORTA PARA:. Valem para a paginação e para as sugestões do autocompletar, independente do idioma da interface.
 - **Arquivos**: Fountain (`.fountain`, formato nativo, texto puro) e Final Draft (`.fdx`, abrir e salvar).
-- **Página de rosto** editada numa janela com prévia ao vivo: título, crédito, autores, fonte, versão, data, observações e contato.
+- **Página de rosto** editada numa janela com prévia ao vivo: título, crédito, autores, fonte, versão, data, observações e contato. O título sai do jeito que você digita, com as maiúsculas e minúsculas que escolher.
 - **Janela de impressão e PDF** com miniaturas das folhas: impressora, cópias, intervalo de páginas, página de rosto, numeração de cenas e **marca d'água** opcional (por exemplo "RASCUNHO" ou o nome de quem recebe a cópia).
 - Navegador de cenas, lista de personagens, localizar/substituir, desfazer/refazer, numeração de cenas e zoom.
 
@@ -36,6 +36,23 @@ O idioma oficial do Owlio é o inglês. A interface em **português do Brasil** 
 - **Sinopse**: F2 ou clique direito → Editar sinopse. Sem sinopse, o cartão mostra o começo da ação. A sinopse é salva no Fountain como `= texto` logo abaixo do cabeçalho, e no `.fdx` como resumo da cena (`SceneProperties/Summary`).
 - **Reordenar**: arraste o cartão, ou use Alt+setas. A cena inteira muda de lugar no roteiro, e Ctrl+Z desfaz.
 - Duplo clique ou Enter abre a cena no roteiro. Ctrl+roda do mouse muda o tamanho dos cartões.
+- **Grade ou lista**: um botão no canto do cabeçalho alterna entre a grade de cartões e uma lista compacta, com uma faixa por cena (local, horário, sinopse, personagens, duração e página). Arrastar, setas e F2 funcionam nos dois modos, e o Owlio lembra a escolha.
+
+## Linha do tempo
+
+**Exibir → Linha do tempo** (Ctrl+Shift+L) mostra o filme da esquerda para a direita: régua de páginas, estrutura da história, uma faixa com os blocos das cenas e uma linha por personagem mostrando onde ele fala. Passe o mouse numa cena para ver página e duração; clique para abri-la no roteiro.
+
+- Compare o que já está escrito com a **duração planejada**, ou aproxime só as páginas escritas.
+- **Estrutura editável**: arraste divisões de atos e pontos de virada, renomeie, divida ou junte atos, e adicione ou remova pontos pelo clique direito.
+- **Modelos**: Convencional (três atos), Fragmentada (não linear), Episódio de TV (drama), Sitcom, Cinco atos (Freytag), Save the Cat, Jornada do herói e Kishōtenketsu. Qualquer edição transforma a estrutura em Personalizada. Ela fica salva no `.fountain`, e toda mudança pode ser desfeita.
+
+## Mapa de relações
+
+**Exibir → Relações** (Ctrl+Shift+M) mostra os personagens como avatares num quadro. Arraste de um personagem até outro para ligá-los.
+
+- Cada ligação tem um **tipo** (Família, Amor, Amizade, Conflito, Trabalho, Outro), com cor própria, e um **rótulo** opcional, como "irmãs" ou "ex-marido".
+- **Mostrar quem divide cenas** liga quem aparece junto, **Arrumar em círculo** organiza o quadro e **Caber na janela** mostra todos.
+- As relações ficam salvas no `.fountain` e podem ser desfeitas.
 
 ## Visual e temas
 
@@ -64,6 +81,9 @@ Clique num personagem no painel lateral para abrir a ficha dele:
 - **Foto, nome, papel** (protagonista, antagonista, coadjuvante…), **idade, ocupação, características** e **sinopse**.
 - Quantas falas, cenas e palavras ele tem, onde aparece pela primeira vez e a lista das cenas em que fala. Duplo clique numa cena leva até ela.
 - **Trocar o nome** na ficha renomeia todas as deixas do roteiro, mantendo extensões como (V.O.). Um Ctrl+Z desfaz.
+- **Janela de personagens** (Documento → Personagens): uma tabela editável com todo o elenco, com papel, idade, ocupação, falas, cenas e palavras. Dá para buscar, criar personagens, abrir a ficha, criar avatar, enviar foto ou ir para a primeira fala. Renomear ali atualiza todas as deixas, a ficha e o mapa de relações, e juntar dois nomes pede confirmação.
+- **Criador de avatar 16-bit**: monte um retrato em pixel art numa grade de 32×32 com cores sombreadas. Escolha o tipo de corpo e depois pele, olhos, sobrancelhas, boca, cabelo, barba, óculos, chapéu, roupa e fundo, cada um com opções de cor. Tem desfazer e refazer, botão Aleatório e Redefinir.
+- O painel Personagens tem dois botões no cabeçalho: um abre a janela de personagens e o outro esconde o painel (Exibir → Personagens traz de volta).
 - A foto aparece no painel e nos cartões. Fichas e fotos ficam guardadas dentro do próprio `.fountain`, num bloco de comentário que outros apps Fountain ignoram.
 
 O estilo fica em [`resources/themes/estilo.qss`](resources/themes/estilo.qss). É CSS do Qt com variáveis de cor (`@accent`, `@surface`, …), definidas em `src/theme.cpp`. Para editar e ver o resultado ao salvar, sem recompilar:
@@ -73,6 +93,10 @@ OWLIO_QSS=resources/themes/estilo.qss ./run.sh
 ```
 
 Para forçar um tema numa execução: `./run.sh --theme dark`.
+
+## Baixar
+
+Cada [versão](https://github.com/berdfandrade/owlio/releases) traz um instalador para Windows (`Owlio-Setup-<versão>.exe`). Ele instala para o usuário atual sem pedir administrador, cria atalho no menu Iniciar (e na área de trabalho, se você quiser) e pode abrir arquivos `.fountain` e `.fdx` com o Owlio. O instalador ainda não é assinado, então o SmartScreen do Windows pode avisar de editor desconhecido: clique em **Mais informações → Executar assim mesmo**.
 
 ## Compilar
 
@@ -120,13 +144,18 @@ LD_LIBRARY_PATH=$HOME/Qt/6.8.3/gcc_64/lib:$HOME/Qt/extra/usr/lib/x86_64-linux-gn
 | `src/mainwindow.*` | Menus, barra de ferramentas, painéis |
 | `src/titlepagedialog.*`, `src/printdialog.*` | Janelas de página de rosto e de impressão/PDF, com prévia |
 | `src/characterdialog.*` | Janela da ficha do personagem |
+| `src/castdialog.*` | Janela de personagens (tabela editável do elenco) |
+| `src/pixelavatar.*` | Criador de avatar 16-bit |
 | `src/autosave.*` | Salvamento automático, cópias de recuperação e backups |
 | `src/settingsdialog.*`, `src/i18n.*` | Configurações, idioma da interface e carregamento das traduções |
 | `src/avatars.*` | Fotos dos personagens: importação, recorte, cache e desenho em círculo |
 | `src/theme.*` | Paleta, QSS com variáveis, ícones SVG recoloridos, claro/escuro |
 | `src/carddelegate.*` | Cartões dos painéis de cenas e personagens |
-| `src/sceneboard.*` | Tela de cartões (quadro de cenas com arrastar e soltar) |
+| `src/sceneboard.*` | Tela de cartões (grade ou lista, com arrastar e soltar) |
+| `src/timeline.*` | Linha do tempo e a estrutura da história editável |
+| `src/relationmap.*` | Mapa de relações |
 | `src/beatboard.*`, `src/beatdialog.*` | Beat Board (quadro em QGraphicsView, beats, linhas de fluxo) e a janela do beat |
+| `packaging/`, `.github/workflows/windows.yml` | Instalador do Windows (Inno Setup) e o workflow que o gera e publica as versões |
 | `translations/` | Traduções do Qt: `owlio_pt_BR.ts` (português) e `owlio_en.ts` (plurais em inglês) |
 
 O núcleo (`document`, `layout`, `editor`, `fountain`, `fdx`) não depende do Qt.
