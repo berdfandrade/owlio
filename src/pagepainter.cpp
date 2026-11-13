@@ -197,7 +197,7 @@ void PagePainter::paintTitlePage(QPainter& p, QPointF o, double ppi) {
     };
 
     int row = 22;
-    for (auto& t : splitLines(doc.titleValue("Title"))) centered(toUpper(t), row++);
+    for (auto& t : splitLines(doc.titleValue("Title"))) centered(t, row++);  // como o autor escreveu, sem forçar maiúsculas
     row += 3;
     std::string credit = doc.titleValue("Credit");
     if (credit.empty()) credit = "Escrito por";
