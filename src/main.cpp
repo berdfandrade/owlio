@@ -17,7 +17,7 @@ int main(int argc, char* argv[]) {
     QApplication app(argc, argv);
     QApplication::setOrganizationName("Owlio");
     QApplication::setApplicationName("Owlio");
-    QApplication::setApplicationVersion("0.1");
+    QApplication::setApplicationVersion(OWLIO_VERSION);
     QApplication::setStyle(ThemeManager::createStyle());
     QApplication::setWindowIcon(QIcon(":/owlio.png"));
     ThemeManager::instance().init();

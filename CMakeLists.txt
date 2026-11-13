@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(Owlio VERSION 0.1 LANGUAGES CXX)
+project(Owlio VERSION 1.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -59,6 +59,7 @@ set(UI_LIBS owlio_core Qt6::Widgets Qt6::PrintSupport Qt6::Svg)
 add_executable(owlio src/main.cpp ${UI_SOURCES})
 target_link_libraries(owlio PRIVATE ${UI_LIBS})
 target_compile_options(owlio PRIVATE ${OWLIO_WARNINGS})
+target_compile_definitions(owlio PRIVATE OWLIO_VERSION="${PROJECT_VERSION}")  # versão do "Sobre"
 if(WIN32)
   # Sem janela de console, com o ícone e os dados de versão no .exe.
   set_target_properties(owlio PROPERTIES WIN32_EXECUTABLE ON)
