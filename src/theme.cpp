@@ -160,10 +160,13 @@ void ThemeManager::setMode(Mode m, bool persist) {
 
 bool ThemeManager::eventFilter(QObject* obj, QEvent* ev) {
     if (ev->type() == QEvent::Polish) {
-        if (auto* menu = qobject_cast<QMenu*>(obj)) {
-            menu->setAttribute(Qt::WA_TranslucentBackground);
-            menu->setWindowFlag(Qt::FramelessWindowHint);
-            menu->setWindowFlag(Qt::NoDropShadowWindowHint);
+        // Janelas suspensas com cantos arredondados (menus, lista dos combos, dicas): fundo transparente,
+        // senão o retângulo da janela aparece por trás dos cantos.
+        if (qobject_cast<QMenu*>(obj) || obj->inherits("QComboBoxPrivateContainer") || obj->inherits("QTipLabel")) {
+            auto* w = static_cast<QWidget*>(obj);
+            w->setAttribute(Qt::WA_TranslucentBackground);
+            w->setWindowFlag(Qt::FramelessWindowHint);
+            w->setWindowFlag(Qt::NoDropShadowWindowHint);
         }
     }
     return QObject::eventFilter(obj, ev);

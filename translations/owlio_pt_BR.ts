@@ -508,12 +508,20 @@ Todas as deixas de %2 passam a ser de %1, e esta ficha substitui a dele.</transl
         <translation>pág. %1</translation>
     </message>
     <message>
-        <source>Upload Photo…</source>
-        <translation>Enviar foto…</translation>
+        <source>Upload Photo</source>
+        <translation>Enviar foto</translation>
     </message>
     <message>
-        <source>Create Avatar…</source>
-        <translation>Criar avatar…</translation>
+        <source>Choose an image from your computer</source>
+        <translation>Escolher uma imagem do computador</translation>
+    </message>
+    <message>
+        <source>Create Avatar</source>
+        <translation>Criar avatar</translation>
+    </message>
+    <message>
+        <source>Build a pixel-art avatar for this character</source>
+        <translation>Montar um avatar em pixel art para este personagem</translation>
     </message>
 </context>
 <context>
@@ -1249,6 +1257,14 @@ Todas as deixas de %2 passam a ser de %1, e esta ficha substitui a dele.</transl
         <source>Don&apos;t Save</source>
         <translation>Não salvar</translation>
     </message>
+    <message>
+        <source>Manage Characters</source>
+        <translation>Gerenciar personagens</translation>
+    </message>
+    <message>
+        <source>Hide panel (View › Characters shows it again)</source>
+        <translation>Esconder painel (Exibir › Personagens mostra de novo)</translation>
+    </message>
 </context>
 <context>
     <name>PixelAvatarDialog</name>
@@ -1969,6 +1985,14 @@ Escreva um cabeçalho (INT. ou EXT.) no roteiro e ele aparece aqui como cartão.
     <message>
         <source>Move to End</source>
         <translation>Mover para o fim</translation>
+    </message>
+    <message>
+        <source>Show as a list</source>
+        <translation>Mostrar em lista</translation>
+    </message>
+    <message>
+        <source>Show as a grid</source>
+        <translation>Mostrar em grade</translation>
     </message>
 </context>
 <context>

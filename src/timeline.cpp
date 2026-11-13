@@ -619,6 +619,14 @@ TimelineView::TimelineView(Editor* editor, QWidget* parent) : QWidget(parent), e
     auto* shapeLabel = new QLabel(tr("Structure:"));
     shapeLabel->setObjectName("subtituloDialogo");
 
+    // O cabeçalho não pode impor largura mínima grande: ela vira a largura mínima da janela central
+    // e trava o redimensionamento da barra lateral. Título e números cortam quando falta espaço.
+    heading->setMinimumWidth(1);
+    stats_->setMinimumWidth(1);
+    progress_->setMinimumWidth(40);
+    shape_->setSizeAdjustPolicy(QComboBox::AdjustToMinimumContentsLengthWithIcon);
+    shape_->setMinimumContentsLength(14);
+
     auto* titleCol = new QVBoxLayout;
     titleCol->setSpacing(4);
     titleCol->addWidget(heading);

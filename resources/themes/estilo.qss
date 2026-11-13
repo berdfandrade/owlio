@@ -7,7 +7,9 @@
 * { outline: 0; }
 
 QMainWindow, QDialog { background: @window; }
-QMainWindow::separator { background: @border; width: 1px; height: 1px; }
+/* Divisor entre painéis: 5px para dar onde pegar, mas só a linha do meio aparece. */
+QMainWindow::separator { background: @border; border: 2px solid @surface; width: 5px; height: 5px; }
+QMainWindow::separator:hover { background: @accent; }
 
 /* ---------- menus ---------- */
 QMenuBar {
@@ -81,6 +83,7 @@ QComboBox {
     border-radius: 8px;
     padding: 5px 30px 5px 10px;
     min-height: 20px;
+    combobox-popup: 0;  /* lista abaixo do combo; no modo "menu" o Fusion pinta um painel quadrado por trás */
 }
 QComboBox:hover { border-color: @accent; }
 QComboBox::drop-down {
@@ -90,6 +93,7 @@ QComboBox::drop-down {
     border: none;
 }
 QComboBox::down-arrow { image: url(@arrow); width: 14px; height: 14px; }
+QComboBoxPrivateContainer { background: transparent; border: none; padding: 0; margin: 0; }
 QComboBox QAbstractItemView {
     background: @raised;
     color: @text;
@@ -156,6 +160,13 @@ QPushButton#primarioBotao:disabled { background: @hover; color: @muted; border-c
 QPushButton#link { color: @accent; background: transparent; border: none; padding: 4px 0; min-width: 0; text-align: left; }
 QPushButton#link:hover { text-decoration: underline; }
 QPushButton#link { qproperty-iconSize: 15px 15px; }
+/* Enviar foto / Criar avatar, na ficha do personagem. */
+QPushButton#acaoFoto {
+    background: @surface; color: @text; border: 1px solid @border; border-radius: 10px;
+    padding: 0 8px; min-width: 0; font-weight: 600;
+}
+QPushButton#acaoFoto:hover { background: @selected; border-color: @accent; color: @accent; }
+QPushButton#acaoFoto:pressed { background: @hover; }
 QLabel#amostraAvatar { background: transparent; }
 QToolButton#categoria {
     background: @surface; border: 1px solid @border; border-radius: 12px; padding: 8px 6px 6px 6px;
@@ -173,17 +184,11 @@ QToolButton#corAvatar:checked { border: 3px solid @accent; }
 QLabel#nomeAvatar { font-size: 15px; font-weight: 700; color: @text; }
 QLabel#rotuloAvatar { color: @muted; font-size: 11px; font-weight: 700; }
 QPushButton#botaoIconeAvatar { padding: 0; min-width: 38px; max-width: 38px; min-height: 38px; max-height: 38px; border-radius: 10px; }
-QToolButton#corpoEsq, QToolButton#corpoMeio, QToolButton#corpoDir {
-    background: @surface; border: 1px solid @border; color: @muted; padding: 0 14px; font-weight: 600;
+QToolButton#corpo {
+    background: @surface; border: 1px solid @border; border-radius: 10px; color: @muted; padding: 0 14px; font-weight: 600;
 }
-QToolButton#corpoEsq { border-top-left-radius: 10px; border-bottom-left-radius: 10px; }
-QToolButton#corpoMeio { border-left: none; border-right: none; }
-QToolButton#corpoDir { border-top-right-radius: 10px; border-bottom-right-radius: 10px; }
-QToolButton#corpoEsq:hover, QToolButton#corpoMeio:hover, QToolButton#corpoDir:hover { background: @hover; color: @text; }
-QToolButton#corpoEsq:checked, QToolButton#corpoMeio:checked, QToolButton#corpoDir:checked {
-    background: @selected; color: @accent; border-color: @accent;
-}
-QToolButton#corpoMeio:checked { border-left: 1px solid @accent; border-right: 1px solid @accent; }
+QToolButton#corpo:hover { background: @hover; color: @text; }
+QToolButton#corpo:checked { background: @selected; color: @accent; border-color: @accent; }
 QSpinBox {
     background: @surface; color: @text; border: 1px solid @border; border-radius: 8px;
     padding: 5px 8px; selection-background-color: @accent;
@@ -226,10 +231,13 @@ QScrollArea#paginaConfig, QScrollArea#paginaConfig > QWidget > QWidget { backgro
 
 /* ---------- painéis laterais ---------- */
 QDockWidget { color: @muted; }
+QWidget#cabecalhoPainel { background: @surface; }
+QToolButton#botaoPainel { background: transparent; border: none; border-radius: 6px; padding: 4px; }
+QToolButton#botaoPainel:hover { background: @hover; }
 QLabel#tituloPainel {
     background: @surface;
     color: @muted;
-    padding: 14px 16px 8px 16px;
+    padding: 8px 16px 8px 16px;  /* + 6px do cabeçalho */
     font-size: 11px;
     font-weight: 700;
 }

@@ -187,7 +187,13 @@ MainWindow::MainWindow() {
     // Painel de personagens.
     charList_ = new QListWidget;
     charList_->setItemDelegate(new CardDelegate(CardDelegate::Character, charList_));
-    addDockWidget(Qt::LeftDockWidgetArea, makeDock(tr("Characters"), "characters", charList_));
+    QDockWidget* charDock = makeDock(tr("Characters"), "characters", charList_);
+    addDockWidget(Qt::LeftDockWidgetArea, charDock);
+    // O escritor não olha a lista o tempo todo: dá para escondê-la (Exibir › Personagens traz de volta).
+    connect(addDockButton(charDock, "configuracoes", tr("Manage Characters")), &QToolButton::clicked, this,
+            &MainWindow::showCast);
+    connect(addDockButton(charDock, "menos", tr("Hide panel (View › Characters shows it again)")),
+            &QToolButton::clicked, charDock, &QDockWidget::close);
     connect(charList_, &QListWidget::itemClicked, this,
             [this](QListWidgetItem* it) { editCharacter(it->data(Qt::UserRole).toString()); });
     charList_->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -262,15 +268,36 @@ MainWindow::MainWindow() {
 QDockWidget* MainWindow::makeDock(const QString& title, const QString& objectName, QWidget* content) {
     auto* dock = new QDockWidget(title, this);
     dock->setObjectName(objectName);
-    auto* header = new QLabel(title.toUpper());
-    header->setObjectName("tituloPainel");
-    QFont f = header->font();
+    auto* label = new QLabel(title.toUpper());
+    label->setObjectName("tituloPainel");
+    QFont f = label->font();
     f.setLetterSpacing(QFont::AbsoluteSpacing, 1.2);
-    header->setFont(f);
+    label->setFont(f);
+    // Cabeçalho: título à esquerda; botões do painel (addDockButton) à direita.
+    auto* header = new QWidget;
+    header->setObjectName("cabecalhoPainel");
+    header->setAttribute(Qt::WA_StyledBackground);
+    auto* row = new QHBoxLayout(header);
+    row->setContentsMargins(0, 6, 10, 0);
+    row->setSpacing(2);
+    row->addWidget(label, 1);
     dock->setTitleBarWidget(header);
     dock->setWidget(content);
     dock->setFeatures(QDockWidget::DockWidgetClosable | QDockWidget::DockWidgetMovable);
     return dock;
+}
+
+QToolButton* MainWindow::addDockButton(QDockWidget* dock, const QString& icon, const QString& tip) {
+    auto* b = new QToolButton;
+    b->setObjectName("botaoPainel");
+    b->setProperty("icone", icon);
+    b->setToolTip(tip);
+    b->setIconSize(QSize(15, 15));
+    b->setCursor(Qt::PointingHandCursor);
+    b->setAutoRaise(true);
+    b->setIcon(ThemeManager::instance().icon(icon, ThemeManager::instance().colors().muted));
+    dock->titleBarWidget()->layout()->addWidget(b);
+    return b;
 }
 
 QAction* MainWindow::iconAction(QAction* a, const QString& icon) {
@@ -287,6 +314,8 @@ void MainWindow::refreshIcons() {
         f.setLetterSpacing(QFont::AbsoluteSpacing, 1.2);
         h->setFont(f);
     }
+    for (QToolButton* b : findChildren<QToolButton*>("botaoPainel"))
+        b->setIcon(tm.icon(b->property("icone").toString(), tm.colors().muted));
     for (auto it = actionIcons_.begin(); it != actionIcons_.end(); ++it) {
         QColor color;
         if (it.key()->property("primario").toBool()) color = tm.colors().accentText;

@@ -5,7 +5,7 @@
 
 #include "editor.h"
 
-// Quadro de cartões: cada cena do roteiro como um cartão, em grade.
+// Quadro de cartões: cada cena do roteiro como um cartão, em grade ou em lista (uma faixa por cena).
 // Arraste para reordenar, duplo clique para abrir a cena, F2 para editar a sinopse.
 class SceneBoard : public QAbstractScrollArea {
     Q_OBJECT
@@ -17,6 +17,8 @@ public:
     void selectScene(int index, bool scrollTo = true);
     int sceneCount() const { return static_cast<int>(cards_.size()); }
     QRectF cardRect(int i) const;  // em coordenadas do viewport
+    bool listMode() const { return list_; }
+    void setListMode(bool on);
 
 signals:
     void openScene(int para);
@@ -42,6 +44,9 @@ private:
     int cardAt(QPointF pt) const;
     int dropIndexAt(QPointF pt, QRectF* bar) const;
     void paintCard(QPainter& p, const QRectF& r, int index, bool selected, bool hover) const;
+    void paintRow(QPainter& p, const QRectF& r, int index) const;  // corpo do cartão no modo lista
+    QRectF toggleRect(bool listButton) const;                      // alternador grade/lista, no cabeçalho
+    double gap() const { return list_ ? 10 : kGap; }
     void requestMove(int from, int to);
 
     Editor* ed_;
@@ -51,6 +56,8 @@ private:
     double minCardW_ = 250;
     double cardW_ = 250, cardH_ = 210;
     int cols_ = 1;
+    bool list_ = false;
+    int hoverToggle_ = -1;  // 0 = grade, 1 = lista
     static constexpr double kGap = 22, kMargin = 32, kHeader = 78;
 
     int selected_ = -1;
