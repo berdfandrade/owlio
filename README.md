@@ -39,13 +39,26 @@ It also follows the keyboard-first flow screenwriters know from tools like Final
 - US Letter pages drawn on screen with exact industry margins (1.5" left, 1" elsewhere).
 - Professional page breaks: scene headings and character cues never sit alone at the bottom of a page, and dialogue split across pages gets **(MORE)** and **CHARACTER (CONT'D)**. Scripts written in Portuguese can use (MAIS)/(CONT.) instead.
 - Page numbers and optional scene numbers in both margins.
-- **Title page editor** with a live preview: title, credit, authors, source, revision, draft date, notes and contact.
+- **Title page editor** with a live preview: title, credit, authors, source, revision, draft date, notes and contact. The title keeps the capitalization you type.
 
 ### Index cards
 - Every scene becomes a card showing its number, INT/EXT, location, time of day (color-coded), starting page, the characters who speak in it, and its length in eighths of a page.
 - **Drag and drop cards to reorder scenes.** The whole scene moves in the script, and Ctrl+Z undoes the move. Alt+arrow keys move cards from the keyboard.
 - Write a **synopsis** for each scene with F2. When a scene has no synopsis, the card shows the opening of its action.
 - Double-click a card to jump to that scene in the script.
+- **Grid or list**: a toggle in the corner of the header switches between the card grid and a compact list with one row per scene (location, time, synopsis, cast, length and page). Dragging, arrow keys and F2 work in both, and Owlio remembers your choice.
+
+### Timeline
+- **View → Timeline** (Ctrl+Shift+L) lays the film out from left to right: a page ruler, the story structure, a strip of scene blocks and one lane per character showing where they speak. Hover a scene for its page and length; click it to open it in the script.
+- Compare what is written with the **planned length**, or zoom into the written pages only.
+- **Editable story structure**: drag act dividers and plot points, rename them, split or merge acts, and add or remove plot points from the right-click menu.
+- **Presets**: Conventional (three acts), Fragmented (nonlinear), TV episode (drama), Sitcom, Five acts (Freytag), Save the Cat, Hero's journey and Kishōtenketsu. Any edit turns the structure into Custom. It is saved in the `.fountain` file, and every change can be undone.
+
+### Relationship map
+- **View → Relationships** (Ctrl+Shift+M) shows the characters as avatars on a canvas. Drag from one character to another to link them.
+- Each link has a **type** (Family, Love, Friendship, Conflict, Work, Other) with its own color and an optional **label** such as "sisters" or "ex-husband".
+- **Show who shares scenes** draws the characters who appear together, **Arrange in a circle** tidies the layout, and **Fit to window** frames everything.
+- Relationships are saved in the `.fountain` file and can be undone.
 
 ### Saving and backups
 - **Autosave**: scripts that already have a file are saved automatically every 5 minutes (1 or 10 minutes, or off, in Settings).
@@ -68,6 +81,9 @@ It also follows the keyboard-first flow screenwriters know from tools like Final
 - **Character sheets**: click a character in the side panel to open their sheet, with a photo, name, role, age, occupation, characteristics and a synopsis.
 - The sheet also shows how many lines, scenes and words the character has, where they first appear, and every scene they speak in. Double-click a scene to jump to it.
 - **Renaming** a character on the sheet updates every cue in the script and keeps extensions such as (V.O.). One Ctrl+Z undoes it.
+- **Characters window** (Document → Characters): an editable table of the whole cast with role, age, occupation, speeches, scenes and words. Search, add characters, open a sheet, create an avatar, upload a photo or jump to a character's first line. Renaming a character there updates every cue, the sheet and the relationship map, and merging two names asks first.
+- **16-bit avatar creator**: build a pixel-art portrait for any character on a 32×32 grid with shaded colors. Pick a body type, then skin, eyes, eyebrows, mouth, hair, facial hair, glasses, hats, clothes and background, each with color choices. It has undo and redo, a Random button and Reset.
+- The Characters panel has two buttons in its header: one opens the Characters window, the other hides the panel (View → Characters brings it back).
 - Photos show up in the side panel and on the index cards. Sheets and photos are stored inside the `.fountain` file in a comment block that other Fountain apps ignore, so a script stays a single portable file.
 
 ### Interface
@@ -109,6 +125,8 @@ It also follows the keyboard-first flow screenwriters know from tools like Final
 | **Tab / Enter / →** | Accept the grey autocomplete suggestion |
 | **Ctrl+Shift+C / Ctrl+Shift+R** | Index cards / script view |
 | **Ctrl+Shift+B** | Beat Board |
+| **Ctrl+Shift+M** | Relationship map |
+| **Ctrl+Shift+L** | Timeline |
 | **Double-click / Enter / Delete** (Beat Board) | Add or edit a beat / edit the selected beat / delete the selection |
 | **Ctrl+Shift+F** | Focus mode |
 | **Ctrl+Shift+E** | Export PDF |
@@ -118,6 +136,10 @@ It also follows the keyboard-first flow screenwriters know from tools like Final
 | **F2** (cards) | Edit the selected scene's synopsis |
 | **Alt+arrows** (cards) | Move the selected card |
 | **Ctrl+mouse wheel** | Zoom pages / resize cards |
+
+## Download
+
+A Windows installer (`Owlio-Setup-<version>.exe`) is attached to every [release](https://github.com/berdfandrade/owlio/releases). It installs for the current user without asking for administrator rights, adds Start menu and optional desktop shortcuts, and can open `.fountain` and `.fdx` files with Owlio. The installer is not signed yet, so Windows SmartScreen may warn about an unknown publisher: choose **More info → Run anyway**.
 
 ## Building
 
@@ -174,17 +196,22 @@ LD_LIBRARY_PATH=$HOME/Qt/6.8.3/gcc_64/lib ./build/owlio_gui_test   # drives the 
 | `src/fountain.*`, `src/fdx.*` | Reading and writing Fountain and Final Draft files |
 | `src/pagepainter.*` | Draws pages to screen, PDF or printer with exact glyph positions |
 | `src/scriptview.*` | The page editor widget (keyboard, mouse, input methods, scrolling) |
-| `src/sceneboard.*` | The index cards board (grid, drag and drop) |
+| `src/sceneboard.*` | The index cards board (grid or list, drag and drop) |
+| `src/timeline.*` | The timeline view and its editable story structure |
+| `src/relationmap.*` | The relationship map view |
 | `src/beatboard.*`, `src/beatdialog.*` | The Beat Board (QGraphicsView canvas, beats, flow lines) and the beat window |
 | `src/mainwindow.*` | Menus, toolbar, side panels |
 | `src/titlepagedialog.*`, `src/printdialog.*` | Title page editor and print/PDF window, both with previews |
 | `src/characterdialog.*` | Character sheet window |
+| `src/castdialog.*` | Characters window (editable cast table) |
+| `src/pixelavatar.*` | 16-bit avatar creator |
 | `src/autosave.*` | Autosave, crash recovery copies and dated backups |
 | `src/settingsdialog.*`, `src/i18n.*` | Settings window, interface language and translation loading |
 | `src/avatars.*` | Character photos: import, crop, cache and circular drawing |
 | `src/theme.*`, `resources/themes/estilo.qss` | Light/dark palettes, the Qt style sheet, recolored SVG icons |
 | `translations/` | Qt translation files: `owlio_pt_BR.ts` (Portuguese) and `owlio_en.ts` (English plural forms) |
 | `tests/` | Core unit tests and a QTest-based UI test |
+| `packaging/`, `.github/workflows/windows.yml` | Windows installer (Inno Setup) and the workflow that builds it and publishes releases |
 | `examples/` | A short sample screenplay, in English and in Portuguese |
 
 The core (`document`, `layout`, `editor`, `fountain`, `fdx`) has no Qt dependency.
