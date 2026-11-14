@@ -5,6 +5,7 @@
 
 #include "editor.h"
 #include "pagepainter.h"
+#include "speller.h"
 
 // Área de edição: mostra o roteiro como páginas reais e trata teclado/mouse.
 class ScriptView : public QAbstractScrollArea {
@@ -18,6 +19,7 @@ public:
     void setSceneNumbers(bool on);
     bool focusMode() const { return focusMode_; }
     void setFocusMode(bool on);
+    void setSpellCheck(bool on);  // sublinha as palavras que não estão no dicionário
     PagePainter& painter() { return painter_; }
 
     int currentPage() const;
@@ -76,6 +78,7 @@ private:
 
     Editor* ed_;
     PagePainter painter_;
+    Speller speller_;
     double zoom_ = 1.0;
     bool sceneNumbers_ = false;
     bool focusMode_ = false;

@@ -226,6 +226,10 @@ QLabel#teclaSep { color: @muted; }
 /* ---------- configurações ---------- */
 QWidget#ladoConfig { background: @surface; border-right: 1px solid @border; }
 QLabel#tituloNav { color: @text; font-size: 15px; font-weight: 700; padding: 0 8px 6px 8px; }
+QListWidget#listaPalavras { background: @surface; border: 1px solid @border; border-radius: 10px; padding: 6px; outline: none; }
+QListWidget#listaPalavras::item { border-radius: 6px; padding: 5px 8px; color: @text; }
+QListWidget#listaPalavras::item:hover { background: @hover; }
+QListWidget#listaPalavras::item:selected { background: @selected; color: @text; }
 QListWidget#navConfig { background: transparent; padding: 0; outline: none; }
 QListWidget#navConfig::item { border-radius: 8px; padding: 0 8px; margin: 1px 0; color: @text; }
 QListWidget#navConfig::item:hover { background: @hover; }

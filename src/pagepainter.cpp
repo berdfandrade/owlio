@@ -2,6 +2,8 @@
 
 #include <QFontDatabase>
 #include <QGlyphRun>
+#include <QPen>
+#include <QPolygonF>
 #include <QSettings>
 #include <QStringList>
 #include <algorithm>
@@ -137,6 +139,22 @@ void PagePainter::paintPage(QPainter& p, int pg, QPointF o, double ppi, const Ex
         const bool dimmed = ex.focusFrom >= 0 && (l.para < ex.focusFrom || l.para > ex.focusTo);
         drawText(p, f, text, o.x() + l.col * charW, top + baseOff, charW,
                  dimmed ? QColor(196, 199, 204) : ink);
+
+        if (ex.spellMarks && !dimmed) {
+            const double amp = std::max(1.0, ppi / 96.0), step = 2.0 * amp;
+            const double y = top + baseOff + 2.2 * amp;
+            p.save();
+            p.setPen(QPen(QColor(229, 72, 77), std::max(1.0, ppi / 110.0)));
+            for (const WordSpan& w : ex.spellMarks(static_cast<int>(li))) {
+                const double x0 = o.x() + (l.col + w.start) * charW, x1 = x0 + w.len * charW;
+                QPolygonF wave;
+                int i = 0;
+                for (double x = x0; x < x1; x += step, ++i) wave << QPointF(x, y + (i % 2 ? amp : 0));
+                wave << QPointF(x1, y + (i % 2 ? amp : 0));
+                p.drawPolyline(wave);
+            }
+            p.restore();
+        }
 
         // Números de cena nas duas margens.
         if (ex.sceneNumbers && l.para >= 0 && doc.paragraphs[l.para].type == Element::SceneHeading &&

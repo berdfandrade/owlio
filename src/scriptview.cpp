@@ -19,7 +19,7 @@
 #include <tuple>
 
 ScriptView::ScriptView(Editor* editor, QWidget* parent)
-    : QAbstractScrollArea(parent), ed_(editor), painter_(*editor) {
+    : QAbstractScrollArea(parent), ed_(editor), painter_(*editor), speller_(*editor) {
     setFocusPolicy(Qt::StrongFocus);
     setAttribute(Qt::WA_InputMethodEnabled);
     viewport()->setCursor(Qt::IBeamCursor);
@@ -232,6 +232,7 @@ void ScriptView::paintEvent(QPaintEvent* ev) {
     if (preedit_.empty() && hasFocus()) ex.ghost = ed_->suggestion();
     if (!hasFocus()) ex.selectionColor = QColor(226, 229, 234);
     if (focusMode_) std::tie(ex.focusFrom, ex.focusTo) = focusRange();
+    if (speller_.enabled()) ex.spellMarks = [this](int line) { return speller_.marks(line); };
 
     const int pages = ed_->layout().pageCount;
     const double stride = pageH() + gap();
@@ -379,8 +380,34 @@ void ScriptView::wheelEvent(QWheelEvent* e) {
     QAbstractScrollArea::wheelEvent(e);
 }
 
+void ScriptView::setSpellCheck(bool on) {
+    speller_.setEnabled(on);
+    viewport()->update();
+}
+
 void ScriptView::contextMenuEvent(QContextMenuEvent* e) {
     QMenu menu(this);
+    // Palavra sob o ponteiro: entra no dicionário do roteiro, ou sai dele.
+    const std::u32string word = speller_.wordAt(posFromPoint(e->pos()));
+    const QString shown = QString::fromStdU32String(word);
+    if (!word.empty() && speller_.misspelled(word)) {
+        menu.addAction(tr("Add “%1” to the Script Dictionary").arg(shown), this, [this, word] {
+            const int rev = ed_->revision();
+            ed_->addCustomWord(word);
+            afterEdit(rev);
+        });
+        menu.addSeparator();
+    } else if (!word.empty() && ed_->isCustomWord(word)) {
+        menu.addAction(tr("Remove “%1” from the Script Dictionary").arg(shown), this, [this, word] {
+            std::vector<std::u32string> words;
+            for (const std::u32string& w : ed_->doc().dictionary)
+                if (toUpper(w) != toUpper(word)) words.push_back(w);
+            const int rev = ed_->revision();
+            ed_->setCustomWords(words);
+            afterEdit(rev);
+        });
+        menu.addSeparator();
+    }
     menu.addAction(tr("Cut"), this, &ScriptView::cut)->setEnabled(ed_->hasSelection());
     menu.addAction(tr("Copy"), this, &ScriptView::copy)->setEnabled(ed_->hasSelection());
     menu.addAction(tr("Paste"), this, &ScriptView::paste);

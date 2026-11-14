@@ -525,6 +525,37 @@ Todas as deixas de %2 passam a ser de %1, e esta ficha substitui a dele.</transl
     </message>
 </context>
 <context>
+    <name>DictionaryDialog</name>
+    <message>
+        <source>Script Dictionary</source>
+        <translation>Dicionário do roteiro</translation>
+    </message>
+    <message>
+        <source>Words listed here are never marked as misspelled in this script: names, places, slang. They are saved with the script.</source>
+        <translation>As palavras desta lista nunca são marcadas como erradas neste roteiro: nomes, lugares, gírias. Elas são salvas junto com o roteiro.</translation>
+    </message>
+    <message>
+        <source>New word</source>
+        <translation>Nova palavra</translation>
+    </message>
+    <message>
+        <source>Add</source>
+        <translation>Adicionar</translation>
+    </message>
+    <message>
+        <source>Remove</source>
+        <translation>Remover</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>Cancelar</translation>
+    </message>
+    <message>
+        <source>Save</source>
+        <translation>Salvar</translation>
+    </message>
+</context>
+<context>
     <name>Element</name>
     <message>
         <source>Scene Heading</source>
@@ -1277,6 +1308,26 @@ Todas as deixas de %2 passam a ser de %1, e esta ficha substitui a dele.</transl
         <source>Restored the version from %1. Ctrl+Z undoes it.</source>
         <translation>Versão de %1 restaurada. Ctrl+Z desfaz.</translation>
     </message>
+    <message>
+        <source>Script &amp;Dictionary...</source>
+        <translation>&amp;Dicionário do roteiro...</translation>
+    </message>
+    <message>
+        <source>Beat Board / timeline</source>
+        <translation>Beat Board / linha do tempo</translation>
+    </message>
+    <message>
+        <source>Relationship map</source>
+        <translation>Mapa de relações</translation>
+    </message>
+    <message>
+        <source>Versions: browse and restore saved copies</source>
+        <translation>Versões: ver e restaurar cópias salvas</translation>
+    </message>
+    <message>
+        <source>Dual dialogue</source>
+        <translation>Diálogo duplo</translation>
+    </message>
 </context>
 <context>
     <name>PixelAvatarDialog</name>
@@ -1311,10 +1362,6 @@ Todas as deixas de %2 passam a ser de %1, e esta ficha substitui a dele.</transl
     <message>
         <source>Cancel</source>
         <translation>Cancelar</translation>
-    </message>
-    <message>
-        <source>Face</source>
-        <translation>Rosto</translation>
     </message>
     <message>
         <source>Eyes</source>
@@ -1697,6 +1744,295 @@ Todas as deixas de %2 passam a ser de %1, e esta ficha substitui a dele.</transl
         <comment>body</comment>
         <translation>Neutro</translation>
     </message>
+    <message>
+        <source>Head</source>
+        <translation>Rosto</translation>
+    </message>
+    <message>
+        <source>Oval</source>
+        <translation>Oval</translation>
+    </message>
+    <message>
+        <source>Round</source>
+        <translation>Redondo</translation>
+    </message>
+    <message>
+        <source>Square</source>
+        <translation>Quadrado</translation>
+    </message>
+    <message>
+        <source>Heart</source>
+        <translation>Coração</translation>
+    </message>
+    <message>
+        <source>Details</source>
+        <translation>Detalhes</translation>
+    </message>
+    <message>
+        <source>Band-aid</source>
+        <translation>Curativo</translation>
+    </message>
+    <message>
+        <source>Makeup</source>
+        <translation>Maquiagem</translation>
+    </message>
+    <message>
+        <source>Almond</source>
+        <translation>Amendoado</translation>
+    </message>
+    <message>
+        <source>Big</source>
+        <translation>Grande</translation>
+    </message>
+    <message>
+        <source>Tired</source>
+        <translation>Cansado</translation>
+    </message>
+    <message>
+        <source>Wink</source>
+        <translation>Piscando</translation>
+    </message>
+    <message>
+        <source>Straight</source>
+        <translation>Reta</translation>
+    </message>
+    <message>
+        <source>Arched</source>
+        <translation>Arqueada</translation>
+    </message>
+    <message>
+        <source>Short brows</source>
+        <translation>Curta</translation>
+    </message>
+    <message>
+        <source>Nose</source>
+        <translation>Nariz</translation>
+    </message>
+    <message>
+        <source>Soft</source>
+        <translation>Suave</translation>
+    </message>
+    <message>
+        <source>Button</source>
+        <translation>Arredondado</translation>
+    </message>
+    <message>
+        <source>Long nose</source>
+        <translation>Comprido</translation>
+    </message>
+    <message>
+        <source>Wide nose</source>
+        <translation>Largo</translation>
+    </message>
+    <message>
+        <source>Pointed</source>
+        <translation>Pontudo</translation>
+    </message>
+    <message>
+        <source>Surprised</source>
+        <translation>Surpresa</translation>
+    </message>
+    <message>
+        <source>Tongue out</source>
+        <translation>Língua de fora</translation>
+    </message>
+    <message>
+        <source>Pout</source>
+        <translation>Biquinho</translation>
+    </message>
+    <message>
+        <source>Pixie</source>
+        <translation>Pixie</translation>
+    </message>
+    <message>
+        <source>Long with bangs</source>
+        <translation>Comprido com franja</translation>
+    </message>
+    <message>
+        <source>Pigtails</source>
+        <translation>Maria-chiquinha</translation>
+    </message>
+    <message>
+        <source>Space buns</source>
+        <translation>Coques duplos</translation>
+    </message>
+    <message>
+        <source>Dreadlocks</source>
+        <translation>Dreads</translation>
+    </message>
+    <message>
+        <source>Undercut</source>
+        <translation>Undercut</translation>
+    </message>
+    <message>
+        <source>Slicked back</source>
+        <translation>Penteado para trás</translation>
+    </message>
+    <message>
+        <source>Shoulder length</source>
+        <translation>Na altura do ombro</translation>
+    </message>
+    <message>
+        <source>Long curls</source>
+        <translation>Cacheado longo</translation>
+    </message>
+    <message>
+        <source>Top knot</source>
+        <translation>Coque samurai</translation>
+    </message>
+    <message>
+        <source>Bowl cut</source>
+        <translation>Tigela</translation>
+    </message>
+    <message>
+        <source>Spiky</source>
+        <translation>Espetado</translation>
+    </message>
+    <message>
+        <source>Side shave</source>
+        <translation>Raspado de um lado</translation>
+    </message>
+    <message>
+        <source>Afro puffs</source>
+        <translation>Puffs</translation>
+    </message>
+    <message>
+        <source>Receding</source>
+        <translation>Entradas</translation>
+    </message>
+    <message>
+        <source>Side fringe</source>
+        <translation>Franja de lado</translation>
+    </message>
+    <message>
+        <source>Handlebar</source>
+        <translation>Bigode de guidão</translation>
+    </message>
+    <message>
+        <source>Soul patch</source>
+        <translation>Mosca</translation>
+    </message>
+    <message>
+        <source>Sideburns</source>
+        <translation>Costeletas</translation>
+    </message>
+    <message>
+        <source>Circle beard</source>
+        <translation>Cavanhaque fechado</translation>
+    </message>
+    <message>
+        <source>Cat-eye glasses</source>
+        <translation>Óculos gatinho</translation>
+    </message>
+    <message>
+        <source>Aviators</source>
+        <translation>Aviador</translation>
+    </message>
+    <message>
+        <source>Small round glasses</source>
+        <translation>Redondos pequenos</translation>
+    </message>
+    <message>
+        <source>Half-rim glasses</source>
+        <translation>Meio aro</translation>
+    </message>
+    <message>
+        <source>Beret</source>
+        <translation>Boina</translation>
+    </message>
+    <message>
+        <source>Cowboy hat</source>
+        <translation>Chapéu de caubói</translation>
+    </message>
+    <message>
+        <source>Top hat</source>
+        <translation>Cartola</translation>
+    </message>
+    <message>
+        <source>Bandana</source>
+        <translation>Bandana</translation>
+    </message>
+    <message>
+        <source>Headphones</source>
+        <translation>Fones</translation>
+    </message>
+    <message>
+        <source>Hijab</source>
+        <translation>Hijab</translation>
+    </message>
+    <message>
+        <source>V-neck</source>
+        <translation>Gola V</translation>
+    </message>
+    <message>
+        <source>Striped tee</source>
+        <translation>Camiseta listrada</translation>
+    </message>
+    <message>
+        <source>Overalls</source>
+        <translation>Macacão</translation>
+    </message>
+    <message>
+        <source>Tuxedo</source>
+        <translation>Smoking</translation>
+    </message>
+    <message>
+        <source>Sweater</source>
+        <translation>Suéter</translation>
+    </message>
+    <message>
+        <source>Coat and scarf</source>
+        <translation>Casaco e cachecol</translation>
+    </message>
+    <message>
+        <source>Off-shoulder</source>
+        <translation>Ombro a ombro</translation>
+    </message>
+    <message>
+        <source>Accessories</source>
+        <translation>Acessórios</translation>
+    </message>
+    <message>
+        <source>None</source>
+        <comment>accessory</comment>
+        <translation>Nenhum</translation>
+    </message>
+    <message>
+        <source>Stud earrings</source>
+        <translation>Brincos</translation>
+    </message>
+    <message>
+        <source>Hoop earrings</source>
+        <translation>Argolas</translation>
+    </message>
+    <message>
+        <source>Drop earrings</source>
+        <translation>Pingentes</translation>
+    </message>
+    <message>
+        <source>Necklace</source>
+        <translation>Colar</translation>
+    </message>
+    <message>
+        <source>Choker</source>
+        <translation>Gargantilha</translation>
+    </message>
+    <message>
+        <source>Nose ring</source>
+        <translation>Piercing no nariz</translation>
+    </message>
+    <message>
+        <source>Accent color</source>
+        <translation>Cor de destaque</translation>
+    </message>
+    <message>
+        <source>Coral</source>
+        <translation>Coral</translation>
+    </message>
+    <message>
+        <source>Ocean</source>
+        <translation>Oceano</translation>
+    </message>
 </context>
 <context>
     <name>PrintDialog</name>
@@ -2029,6 +2365,14 @@ Escreva um cabeçalho (INT. ou EXT.) no roteiro e ele aparece aqui como cartão.
         <source>Dual Dialogue</source>
         <translation>Diálogo duplo</translation>
     </message>
+    <message>
+        <source>Add “%1” to the Script Dictionary</source>
+        <translation>Adicionar “%1” ao dicionário do roteiro</translation>
+    </message>
+    <message>
+        <source>Remove “%1” from the Script Dictionary</source>
+        <translation>Remover “%1” do dicionário do roteiro</translation>
+    </message>
 </context>
 <context>
     <name>SettingsDialog</name>
@@ -2223,6 +2567,18 @@ Escreva um cabeçalho (INT. ou EXT.) no roteiro e ele aparece aqui como cartão.
     <message>
         <source>Otherwise the Versions window covers only the script area.</source>
         <translation>Se desligado, a janela de Versões cobre só a área do roteiro.</translation>
+    </message>
+    <message>
+        <source>Check spelling as you type</source>
+        <translation>Verificar a ortografia ao digitar</translation>
+    </message>
+    <message>
+        <source>Spelling</source>
+        <translation>Ortografia</translation>
+    </message>
+    <message>
+        <source>Underlines words that are not in the dictionary of the script language. Right-click a word to add it to the script dictionary (Edit › Script Dictionary).</source>
+        <translation>Sublinha as palavras que não estão no dicionário do idioma do roteiro. Clique com o botão direito numa palavra para adicioná-la ao dicionário do roteiro (Editar › Dicionário do roteiro).</translation>
     </message>
 </context>
 <context>

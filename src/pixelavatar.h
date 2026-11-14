@@ -10,25 +10,29 @@ class QLabel;
 class QListWidget;
 class QPushButton;
 
-// Avatar em pixel art no estilo 16 bits: grade de 32×32, cada cor com luz, base e duas sombras.
+// Avatar em pixel art detalhado: grade de 64×64, formas em curvas, cada cor com brilho, luz, base,
+// duas sombras e contorno.
 // Cada campo é o índice de uma opção ou de uma cor da paleta.
 struct PixelAvatar {
     int body = 0;        // tipo de corpo: 0 feminino, 1 masculino, 2 neutro
-    int skin = 2;
-    int face = 0;        // detalhes: nenhum, blush, sardas, pinta, cicatriz, rugas
-    int eyes = 0;        // normal, feliz, arregalado, com cílios, sonolento, fechado
+    int shape = 0;       // formato do rosto: oval, redondo, quadrado, coração, alongado
+    int skin = 3;
+    int face = 0;        // detalhes: nenhum, blush, sardas, pinta, cicatriz, rugas, curativo, maquiagem
+    int eyes = 0;        // normal, feliz, arregalado, cílios, sonolento, fechado, amendoado, grande, cansado, piscando
     int eyeColor = 0;
-    int brows = 0;       // natural, grossa, fina, erguida, brava, preocupada
-    int mouth = 0;       // sorriso, neutra, rindo, de lado, triste, dentes, lábios cheios
+    int brows = 0;       // natural, grossa, fina, erguida, brava, preocupada, reta, arqueada, curta
+    int nose = 0;        // suave, arredondado, comprido, largo, pontudo
+    int mouth = 0;       // sorriso, neutra, rindo, de lado, triste, dentes, lábios cheios, surpresa, língua, biquinho
     int lips = 0;
-    int hairStyle = 1;
+    int hairStyle = 1;   // 31 cortes; ver hairShape()
     int hairColor = 0;
-    int facialHair = 0;  // nenhum, por fazer, bigode, cavanhaque, barba, barba cheia
-    int glasses = 0;     // nenhum, redondos, quadrados, escuros, monóculo, tapa-olho
-    int hat = 0;         // nenhum, gorro, boné, chapéu, faixa, laço, coroa
-    int hatColor = 0;
-    int clothes = 0;     // camiseta, camisa, terno, moletom, gola alta, alcinha, jaqueta
+    int facialHair = 0;  // nenhum, por fazer, bigode, cavanhaque, barba, barba cheia, guidão, mosca, costeletas, cavanhaque fechado
+    int glasses = 0;     // nenhum, redondos, quadrados, escuros, monóculo, tapa-olho, gatinho, aviador, pequenos, meio aro
+    int hat = 0;         // nenhum, gorro, boné, chapéu, faixa, laço, coroa, boina, caubói, cartola, bandana, fones, hijab
+    int hatColor = 0;    // também a cor da gravata, do cachecol e dos elásticos
+    int clothes = 0;     // 14 roupas; ver render()
     int shirt = 0;
+    int accessory = 0;   // nenhum, brincos, argolas, pingentes, colar, gargantilha, piercing
     int background = 0;
 
     QImage render(int size = 192) const;  // ampliada sem suavizar
