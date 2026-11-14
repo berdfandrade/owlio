@@ -96,7 +96,7 @@ It also follows the keyboard-first flow screenwriters know from tools like Final
 - **Focus mode** dims everything except the speech or paragraph you are writing.
 - Side panels list scenes (with page and cast) and characters (with line counts). The sidebar button at the left of the toolbar (Ctrl+\\) hides or shows them both.
 - Find and replace, unlimited undo and redo, and zoom.
-- **Spell check** as you type, in the language of the script (English or Brazilian Portuguese): unknown words get a red wavy underline on screen, never in the PDF. Character names are never marked. Right-click a word to add it to the **script dictionary** (Edit › Script Dictionary), which is saved inside the script. Turn it off in Settings › Script.
+- **Spell check** as you type, in Brazilian Portuguese or English, picked automatically from the words of the script (or fixed in Settings › Script): unknown words get a red wavy underline on screen, never in the PDF. Character names are never marked. Right-click a word to add it to the **script dictionary** (Edit › Script Dictionary), which is saved inside the script. Turn it off in Settings › Script.
 
 <p align="center">
   <img src="docs/screenshots/cards-dark.png" width="49%" alt="Index cards, dark theme">

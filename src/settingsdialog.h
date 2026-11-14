@@ -20,6 +20,7 @@ public:
     QString uiLanguage() const;
     ScriptLanguage scriptLanguage() const;
     bool spellCheck() const;
+    QString spellLanguage() const;  // "auto", "pt" ou "en"
     ThemeManager::Mode themeMode() const;
     int autosaveMinutes() const;  // 0 = desligado
     bool keepBackups() const;
@@ -49,6 +50,7 @@ private:
     QLabel* scriptPreview_;
     QCheckBox* sceneNumbers_;
     QCheckBox* spellCheck_;
+    QComboBox* spellLanguage_;
     QComboBox* autosave_;
     QCheckBox* backups_;
     QCheckBox* versionsFull_;

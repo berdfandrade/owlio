@@ -20,6 +20,7 @@ public:
     bool focusMode() const { return focusMode_; }
     void setFocusMode(bool on);
     void setSpellCheck(bool on);  // sublinha as palavras que não estão no dicionário
+    void setSpellLanguage(Speller::Language l);
     PagePainter& painter() { return painter_; }
 
     int currentPage() const;

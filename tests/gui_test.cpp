@@ -875,6 +875,28 @@ int main(int argc, char* argv[]) {
 
     // ---- Corretor ortográfico e dicionário do roteiro
     {
+        // Convenção em inglês, texto em português: o automático escolhe o dicionário pelo texto.
+        Editor mixed;
+        mixed.setScriptLanguage(ScriptLanguage::English);
+        mixed.setDocument(parseFountain(
+            "EXT. CINEMA ÍRIS - RUA DO OURO - FIM DE TARDE\n\nUma fachada estreita entre uma loja de conserto de celulares "
+            "e uma farmácia. O letreiro luminoso diz CINEMA ÍRIS. Algumas letras falham: o C pisca, o R está apagado.\n\n"
+            "Um cartaz desbotado anuncia: \"ÚLTIMA SEMANA — ENTRADA FRANCA\".\n\nO saguão é pequeno, mas tem a dignidade de "
+            "um lugar que já recebeu muita gente. Carpete vermelho gasto. Molduras douradas.\n\nLIA, 28, está sentada no chão, "
+            "tentando consertar uma letra do letreiro interno com fita isolante.\n"));
+        Speller ms(mixed);
+        CHECK(ms.dictionaryLanguage() == ScriptLanguage::Portuguese);
+        QStringList marked;
+        for (int li = 0; li < static_cast<int>(mixed.layout().lines.size()); ++li) {
+            const std::u32string text = mixed.layout().lineText(mixed.doc(), li);
+            for (const WordSpan& m : ms.marks(li)) marked << QString::fromStdU32String(text.substr(m.start, m.len));
+        }
+        if (!marked.isEmpty()) std::printf("marked: %s\n", qPrintable(marked.join(" ")));
+        CHECK(marked.isEmpty());
+        ms.setLanguage(Speller::Language::English);
+        CHECK(ms.dictionaryLanguage() == ScriptLanguage::English && ms.misspelled(U"fachada"));
+    }
+    {
         Editor pt;
         pt.setScriptLanguage(ScriptLanguage::Portuguese);
         pt.setDocument(parseFountain("INT. CINE KWYJIBO - NOITE\n\nHelena camimha até a bilheteria do Kwyjibo.\n\nHELENA\nUma entrada, por favor.\n"));
@@ -888,6 +910,7 @@ int main(int argc, char* argv[]) {
             return out;
         };
         pt.setCursor({0, 0});
+        CHECK(sp.dictionaryLanguage() == ScriptLanguage::Portuguese);
         CHECK(wrong() == QStringList({"KWYJIBO", "camimha", "Kwyjibo"}));  // Helena é personagem; INT não conta
         pt.addCustomWord(U"Kwyjibo");
         CHECK(wrong() == QStringList({"camimha"}));

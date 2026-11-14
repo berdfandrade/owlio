@@ -134,6 +134,12 @@ private:
 
 // ------------------------------------------------------------ Janela principal
 
+namespace {
+Speller::Language spellLanguageFrom(const QString& key) {
+    return key == "pt" ? Speller::Language::Portuguese : key == "en" ? Speller::Language::English : Speller::Language::Automatic;
+}
+}  // namespace
+
 MainWindow::MainWindow() {
     view_ = new ScriptView(&editor_, this);
     board_ = new SceneBoard(&editor_, this);
@@ -257,6 +263,7 @@ MainWindow::MainWindow() {
     view_->setZoom(s.value("zoom", 1.0).toDouble());
     sceneNumsAct_->setChecked(s.value("sceneNumbers", false).toBool());
     view_->setSpellCheck(s.value("spellCheck", true).toBool());
+    view_->setSpellLanguage(spellLanguageFrom(s.value("spellLanguage", "auto").toString()));
     syncSidebarAction();
     if (!s.contains("geometry")) {
         resize(1320, 900);
@@ -1016,7 +1023,9 @@ void MainWindow::showSettings() {
     s.setValue("keepBackups", dlg.keepBackups());
     s.setValue("versionsFullScreen", dlg.versionsFullScreen());
     s.setValue("spellCheck", dlg.spellCheck());
+    s.setValue("spellLanguage", dlg.spellLanguage());
     view_->setSpellCheck(dlg.spellCheck());
+    view_->setSpellLanguage(spellLanguageFrom(dlg.spellLanguage()));
     s.setValue("reopenLast", dlg.reopenLastScript());
     s.setValue("uiFont", dlg.interfaceFont());
     s.setValue("uiFontSize", dlg.interfaceFontSize());

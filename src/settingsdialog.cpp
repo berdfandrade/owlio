@@ -122,8 +122,16 @@ SettingsDialog::SettingsDialog(QWidget* parent) : QDialog(parent) {
     convForm->addRow(tr("Language"), script_);
     spellCheck_ = new QCheckBox(tr("Check spelling as you type"));
     spellCheck_->setChecked(settings.value("spellCheck", true).toBool());
+    spellLanguage_ = new QComboBox;
+    spellLanguage_->addItem(tr("Automatic (from the script text)"), "auto");
+    spellLanguage_->addItem(tr("Portuguese (Brazil)"), "pt");
+    spellLanguage_->addItem(tr("English (US)"), "en");
+    spellLanguage_->setCurrentIndex(std::max(0, spellLanguage_->findData(settings.value("spellLanguage", "auto"))));
     auto* spellForm = makeForm();
     spellForm->addRow(QString(), spellCheck_);
+    spellForm->addRow(tr("Dictionary"), spellLanguage_);
+    connect(spellCheck_, &QCheckBox::toggled, spellLanguage_, &QWidget::setEnabled);
+    spellLanguage_->setEnabled(spellCheck_->isChecked());
 
     scriptFont_ = new QComboBox;
     scriptFont_->addItem(tr("Automatic (%1)").arg(PagePainter::defaultFontFamily()), QString());
@@ -218,8 +226,9 @@ SettingsDialog::SettingsDialog(QWidget* parent) : QDialog(parent) {
         {section(tr("Conventions"), convForm,
                  tr("Used for page breaks inside dialogue and for autocomplete suggestions.")),
          section(tr("Spelling"), spellForm,
-                 tr("Underlines words that are not in the dictionary of the script language. Right-click a word "
-                    "to add it to the script dictionary (Edit › Script Dictionary).")),
+                 tr("Underlines words that are not in the dictionary. Automatic picks Portuguese or English from "
+                    "the words of the script. Right-click a word to add it to the script dictionary "
+                    "(Edit › Script Dictionary).")),
          section(tr("Page font"), scriptFontForm,
                  tr("Only monospaced fonts keep the industry layout: the page is always set at 12 points, "
                     "10 characters per inch, so page count stays the same whatever font you pick."))}));
@@ -346,6 +355,7 @@ QString SettingsDialog::interfaceFont() const { return uiFont_->currentData().to
 double SettingsDialog::interfaceFontSize() const { return uiSize_->value(); }
 QString SettingsDialog::scriptFont() const { return scriptFont_->currentData().toString(); }
 bool SettingsDialog::spellCheck() const { return spellCheck_->isChecked(); }
+QString SettingsDialog::spellLanguage() const { return spellLanguage_->currentData().toString(); }
 bool SettingsDialog::numberScenes() const { return sceneNumbers_->isChecked(); }
 
 QString SettingsDialog::uiLanguage() const { return language_->currentData().toString(); }

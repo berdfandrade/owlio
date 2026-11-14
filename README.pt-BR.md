@@ -64,7 +64,7 @@ O idioma oficial do Owlio é o inglês. A interface em **português do Brasil** 
 - Janela de impressão e PDF com a prévia das folhas uma embaixo da outra.
 - Ícones SVG próprios (`resources/icons`), recoloridos automaticamente para cada tema.
 - Painéis em cartões: cenas com número, página e quem fala, e personagens com avatar.
-- **Corretor ortográfico** ao digitar, no idioma do roteiro (português do Brasil ou inglês): palavras desconhecidas ganham um sublinhado vermelho ondulado na tela, nunca no PDF. Nomes de personagens não são marcados. Clique com o botão direito numa palavra para adicioná-la ao **dicionário do roteiro** (Editar › Dicionário do roteiro), que é salvo dentro do arquivo. Dá para desligar em Configurações › Roteiro.
+- **Corretor ortográfico** ao digitar, em português do Brasil ou inglês, escolhido automaticamente pelas palavras do roteiro (ou fixado em Configurações › Roteiro): palavras desconhecidas ganham um sublinhado vermelho ondulado na tela, nunca no PDF. Nomes de personagens não são marcados. Clique com o botão direito numa palavra para adicioná-la ao **dicionário do roteiro** (Editar › Dicionário do roteiro), que é salvo dentro do arquivo. Dá para desligar em Configurações › Roteiro.
 - **Modo foco** (Ctrl+Shift+F): esmaece tudo menos o trecho atual. Numa fala, o personagem, os parentéticos e o diálogo ficam em destaque juntos.
 
 ## Beat Board

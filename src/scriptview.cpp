@@ -385,6 +385,11 @@ void ScriptView::setSpellCheck(bool on) {
     viewport()->update();
 }
 
+void ScriptView::setSpellLanguage(Speller::Language l) {
+    speller_.setLanguage(l);
+    viewport()->update();
+}
+
 void ScriptView::contextMenuEvent(QContextMenuEvent* e) {
     QMenu menu(this);
     // Palavra sob o ponteiro: entra no dicionário do roteiro, ou sai dele.

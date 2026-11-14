@@ -2577,8 +2577,24 @@ Escreva um cabeçalho (INT. ou EXT.) no roteiro e ele aparece aqui como cartão.
         <translation>Ortografia</translation>
     </message>
     <message>
-        <source>Underlines words that are not in the dictionary of the script language. Right-click a word to add it to the script dictionary (Edit › Script Dictionary).</source>
-        <translation>Sublinha as palavras que não estão no dicionário do idioma do roteiro. Clique com o botão direito numa palavra para adicioná-la ao dicionário do roteiro (Editar › Dicionário do roteiro).</translation>
+        <source>Automatic (from the script text)</source>
+        <translation>Automático (pelo texto do roteiro)</translation>
+    </message>
+    <message>
+        <source>Portuguese (Brazil)</source>
+        <translation>Português (Brasil)</translation>
+    </message>
+    <message>
+        <source>English (US)</source>
+        <translation>Inglês (EUA)</translation>
+    </message>
+    <message>
+        <source>Dictionary</source>
+        <translation>Dicionário</translation>
+    </message>
+    <message>
+        <source>Underlines words that are not in the dictionary. Automatic picks Portuguese or English from the words of the script. Right-click a word to add it to the script dictionary (Edit › Script Dictionary).</source>
+        <translation>Sublinha as palavras que não estão no dicionário. O automático escolhe português ou inglês pelas palavras do roteiro. Clique com o botão direito numa palavra para adicioná-la ao dicionário do roteiro (Editar › Dicionário do roteiro).</translation>
     </message>
 </context>
 <context>

@@ -36,15 +36,39 @@ void Speller::syncNames() {
     for (const CharacterInfo& c : ed_.doc().cast) add(c.name);
 }
 
-bool Speller::misspelled(const std::u32string& word) {
-    if (!enabled_) return false;
-    const ScriptLanguage lang = ed_.scriptLanguage();
+bool Speller::unknown(ScriptLanguage lang, const std::u32string& word) {
     const SpellChecker& dict = dictionary(lang);
     if (!dict.loaded()) return false;
     auto& cache = cache_[lang == ScriptLanguage::Portuguese ? 1 : 0];
     auto it = cache.find(word);
     if (it == cache.end()) it = cache.emplace(word, !dict.check(word)).first;
-    if (!it->second) return false;
+    return it->second;
+}
+
+ScriptLanguage Speller::dictionaryLanguage() {
+    if (language_ == Language::Portuguese) return ScriptLanguage::Portuguese;
+    if (language_ == Language::English) return ScriptLanguage::English;
+    if (detectedRevision_ == ed_.revision()) return detected_;
+    detectedRevision_ = ed_.revision();
+    // Até 400 palavras de ação e diálogo; sem texto suficiente, vale a convenção do roteiro.
+    int pt = 0, en = 0, seen = 0;
+    for (const Paragraph& p : ed_.doc().paragraphs) {
+        if (p.type != Element::Action && p.type != Element::Dialogue) continue;
+        for (const WordSpan& w : wordSpans(p.text)) {
+            if (w.len < 3) continue;
+            const std::u32string word = p.text.substr(w.start, w.len);
+            pt += !unknown(ScriptLanguage::Portuguese, word);
+            en += !unknown(ScriptLanguage::English, word);
+            if (++seen >= 400) break;
+        }
+        if (seen >= 400) break;
+    }
+    detected_ = seen < 8 || pt == en ? ed_.scriptLanguage() : pt > en ? ScriptLanguage::Portuguese : ScriptLanguage::English;
+    return detected_;
+}
+
+bool Speller::misspelled(const std::u32string& word) {
+    if (!enabled_ || !unknown(dictionaryLanguage(), word)) return false;
     syncNames();
     const std::u32string lower = lowered(word);
     return !sceneWord(lower) && !names_.count(lower) && !ed_.isCustomWord(word);
