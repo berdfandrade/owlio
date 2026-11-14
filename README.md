@@ -171,6 +171,8 @@ It also follows the keyboard-first flow screenwriters know from tools like Final
 
 A Windows installer (`Owlio-Setup-<version>.exe`) is attached to every [release](https://github.com/berdfandrade/owlio/releases). It installs for the current user without asking for administrator rights, adds Start menu and optional desktop shortcuts, and can open `.fountain` and `.fdx` files with Owlio. Release installers are being moved to free code signing through SignPath Foundation (see the [code signing policy](docs/CODE_SIGNING.md)). Until a signed release is out, Windows SmartScreen may warn about an unknown publisher: choose **More info → Run anyway**.
 
+A Microsoft Store version, which Windows installs without any warning, is on the way; the workflow already builds its MSIX package (see [publishing on the Microsoft Store](docs/MICROSOFT_STORE.md)).
+
 ## Building
 
 Requirements: CMake 3.16 or newer, a C++17 compiler, and **Qt 6** (Widgets, PrintSupport, Svg, plus Test for the UI test).

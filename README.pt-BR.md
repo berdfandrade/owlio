@@ -145,6 +145,8 @@ Para forçar um tema numa execução: `./run.sh --theme dark`.
 
 Cada [versão](https://github.com/berdfandrade/owlio/releases) traz um instalador para Windows (`Owlio-Setup-<versão>.exe`). Ele instala para o usuário atual sem pedir administrador, cria atalho no menu Iniciar (e na área de trabalho, se você quiser) e pode abrir arquivos `.fountain` e `.fdx` com o Owlio. Os instaladores estão passando a ser assinados de graça pela SignPath Foundation (veja a [política de assinatura](docs/CODE_SIGNING.md)). Até sair uma versão assinada, o SmartScreen do Windows pode avisar de editor desconhecido: clique em **Mais informações → Executar assim mesmo**.
 
+Uma versão na Microsoft Store, que o Windows instala sem nenhum aviso, está a caminho; o workflow já gera o pacote MSIX dela (veja [publicação na Microsoft Store](docs/MICROSOFT_STORE.md)).
+
 ## Compilar
 
 Requer CMake ≥ 3.16, g++ com C++17 e Qt 6 (Widgets, PrintSupport, Svg; Test para o teste de interface).

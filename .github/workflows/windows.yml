@@ -1,5 +1,6 @@
-# Compila o Owlio no Windows e gera o instalador (Inno Setup).
-# Em todo PR: confere que compila e empacota; o instalador fica nos artefatos da execução.
+# Compila o Owlio no Windows e gera o instalador (Inno Setup) e o pacote MSIX da Microsoft Store.
+# Em todo PR: confere que compila e empacota; o instalador e o .msix ficam nos artefatos da execução.
+# O .msix não entra na release do GitHub: ele vai para o Partner Center (docs/MICROSOFT_STORE.md).
 # Numa tag v*: assina o owlio.exe e o instalador pela SignPath Foundation (quando o segredo
 # SIGNPATH_API_TOKEN existe) e publica o instalador numa release do GitHub.
 # Configuração da SignPath: docs/CODE_SIGNING.md.
@@ -136,6 +137,68 @@ jobs:
         with:
           name: Owlio-Setup-${{ steps.version.outputs.value }}
           path: packaging/Output/*.exe
+
+      # Pacote MSIX para a Microsoft Store. Sai sem assinatura: a Store assina na publicação.
+      # A identidade vem do Partner Center (docs/MICROSOFT_STORE.md); sem ela, usa valores de teste.
+      - name: Build MSIX for the Microsoft Store
+        shell: pwsh
+        env:
+          IDENTITY_NAME: ${{ vars.MSIX_IDENTITY_NAME || 'Owlio.Development' }}
+          PUBLISHER: ${{ vars.MSIX_PUBLISHER || 'CN=Owlio Development' }}
+          PUBLISHER_NAME: ${{ vars.MSIX_PUBLISHER_NAME || 'Owlio' }}
+        run: |
+          # O SDK mais novo que tenha as duas ferramentas (as pastas são nomeadas pela versão).
+          $sdk = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin\10.*\x64" -Directory |
+                 Where-Object { (Test-Path "$($_.FullName)\makeappx.exe") -and (Test-Path "$($_.FullName)\makepri.exe") } |
+                 Sort-Object { [version]$_.Parent.Name } -Descending | Select-Object -First 1
+          if (-not $sdk) { throw "Windows SDK not found" }
+          # A Store quer quatro números, com o último em zero: 1.1 vira 1.1.0.0.
+          $parts = @("${{ steps.version.outputs.value }}".Split('.')) + @('0', '0', '0')
+          $version = ($parts[0..2] -join '.') + '.0'
+
+          $root = "$env:RUNNER_TEMP\msix"
+          Remove-Item $root -Recurse -Force -ErrorAction SilentlyContinue
+          Copy-Item dist $root -Recurse
+          Copy-Item packaging\msix\Assets "$root\Assets" -Recurse
+          Copy-Item LICENSE "$root\LICENSE.txt"
+          (Get-Content packaging\msix\AppxManifest.xml.in -Raw).
+            Replace('@IDENTITY_NAME@', $env:IDENTITY_NAME).
+            Replace('@PUBLISHER@', [Security.SecurityElement]::Escape($env:PUBLISHER)).
+            Replace('@PUBLISHER_NAME@', [Security.SecurityElement]::Escape($env:PUBLISHER_NAME)).
+            Replace('@VERSION@', $version) | Set-Content "$root\AppxManifest.xml" -Encoding utf8
+
+          # Índice de recursos: escolhe o logo do tamanho certo (barra de tarefas, Iniciar, Store).
+          Push-Location $root
+          & "$($sdk.FullName)\makepri.exe" createconfig /cf "$env:RUNNER_TEMP\priconfig.xml" /dq en-US /pv 10.0.0 /o
+          if ($LASTEXITCODE) { throw "makepri createconfig failed" }
+          & "$($sdk.FullName)\makepri.exe" new /pr . /cf "$env:RUNNER_TEMP\priconfig.xml" /mn AppxManifest.xml /of resources.pri /o
+          if ($LASTEXITCODE) { throw "makepri new failed" }
+          Pop-Location
+
+          New-Item packaging\Output -ItemType Directory -Force | Out-Null
+          $msix = "packaging\Output\Owlio-$version.msix"
+          & "$($sdk.FullName)\makeappx.exe" pack /d $root /p $msix /o
+          if ($LASTEXITCODE) { throw "makeappx failed" }
+          "MSIX_PATH=$msix" >> $env:GITHUB_ENV
+          "MSIX_ROOT=$root" >> $env:GITHUB_ENV
+
+      - name: Check that Windows accepts the package
+        shell: pwsh
+        run: |
+          # Registra a pasta do pacote em modo de desenvolvedor (sem assinatura), como o Windows faria na instalação.
+          $key = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock"
+          New-Item $key -Force | Out-Null
+          Set-ItemProperty $key AllowDevelopmentWithoutDevLicense 1 -Type DWord
+          Add-AppxPackage -Register "$env:MSIX_ROOT\AppxManifest.xml"
+          $pkg = Get-AppxPackage -Name "${{ vars.MSIX_IDENTITY_NAME || 'Owlio.Development' }}"
+          if (-not $pkg) { throw "the MSIX package did not register" }
+          "$($pkg.Name) $($pkg.Version) registered"
+          Remove-AppxPackage $pkg.PackageFullName
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Owlio-${{ steps.version.outputs.value }}-msix
+          path: ${{ env.MSIX_PATH }}
 
       - name: Publish release
         if: startsWith(github.ref, 'refs/tags/v')
