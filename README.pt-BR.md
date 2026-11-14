@@ -6,6 +6,11 @@
 
 Editor de roteiros no estilo Final Draft, em C++17 e Qt 6.
 
+<p align="center">
+  <img src="docs/screenshots/pt/script-dark.webp" width="49%" alt="Roteiro no tema escuro">
+  <img src="docs/screenshots/pt/cards-light.webp" width="49%" alt="Cartões das cenas no tema claro">
+</p>
+
 O idioma oficial do Owlio é o inglês. A interface em **português do Brasil** está em **Editar → Configurações** (Ctrl+,): escolha o idioma e o Owlio reinicia já traduzido. Para uma execução só: `./run.sh --language pt_BR`.
 
 ## Recursos
@@ -22,12 +27,21 @@ O idioma oficial do Owlio é o inglês. A interface em **português do Brasil** 
 - **Janela de impressão e PDF** com miniaturas das folhas: impressora, cópias, intervalo de páginas, página de rosto, numeração de cenas e **marca d'água** opcional (por exemplo "RASCUNHO" ou o nome de quem recebe a cópia).
 - Navegador de cenas, lista de personagens, localizar/substituir, desfazer/refazer, numeração de cenas e zoom.
 
+<p align="center">
+  <img src="docs/screenshots/title-page.png" width="49%" alt="Página de rosto com prévia ao vivo">
+  <img src="docs/screenshots/pt/print.webp" width="49%" alt="Janela de impressão e PDF">
+</p>
+
 ## Salvamento e backups
 
 - **Salvamento automático**: roteiros que já têm arquivo são salvos sozinhos a cada 5 minutos (ou 1, 10, ou desligado, nas Configurações).
 - **Recuperação**: enquanto houver alterações não salvas, o Owlio guarda uma cópia a cada 20 segundos, inclusive de roteiros sem título. Se ele fechar de repente, oferece as alterações de volta no próximo início.
 - **Backups**: cada salvamento guarda também uma cópia com data e hora, até as 30 mais recentes de cada roteiro. Salvamentos automáticos geram no máximo um backup a cada 10 minutos. Arquivo → Abrir arquivo de backup abre um deles como cópia sem título, para o backup nunca ser sobrescrito.
 - **Versões** (Arquivo → Versões, Ctrl+Shift+H, ou o botão de relógio na barra de ferramentas): uma máquina do tempo para o roteiro. Ela abre sobre a área do roteiro; em Configurações → Salvamento dá para abrir em tela cheia. Cada versão salva aparece empilhada em perspectiva sob um céu noturno, a mais nova na frente, com uma linha do tempo ao lado. Volte com as setas, a roda do mouse ou a linha do tempo, folheie com ← e → e clique em **Restaurar** para trazer aquela versão de volta. A restauração é uma edição comum, então Ctrl+Z volta para onde você estava.
+
+<p align="center">
+  <img src="docs/screenshots/pt/versions.webp" width="80%" alt="Versões: cópias salvas empilhadas sob um céu noturno">
+</p>
 
 ## Tela de cartões
 
@@ -39,6 +53,10 @@ O idioma oficial do Owlio é o inglês. A interface em **português do Brasil** 
 - Duplo clique ou Enter abre a cena no roteiro. Ctrl+roda do mouse muda o tamanho dos cartões.
 - **Grade ou lista**: um botão no canto do cabeçalho alterna entre a grade de cartões e uma lista compacta, com uma faixa por cena (local, horário, sinopse, personagens, duração e página). Arrastar, setas e F2 funcionam nos dois modos, e o Owlio lembra a escolha.
 
+<p align="center">
+  <img src="docs/screenshots/pt/cards-dark.webp" width="80%" alt="Cartões das cenas no tema escuro">
+</p>
+
 ## Linha do tempo
 
 **Exibir → Linha do tempo** (Ctrl+Shift+L) mostra o filme da esquerda para a direita: régua de páginas, estrutura da história, uma faixa com os blocos das cenas e uma linha por personagem mostrando onde ele fala. Passe o mouse numa cena para ver página e duração; clique para abri-la no roteiro.
@@ -47,6 +65,10 @@ O idioma oficial do Owlio é o inglês. A interface em **português do Brasil** 
 - **Estrutura editável**: arraste divisões de atos e pontos de virada, renomeie, divida ou junte atos, e adicione ou remova pontos pelo clique direito.
 - **Modelos**: Convencional (três atos), Fragmentada (não linear), Episódio de TV (drama), Sitcom, Cinco atos (Freytag), Save the Cat, Jornada do herói e Kishōtenketsu. Qualquer edição transforma a estrutura em Personalizada. Ela fica salva no `.fountain`, e toda mudança pode ser desfeita.
 
+<p align="center">
+  <img src="docs/screenshots/pt/timeline.webp" width="80%" alt="Linha do tempo com estrutura, cenas e personagens">
+</p>
+
 ## Mapa de relações
 
 **Exibir → Relações** (Ctrl+Shift+M) mostra os personagens como avatares num quadro. Arraste de um personagem até outro para ligá-los.
@@ -54,6 +76,10 @@ O idioma oficial do Owlio é o inglês. A interface em **português do Brasil** 
 - Cada ligação tem um **tipo** (Família, Amor, Amizade, Conflito, Trabalho, Outro), com cor própria, e um **rótulo** opcional, como "irmãs" ou "ex-marido".
 - **Mostrar quem divide cenas** liga quem aparece junto, **Arrumar em círculo** organiza o quadro e **Caber na janela** mostra todos.
 - As relações ficam salvas no `.fountain` e podem ser desfeitas.
+
+<p align="center">
+  <img src="docs/screenshots/pt/relations.webp" width="80%" alt="Mapa de relações">
+</p>
 
 ## Visual e temas
 
@@ -68,6 +94,11 @@ O idioma oficial do Owlio é o inglês. A interface em **português do Brasil** 
 - **Corretor ortográfico** ao digitar, em português do Brasil ou inglês, escolhido automaticamente pelas palavras do roteiro (ou fixado em Configurações › Roteiro): palavras desconhecidas ganham um sublinhado vermelho ondulado na tela, nunca no PDF. Nomes de personagens não são marcados. Clique com o botão direito numa palavra para adicioná-la ao **dicionário do roteiro** (Editar › Dicionário do roteiro), que é salvo dentro do arquivo. Dá para desligar em Configurações › Roteiro.
 - **Modo foco** (Ctrl+Shift+F): esmaece tudo menos o trecho atual. Numa fala, o personagem, os parentéticos e o diálogo ficam em destaque juntos.
 
+<p align="center">
+  <img src="docs/screenshots/pt/settings.webp" width="49%" alt="Configurações do roteiro">
+  <img src="docs/screenshots/pt/spell.webp" width="45%" alt="Corretor ortográfico com o menu do botão direito">
+</p>
+
 ## Beat Board
 
 Um **quadro livre para ideias** (Exibir → Beat Board, Ctrl+Shift+B):
@@ -76,6 +107,10 @@ Um **quadro livre para ideias** (Exibir → Beat Board, Ctrl+Shift+B):
 - **Imagens**: solte arquivos de imagem no quadro, cole uma imagem com Ctrl+V ou escolha na janela do beat. Elas são reduzidas e guardadas em JPEG dentro do próprio roteiro.
 - **Linhas de fluxo** ligam um beat a outro: arraste o + da borda de um beat até o próximo. Clique numa linha e aperte Delete para apagá-la.
 - Espaço ou o botão do meio do mouse arrastam o quadro; Ctrl+roda dá zoom; "Enquadrar" mostra todos os beats. Tudo pode ser desfeito, e o quadro fica salvo dentro do `.fountain`, num bloco de comentário que outros apps Fountain ignoram.
+
+<p align="center">
+  <img src="docs/screenshots/pt/beat-board.webp" width="80%" alt="Beat Board com linhas de fluxo">
+</p>
 
 ## Fichas dos personagens
 
@@ -88,6 +123,15 @@ Clique num personagem no painel lateral para abrir a ficha dele:
 - **Criador de avatar**: monte um retrato detalhado em pixel art numa grade de 64×64, com formas em curvas e seis tons por cor. Escolha o tipo de corpo e depois formato do rosto, pele, detalhes, olhos, sobrancelhas, nariz, boca, 31 cortes de cabelo, barba, óculos, chapéu, roupa, acessórios e fundo, cada um com opções de cor. Tem desfazer e refazer, botão Aleatório e Redefinir.
 - O painel Personagens tem dois botões no cabeçalho: um abre a janela de personagens e o outro esconde o painel (Exibir → Personagens traz de volta).
 - A foto aparece no painel e nos cartões. Fichas e fotos ficam guardadas dentro do próprio `.fountain`, num bloco de comentário que outros apps Fountain ignoram.
+
+<p align="center">
+  <img src="docs/screenshots/pt/character.webp" width="49%" alt="Ficha do personagem">
+  <img src="docs/screenshots/pt/avatar.webp" width="49%" alt="Criador de avatar em pixel art">
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/pt/cast.webp" width="80%" alt="Janela de personagens">
+</p>
 
 O estilo fica em [`resources/themes/estilo.qss`](resources/themes/estilo.qss). É CSS do Qt com variáveis de cor (`@accent`, `@surface`, …), definidas em `src/theme.cpp`. Para editar e ver o resultado ao salvar, sem recompilar:
 
