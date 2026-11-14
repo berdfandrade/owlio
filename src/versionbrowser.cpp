@@ -140,8 +140,9 @@ QImage VersionBrowser::pageImage(int i) {
     if (it != e.pages.end()) return *it;
 
     const double dpr = devicePixelRatioF();
-    const double ppi = w / 8.5;
-    QImage img(QSize(int(w * dpr), int(11 * ppi * dpr)), QImage::Format_ARGB32_Premultiplied);
+    const PaperGeometry paper = current_.paper();
+    const double ppi = w / paper.width;
+    QImage img(QSize(int(w * dpr), int(paper.height * ppi * dpr)), QImage::Format_ARGB32_Premultiplied);
     img.setDevicePixelRatio(dpr);
     img.fill(Qt::white);
     QPainter p(&img);
@@ -234,9 +235,10 @@ QRectF VersionBrowser::frontRect() const {
     // Centralizado na janela (a linha do tempo fica por cima, na borda direita).
     const double areaW = width() - 2 * kRightRail;
     const double areaH = height() - kBottomBar - 30;
-    double pageH = std::min(areaH * 0.82 - kHeaderH, areaW * 0.9 * 11.0 / 8.5);
+    const double ratio = current_.paper().height / current_.paper().width;
+    double pageH = std::min(areaH * 0.82 - kHeaderH, areaW * 0.9 * ratio);
     pageH = std::max(pageH, 200.0);
-    const double w = pageH * 8.5 / 11.0;
+    const double w = pageH / ratio;
     const double h = pageH + kHeaderH;
     const double cx = width() / 2.0;
     const double bottom = height() - kBottomBar - 6;

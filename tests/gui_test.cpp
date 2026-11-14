@@ -322,7 +322,7 @@ int main(int argc, char* argv[]) {
             QTest::qWait(400);
             if (argc > 3) w.grab().save(QString::fromLocal8Bit(argv[3]));
 
-            TitlePageDialog title(ed.doc(), &w);
+            TitlePageDialog title(ed.doc(), Paper::Letter, &w);
             title.resize(980, 660);
             title.show();
             QTest::qWait(250);
@@ -945,6 +945,24 @@ int main(int argc, char* argv[]) {
         w.view()->setFocusMode(false);
         QTest::qWait(80);
         if (argc > 20) w.view()->viewport()->grab(QRect(0, 0, 900, 420)).save(QString::fromLocal8Bit(argv[20]));
+        QFile::remove(file);
+    }
+
+    // ---- Papel A4: a página na tela fica mais estreita e mais alta.
+    {
+        const QString file = QDir::temp().filePath("owlio-a4.fountain");
+        QFile f(file);
+        if (f.open(QIODevice::WriteOnly)) { f.write("INT. CASA - DIA\n\nAna entra.\n"); f.close(); }
+        CHECK(w.openFile(file));
+        auto& ed = const_cast<Editor&>(w.editor());
+        ed.setPaper(Paper::A4);
+        w.view()->refreshAfterExternalEdit();
+        QTest::qWait(60);
+        CHECK(ed.layout().linesPerPage == 58);
+        if (argc > 22) w.view()->viewport()->grab().save(QString::fromLocal8Bit(argv[22]));
+        ed.setPaper(Paper::Letter);
+        w.view()->refreshAfterExternalEdit();
+        if (argc > 23) w.view()->viewport()->grab().save(QString::fromLocal8Bit(argv[23]));
         QFile::remove(file);
     }
 

@@ -17,7 +17,8 @@ public:
     void setDocument(const Document& doc);
     QSize sizeHint() const override { return {380, 492}; }
     bool hasHeightForWidth() const override { return true; }
-    int heightForWidth(int w) const override { return static_cast<int>(w * 11.0 / 8.5); }
+    int heightForWidth(int w) const override { return static_cast<int>(w * ed_.paper().height / ed_.paper().width); }
+    void setPaper(Paper p) { ed_.setPaper(p); update(); }
 
 protected:
     void paintEvent(QPaintEvent*) override;
@@ -31,7 +32,7 @@ private:
 class TitlePageDialog : public QDialog {
     Q_OBJECT
 public:
-    TitlePageDialog(const Document& doc, QWidget* parent = nullptr);
+    TitlePageDialog(const Document& doc, Paper paper = Paper::Letter, QWidget* parent = nullptr);
     // Pares chave/valor no formato Fountain (Title, Credit, Author, ...).
     std::vector<std::pair<std::string, std::string>> values() const;
 

@@ -83,6 +83,11 @@ int Layout::pageOfPara(int para) const {
     return lines[paraLines[para].front()].page;
 }
 
+PaperGeometry paperGeometry(Paper p) {
+    if (p == Paper::A4) return {8.27, 11.69, 58, 64};
+    return {8.5, 11.0, page::kLinesPerPage, 60};
+}
+
 Layout computeLayout(const Document& doc, const LayoutOptions& opt) {
     Layout L;
     const int n = static_cast<int>(doc.paragraphs.size());
@@ -95,7 +100,7 @@ Layout computeLayout(const Document& doc, const LayoutOptions& opt) {
         wraps[i] = wrapText(p.text, elementStyle(p.type, sides[i]).width);
     }
 
-    const int LPP = page::kLinesPerPage;
+    const int LPP = paperGeometry(opt.paper).linesPerPage;
     int pg = 0, row = 0;
     bool inSpeech = false;
     std::u32string speaker;
@@ -233,5 +238,6 @@ Layout computeLayout(const Document& doc, const LayoutOptions& opt) {
         }
     }
     L.pageCount = pg + 1;
+    L.linesPerPage = LPP;
     return L;
 }

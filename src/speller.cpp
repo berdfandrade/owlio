@@ -50,7 +50,7 @@ ScriptLanguage Speller::dictionaryLanguage() {
     if (language_ == Language::English) return ScriptLanguage::English;
     if (detectedRevision_ == ed_.revision()) return detected_;
     detectedRevision_ = ed_.revision();
-    // Até 400 palavras de ação e diálogo; sem texto suficiente, vale a convenção do roteiro.
+    // Até 400 palavras de ação e diálogo; em caso de empate (ou sem texto), vale a convenção do roteiro.
     int pt = 0, en = 0, seen = 0;
     for (const Paragraph& p : ed_.doc().paragraphs) {
         if (p.type != Element::Action && p.type != Element::Dialogue) continue;
@@ -63,7 +63,7 @@ ScriptLanguage Speller::dictionaryLanguage() {
         }
         if (seen >= 400) break;
     }
-    detected_ = seen < 8 || pt == en ? ed_.scriptLanguage() : pt > en ? ScriptLanguage::Portuguese : ScriptLanguage::English;
+    detected_ = pt == en ? ed_.scriptLanguage() : pt > en ? ScriptLanguage::Portuguese : ScriptLanguage::English;
     return detected_;
 }
 

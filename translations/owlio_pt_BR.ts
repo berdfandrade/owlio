@@ -1067,10 +1067,6 @@ Todas as deixas de %2 passam a ser de %1, e esta ficha substitui a dele.</transl
         <translation>Sobre o Owlio</translation>
     </message>
     <message>
-        <source>&lt;h3&gt;Owlio %1&lt;/h3&gt;&lt;p&gt;A screenwriting app written in C++ and Qt %2.&lt;/p&gt;&lt;p&gt;Industry-standard formatting (12 pt Courier, US Letter), page breaks with (MORE)/(CONT&apos;D), Fountain and Final Draft (.fdx) files, PDF export.&lt;/p&gt;</source>
-        <translation>&lt;h3&gt;Owlio %1&lt;/h3&gt;&lt;p&gt;Editor de roteiros em C++ e Qt %2.&lt;/p&gt;&lt;p&gt;Formatação padrão da indústria (Courier 12, US Letter), paginação com (MAIS)/(CONT.), arquivos Fountain e Final Draft (.fdx), exportação para PDF.&lt;/p&gt;</translation>
-    </message>
-    <message>
         <source>Interface Language</source>
         <translation>Idioma da interface</translation>
     </message>
@@ -1327,6 +1323,10 @@ Todas as deixas de %2 passam a ser de %1, e esta ficha substitui a dele.</transl
     <message>
         <source>Dual dialogue</source>
         <translation>Diálogo duplo</translation>
+    </message>
+    <message>
+        <source>&lt;h3&gt;Owlio %1&lt;/h3&gt;&lt;p&gt;A screenwriting app written in C++ and Qt %2.&lt;/p&gt;&lt;p&gt;Industry-standard formatting (12 pt Courier, US Letter or A4), page breaks with (MORE)/(CONT&apos;D), Fountain and Final Draft (.fdx) files, PDF export.&lt;/p&gt;</source>
+        <translation>&lt;h3&gt;Owlio %1&lt;/h3&gt;&lt;p&gt;Editor de roteiros em C++ e Qt %2.&lt;/p&gt;&lt;p&gt;Formatação padrão da indústria (Courier 12, Carta ou A4), paginação com (MAIS)/(CONT.), arquivos Fountain e Final Draft (.fdx), exportação para PDF.&lt;/p&gt;</translation>
     </message>
 </context>
 <context>
@@ -2153,6 +2153,10 @@ Todas as deixas de %2 passam a ser de %1, e esta ficha substitui a dele.</transl
         <source>Could not write %1.</source>
         <translation>Não foi possível gravar %1.</translation>
     </message>
+    <message>
+        <source>A4</source>
+        <translation>A4</translation>
+    </message>
 </context>
 <context>
     <name>QObject</name>
@@ -2549,14 +2553,6 @@ Escreva um cabeçalho (INT. ou EXT.) no roteiro e ele aparece aqui como cartão.
         <translation>Convenções</translation>
     </message>
     <message>
-        <source>Page font</source>
-        <translation>Fonte das páginas</translation>
-    </message>
-    <message>
-        <source>Only monospaced fonts keep the industry layout: the page is always set at 12 points, 10 characters per inch, so page count stays the same whatever font you pick.</source>
-        <translation>Só fontes monoespaçadas mantêm o formato padrão: a página é sempre composta em 12 pontos, 10 caracteres por polegada, então o número de páginas não muda com a fonte escolhida.</translation>
-    </message>
-    <message>
         <source>Autosave, backups and crash recovery.</source>
         <translation>Salvamento automático, backups e recuperação após falhas.</translation>
     </message>
@@ -2595,6 +2591,26 @@ Escreva um cabeçalho (INT. ou EXT.) no roteiro e ele aparece aqui como cartão.
     <message>
         <source>Underlines words that are not in the dictionary. Automatic picks Portuguese or English from the words of the script. Right-click a word to add it to the script dictionary (Edit › Script Dictionary).</source>
         <translation>Sublinha as palavras que não estão no dicionário. O automático escolhe português ou inglês pelas palavras do roteiro. Clique com o botão direito numa palavra para adicioná-la ao dicionário do roteiro (Editar › Dicionário do roteiro).</translation>
+    </message>
+    <message>
+        <source>US Letter (8.5 × 11 in)</source>
+        <translation>Carta (8,5 × 11 pol.)</translation>
+    </message>
+    <message>
+        <source>A4 (210 × 297 mm)</source>
+        <translation>A4 (210 × 297 mm)</translation>
+    </message>
+    <message>
+        <source>Paper size</source>
+        <translation>Papel</translation>
+    </message>
+    <message>
+        <source>Page</source>
+        <translation>Página</translation>
+    </message>
+    <message>
+        <source>A4 keeps the same margins and line width as US Letter and fits 4 more lines on each page, so the page count can change. Only monospaced fonts keep the industry layout: the page is always set at 12 points, 10 characters per inch, whatever font you pick.</source>
+        <translation>O A4 mantém as margens e a largura das linhas do papel Carta e cabe 4 linhas a mais em cada página, então o número de páginas pode mudar. Só fontes monoespaçadas mantêm o padrão da indústria: a página é sempre composta em 12 pontos, 10 caracteres por polegada, qualquer que seja a fonte.</translation>
     </message>
 </context>
 <context>

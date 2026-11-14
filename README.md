@@ -37,7 +37,7 @@ It also follows the keyboard-first flow screenwriters know from tools like Final
 - Parentheticals get their parentheses automatically, and full Unicode support covers accented input.
 
 ### Pages and pagination
-- US Letter pages drawn on screen with exact industry margins (1.5" left, 1" elsewhere).
+- US Letter or A4 pages drawn on screen with exact industry margins (1.5" left, 1" elsewhere).
 - Professional page breaks: scene headings and character cues never sit alone at the bottom of a page, and dialogue split across pages gets **(MORE)** and **CHARACTER (CONT'D)**. Scripts written in Portuguese can use (MAIS)/(CONT.) instead.
 - Page numbers and optional scene numbers in both margins.
 - **Title page editor** with a live preview: title, credit, authors, source, revision, draft date, notes and contact. The title keeps the capitalization you type.
@@ -96,6 +96,7 @@ It also follows the keyboard-first flow screenwriters know from tools like Final
 - **Focus mode** dims everything except the speech or paragraph you are writing.
 - Side panels list scenes (with page and cast) and characters (with line counts). The sidebar button at the left of the toolbar (Ctrl+\\) hides or shows them both.
 - Find and replace, unlimited undo and redo, and zoom.
+- **US Letter or A4** (Settings › Script › Page). A4 keeps the same margins and line width and fits 4 more lines per page; the screen, the PDF and the printout all follow the choice.
 - **Spell check** as you type, in Brazilian Portuguese or English, picked automatically from the words of the script (or fixed in Settings › Script): unknown words get a red wavy underline on screen, never in the PDF. Character names are never marked. Right-click a word to add it to the **script dictionary** (Edit › Script Dictionary), which is saved inside the script. Turn it off in Settings › Script.
 
 <p align="center">
@@ -239,9 +240,8 @@ The build compiles the `.ts` files and embeds them in the app. To add a language
 
 ## Status
 
-Owlio is young, and the page size is US Letter. On the roadmap:
+Owlio is young. On the roadmap:
 
-- A4 pages
 - Revision mode with colored pages
 - Reports (scenes, characters, locations)
 

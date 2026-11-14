@@ -153,7 +153,12 @@ SettingsDialog::SettingsDialog(QWidget* parent) : QDialog(parent) {
     }
     sceneNumbers_ = new QCheckBox(tr("Number scenes"));
     sceneNumbers_->setChecked(settings.value("sceneNumbers", false).toBool());
+    paper_ = new QComboBox;
+    paper_->addItem(tr("US Letter (8.5 × 11 in)"), "letter");
+    paper_->addItem(tr("A4 (210 × 297 mm)"), "a4");
+    paper_->setCurrentIndex(std::max(0, paper_->findData(settings.value("paper", "letter"))));
     auto* scriptFontForm = makeForm();
+    scriptFontForm->addRow(tr("Paper size"), paper_);
     scriptFontForm->addRow(tr("Font"), scriptFont_);
     scriptFontForm->addRow(QString(), scriptPreview_);
     scriptFontForm->addRow(QString(), sceneNumbers_);
@@ -229,9 +234,10 @@ SettingsDialog::SettingsDialog(QWidget* parent) : QDialog(parent) {
                  tr("Underlines words that are not in the dictionary. Automatic picks Portuguese or English from "
                     "the words of the script. Right-click a word to add it to the script dictionary "
                     "(Edit › Script Dictionary).")),
-         section(tr("Page font"), scriptFontForm,
-                 tr("Only monospaced fonts keep the industry layout: the page is always set at 12 points, "
-                    "10 characters per inch, so page count stays the same whatever font you pick."))}));
+         section(tr("Page"), scriptFontForm,
+                 tr("A4 keeps the same margins and line width as US Letter and fits 4 more lines on each page, "
+                    "so the page count can change. Only monospaced fonts keep the industry layout: the page is "
+                    "always set at 12 points, 10 characters per inch, whatever font you pick."))}));
     pages_->addWidget(page(tr("Saving"), tr("Autosave, backups and crash recovery."),
                            {section(tr("Saving"), saveForm,
                                     tr("Untitled scripts are not saved automatically, but if Owlio closes "
@@ -355,6 +361,7 @@ QString SettingsDialog::interfaceFont() const { return uiFont_->currentData().to
 double SettingsDialog::interfaceFontSize() const { return uiSize_->value(); }
 QString SettingsDialog::scriptFont() const { return scriptFont_->currentData().toString(); }
 bool SettingsDialog::spellCheck() const { return spellCheck_->isChecked(); }
+QString SettingsDialog::paper() const { return paper_->currentData().toString(); }
 QString SettingsDialog::spellLanguage() const { return spellLanguage_->currentData().toString(); }
 bool SettingsDialog::numberScenes() const { return sceneNumbers_->isChecked(); }
 

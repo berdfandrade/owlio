@@ -10,7 +10,7 @@ O idioma oficial do Owlio é o inglês. A interface em **português do Brasil** 
 
 ## Recursos
 
-- **Páginas reais na tela**: Courier 12, US Letter, margens no padrão da indústria (1,5" à esquerda, 1" nas outras). O que você vê é exatamente o que sai no PDF.
+- **Páginas reais na tela**: Courier 12, Carta (US Letter) ou A4, margens no padrão da indústria (1,5" à esquerda, 1" nas outras). O que você vê é exatamente o que sai no PDF.
 - **6 elementos**: Cabeçalho, Ação, Personagem, Parentético, Diálogo, Transição.
 - **Fluxo do Final Draft**: Enter e Tab escolhem o próximo elemento sozinhos; Ctrl+1…6 define o elemento.
 - **Diálogo duplo**: duas falas lado a lado, quando os personagens falam ao mesmo tempo. Com o cursor em qualquer uma das falas, use Formatar → Diálogo duplo (Ctrl+Shift+D). No Fountain fica salvo como `^`, no Final Draft como `<DualDialogue>`.
@@ -64,6 +64,7 @@ O idioma oficial do Owlio é o inglês. A interface em **português do Brasil** 
 - Janela de impressão e PDF com a prévia das folhas uma embaixo da outra.
 - Ícones SVG próprios (`resources/icons`), recoloridos automaticamente para cada tema.
 - Painéis em cartões: cenas com número, página e quem fala, e personagens com avatar.
+- **Carta (US Letter) ou A4** (Configurações › Roteiro › Página). O A4 mantém as margens e a largura das linhas e cabe 4 linhas a mais por página; a tela, o PDF e a impressão seguem a escolha.
 - **Corretor ortográfico** ao digitar, em português do Brasil ou inglês, escolhido automaticamente pelas palavras do roteiro (ou fixado em Configurações › Roteiro): palavras desconhecidas ganham um sublinhado vermelho ondulado na tela, nunca no PDF. Nomes de personagens não são marcados. Clique com o botão direito numa palavra para adicioná-la ao **dicionário do roteiro** (Editar › Dicionário do roteiro), que é salvo dentro do arquivo. Dá para desligar em Configurações › Roteiro.
 - **Modo foco** (Ctrl+Shift+F): esmaece tudo menos o trecho atual. Numa fala, o personagem, os parentéticos e o diálogo ficam em destaque juntos.
 

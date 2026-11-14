@@ -600,6 +600,22 @@ static void testSpelling() {
     CHECK(e.doc().dictionary.size() == 1);
 }
 
+static void testPaper() {
+    std::string src = "INT. CASA - DIA\n\n";
+    for (int i = 0; i < 300; ++i) src += "Ana anda pela sala, olha a janela e volta para o sofá sem dizer nada.\n\n";
+    Editor e;
+    e.setScriptLanguage(ScriptLanguage::Portuguese);
+    e.setDocument(parseFountain(src));
+    const int letterPages = e.layout().pageCount;
+    CHECK(e.layout().linesPerPage == 54 && e.paper().width == 8.5);
+    e.setPaper(Paper::A4);
+    CHECK(e.layout().linesPerPage == 58 && e.paper().height > 11.6);
+    CHECK(e.layout().pageCount < letterPages);
+    for (const auto& l : e.layout().lines) CHECK(l.row >= 0 && l.row < 58);
+    e.setScriptLanguage(ScriptLanguage::English);  // trocar a convenção não volta para Carta
+    CHECK(e.layoutOptions().paper == Paper::A4 && e.layoutOptions().moreText == U"(MORE)");
+}
+
 int main() {
     testScenes();
     testFountain();
@@ -613,6 +629,7 @@ int main() {
     testStructure();
     testRestoreContent();
     testSpelling();
+    testPaper();
     if (failures == 0) std::printf("All tests passed.\n");
     return failures == 0 ? 0 : 1;
 }

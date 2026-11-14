@@ -271,6 +271,7 @@ MainWindow::MainWindow() {
     }
 
     editor_.setScriptLanguage(i18n::scriptLanguage());
+    editor_.setPaper(QSettings().value("paper", "letter").toString() == "a4" ? Paper::A4 : Paper::Letter);
     newFile();
     view_->setFocus();
 }
@@ -875,7 +876,7 @@ void MainWindow::print() { openPrintDialog(false); }
 bool MainWindow::exportPdfTo(const QString& p) {
     QPdfWriter w(p);
     w.setResolution(1200);
-    w.setPageLayout(QPageLayout(QPageSize(QPageSize::Letter), QPageLayout::Portrait, QMarginsF(0, 0, 0, 0)));
+    w.setPageLayout(pageLayoutFor(editor_.layoutOptions().paper));
     w.setTitle(q(editor_.doc().titleValue("Title")));
     w.setCreator("Owlio");
     PrintOptions opt;
@@ -887,7 +888,7 @@ bool MainWindow::exportPdfTo(const QString& p) {
 // ------------------------------------------------------------ diálogos
 
 void MainWindow::editTitlePage() {
-    TitlePageDialog dlg(editor_.doc(), this);
+    TitlePageDialog dlg(editor_.doc(), editor_.layoutOptions().paper, this);
     dlg.resize(980, 660);
     if (dlg.exec() != QDialog::Accepted) return;
     for (const auto& [key, value] : dlg.values()) editor_.setTitleValue(key, value);
@@ -1002,7 +1003,7 @@ void MainWindow::showShortcuts() {
 void MainWindow::about() {
     QMessageBox::about(this, tr("About Owlio"),
                        tr("<h3>Owlio %1</h3><p>A screenwriting app written in C++ and Qt %2.</p>"
-                          "<p>Industry-standard formatting (12 pt Courier, US Letter), page breaks with "
+                          "<p>Industry-standard formatting (12 pt Courier, US Letter or A4), page breaks with "
                           "(MORE)/(CONT'D), Fountain and Final Draft (.fdx) files, PDF export.</p>")
                            .arg(QApplication::applicationVersion(), qVersion()));
 }
@@ -1024,6 +1025,11 @@ void MainWindow::showSettings() {
     s.setValue("versionsFullScreen", dlg.versionsFullScreen());
     s.setValue("spellCheck", dlg.spellCheck());
     s.setValue("spellLanguage", dlg.spellLanguage());
+    if (dlg.paper() != s.value("paper", "letter").toString()) {
+        s.setValue("paper", dlg.paper());
+        editor_.setPaper(dlg.paper() == "a4" ? Paper::A4 : Paper::Letter);
+        view_->refreshAfterExternalEdit();
+    }
     view_->setSpellCheck(dlg.spellCheck());
     view_->setSpellLanguage(spellLanguageFrom(dlg.spellLanguage()));
     s.setValue("reopenLast", dlg.reopenLastScript());
