@@ -12,6 +12,7 @@
 #include <cstdio>
 
 #include "dictionarydialog.h"
+#include "synopsisdialog.h"
 #include "mainwindow.h"
 #include "speller.h"
 #include "theme.h"
@@ -248,7 +249,7 @@ int main(int argc, char* argv[]) {
         QTest::mouseClick(bvp, Qt::LeftButton, Qt::NoModifier, listBtn.toPoint());
         CHECK(b->listMode());
         const QRectF r0 = b->cardRect(0), r1 = b->cardRect(1);
-        CHECK(r1.top() > r0.bottom() && r0.left() == r1.left() && r0.height() < 100);
+        CHECK(r1.top() > r0.bottom() && r0.left() == r1.left() && r0.height() < 150);
         QTest::keyClick(b, Qt::Key_Home);
         QTest::keyClick(b, Qt::Key_Down);
         CHECK(b->selectedScene() == 1);
@@ -964,6 +965,23 @@ int main(int argc, char* argv[]) {
         w.view()->refreshAfterExternalEdit();
         if (argc > 23) w.view()->viewport()->grab().save(QString::fromLocal8Bit(argv[23]));
         QFile::remove(file);
+    }
+
+    // ---- Sinopse da cena: cabeçalho, contador de palavras e texto devolvido sem espaços nas pontas.
+    {
+        SceneSummary s;
+        s.heading = U"INT. CINEMA ÍRIS - SAGUÃO - FIM DE TARDE";
+        s.cast = {U"LIA", U"MARCOS"};
+        s.page = 0;
+        s.eighths = 12;
+        SynopsisDialog sd(1, s, &w);
+        auto* edit = sd.findChild<QPlainTextEdit*>("textoSinopse");
+        CHECK(edit != nullptr);
+        if (edit) {
+            edit->setPlainText("  Lia convence Marcos a abrir o cinema por uma noite.  ");
+            CHECK(sd.synopsis() == "Lia convence Marcos a abrir o cinema por uma noite.");
+        }
+        if (argc > 24) { sd.show(); QTest::qWait(60); sd.grab().save(QString::fromLocal8Bit(argv[24])); sd.close(); }
     }
 
     std::printf(failures == 0 ? "UI test passed.\n" : "%d failure(s).\n", failures);

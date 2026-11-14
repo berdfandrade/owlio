@@ -41,7 +41,6 @@
 #include <QToolButton>
 #include <algorithm>
 
-#include <QInputDialog>
 #include <QProcess>
 #include <QStackedWidget>
 
@@ -55,6 +54,7 @@
 #include "titlepagedialog.h"
 #include "carddelegate.h"
 #include "sceneboard.h"
+#include "synopsisdialog.h"
 #include "castdialog.h"
 #include "relationmap.h"
 #include "timeline.h"
@@ -1171,11 +1171,9 @@ void MainWindow::editSynopsis(int sceneIndex) {
     const auto scenes = editor_.sceneSummaries();
     if (sceneIndex < 0 || sceneIndex >= static_cast<int>(scenes.size())) return;
     const SceneSummary& s = scenes[sceneIndex];
-    bool ok = false;
-    const QString text = QInputDialog::getMultiLineText(
-        this, tr("Scene %1 Synopsis").arg(sceneIndex + 1), q(s.heading), q(s.synopsis), &ok);
-    if (!ok) return;
-    editor_.setSynopsis(s.para, text.toStdU32String());
+    SynopsisDialog dlg(sceneIndex, s, this);
+    if (dlg.exec() != QDialog::Accepted) return;
+    editor_.setSynopsis(s.para, dlg.synopsis().toStdU32String());
     view_->refreshAfterExternalEdit();
     board_->selectScene(sceneIndex);
 }

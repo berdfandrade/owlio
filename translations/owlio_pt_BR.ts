@@ -1090,10 +1090,6 @@ Todas as deixas de %2 passam a ser de %1, e esta ficha substitui a dele.</transl
         </translation>
     </message>
     <message>
-        <source>Scene %1 Synopsis</source>
-        <translation>Sinopse da cena %1</translation>
-    </message>
-    <message>
         <source>Photo of %1</source>
         <translation>Foto de %1</translation>
     </message>
@@ -2626,6 +2622,60 @@ Escreva um cabeçalho (INT. ou EXT.) no roteiro e ele aparece aqui como cartão.
     <message>
         <source>Nothing to print.</source>
         <translation>Nada para imprimir.</translation>
+    </message>
+</context>
+<context>
+    <name>SynopsisDialog</name>
+    <message>
+        <source>Scene %1 Synopsis</source>
+        <translation>Sinopse da cena %1</translation>
+    </message>
+    <message>
+        <source>SCENE %1</source>
+        <translation>CENA %1</translation>
+    </message>
+    <message>
+        <source>(scene without a heading)</source>
+        <translation>(cena sem cabeçalho)</translation>
+    </message>
+    <message>
+        <source>Page %1</source>
+        <translation>Página %1</translation>
+    </message>
+    <message>
+        <source>pg.</source>
+        <translation>pág.</translation>
+    </message>
+    <message>
+        <source>What happens in this scene? A sentence or two is enough.</source>
+        <translation>O que acontece nesta cena? Uma ou duas frases bastam.</translation>
+    </message>
+    <message>
+        <source>Shown on the index cards and the timeline, never on the printed page.</source>
+        <translation>Aparece nos cartões e na linha do tempo, nunca na página impressa.</translation>
+    </message>
+    <message>
+        <source>Save</source>
+        <translation>Salvar</translation>
+    </message>
+    <message>
+        <source>Ctrl+Enter</source>
+        <translation>Ctrl+Enter</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>Cancelar</translation>
+    </message>
+    <message>
+        <source>Empty: the card shows the start of the action</source>
+        <translation>Vazia: o cartão mostra o começo da ação</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n word(s)</source>
+        <translation>
+            <numerusform>%n palavra</numerusform>
+            <numerusform>%n palavras</numerusform>
+        </translation>
     </message>
 </context>
 <context>

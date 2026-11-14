@@ -5,6 +5,9 @@
 
 #include "editor.h"
 
+// Tamanho em oitavos de página, como "1 3/8".
+QString eighthsText(int eighths);
+
 // Quadro de cartões: cada cena do roteiro como um cartão, em grade ou em lista (uma faixa por cena).
 // Arraste para reordenar, duplo clique para abrir a cena, F2 para editar a sinopse.
 class SceneBoard : public QAbstractScrollArea {
