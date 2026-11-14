@@ -147,8 +147,10 @@ jobs:
           PUBLISHER: ${{ vars.MSIX_PUBLISHER || 'CN=Owlio Development' }}
           PUBLISHER_NAME: ${{ vars.MSIX_PUBLISHER_NAME || 'Owlio' }}
         run: |
+          # O SDK mais novo que tenha as duas ferramentas (as pastas são nomeadas pela versão).
           $sdk = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin\10.*\x64" -Directory |
-                 Sort-Object Name -Descending | Select-Object -First 1
+                 Where-Object { (Test-Path "$($_.FullName)\makeappx.exe") -and (Test-Path "$($_.FullName)\makepri.exe") } |
+                 Sort-Object { [version]$_.Parent.Name } -Descending | Select-Object -First 1
           if (-not $sdk) { throw "Windows SDK not found" }
           # A Store quer quatro números, com o último em zero: 1.1 vira 1.1.0.0.
           $parts = @("${{ steps.version.outputs.value }}".Split('.')) + @('0', '0', '0')
