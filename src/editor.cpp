@@ -109,11 +109,17 @@ void Editor::setAvatar(const std::u32string& name, const std::string& base64) {
 
 void Editor::setScriptLanguage(ScriptLanguage lang) {
     lang_ = lang;
-    LayoutOptions o;
-    if (lang == ScriptLanguage::Portuguese) {
-        o.moreText = U"(MAIS)";
-        o.contdText = U"(CONT.)";
-    }
+    LayoutOptions o = layoutOpt_;
+    const bool pt = lang == ScriptLanguage::Portuguese;
+    o.moreText = pt ? U"(MAIS)" : U"(MORE)";
+    o.contdText = pt ? U"(CONT.)" : U"(CONT'D)";
+    setLayoutOptions(o);
+}
+
+void Editor::setPaper(Paper p) {
+    if (layoutOpt_.paper == p) return;
+    LayoutOptions o = layoutOpt_;
+    o.paper = p;
     setLayoutOptions(o);
 }
 
@@ -1059,7 +1065,7 @@ std::vector<SceneSummary> Editor::sceneSummaries() const {
     const auto heads = scenes();
     auto absRow = [&](int lineIndex) {
         const LayoutLine& l = L.lines[lineIndex];
-        return l.page * page::kLinesPerPage + l.row;
+        return l.page * L.linesPerPage + l.row;
     };
     // A última linha guardada pode ser da coluna da direita de um diálogo duplo: usa a mais baixa.
     int endRowOfDoc = 0;
@@ -1087,8 +1093,8 @@ std::vector<SceneSummary> Editor::sceneSummaries() const {
         s.page = L.lines[startLine].page;
         const int startRow = absRow(startLine);
         const int endRow = next < static_cast<int>(ps.size()) ? absRow(L.paraLines[next].front()) : endRowOfDoc;
-        // 1/8 de página = 54/8 linhas; arredonda e nunca fica abaixo de 1/8.
-        s.eighths = std::max(1, static_cast<int>((endRow - startRow) * 8.0 / page::kLinesPerPage + 0.5));
+        // 1/8 de página = linhas da página / 8; arredonda e nunca fica abaixo de 1/8.
+        s.eighths = std::max(1, static_cast<int>((endRow - startRow) * 8.0 / L.linesPerPage + 0.5));
         out.push_back(std::move(s));
     }
     return out;

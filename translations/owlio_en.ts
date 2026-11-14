@@ -166,6 +166,16 @@
     </message>
 </context>
 <context>
+    <name>SynopsisDialog</name>
+    <message numerus="yes">
+        <source>%n word(s)</source>
+        <translation type="unfinished">
+            <numerusform>%n word</numerusform>
+            <numerusform>%n words</numerusform>
+        </translation>
+    </message>
+</context>
+<context>
     <name>TimelineView</name>
     <message numerus="yes">
         <source>Written: %n page(s)</source>

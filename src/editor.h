@@ -50,6 +50,8 @@ public:
     const Layout& layout() const;
     const LayoutOptions& layoutOptions() const { return layoutOpt_; }
     void setLayoutOptions(const LayoutOptions& o) { layoutOpt_ = o; layoutDirty_ = true; ++revision_; }
+    void setPaper(Paper p);
+    PaperGeometry paper() const { return paperGeometry(layoutOpt_.paper); }
     int revision() const { return revision_; }
     bool modified() const { return modified_; }
     void markSaved() { modified_ = false; }

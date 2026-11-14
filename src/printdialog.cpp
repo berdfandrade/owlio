@@ -26,7 +26,6 @@
 #include "theme.h"
 
 namespace {
-const QPageLayout kLetter(QPageSize(QPageSize::Letter), QPageLayout::Portrait, QMarginsF(0, 0, 0, 0));
 }
 
 // ------------------------------------------------------------ prévia das folhas
@@ -59,7 +58,7 @@ void SheetPreview::relayout() {
     const double avail = viewport()->width() - 2 * margin;
     cols_ = 1;
     sheetW_ = std::clamp(avail, 160.0, 520.0);
-    sheetH_ = sheetW_ * 11.0 / 8.5;
+    sheetH_ = sheetW_ * ed_.paper().height / ed_.paper().width;
     const int rows = static_cast<int>(sheets().size());
     const double total = margin + rows * (sheetH_ + labelH + gap) - gap + margin;
     verticalScrollBar()->setRange(0, std::max(0, static_cast<int>(total - viewport()->height())));
@@ -83,7 +82,7 @@ void SheetPreview::paintEvent(QPaintEvent*) {
     const double margin = 32, gap = 28, labelH = 26;
     const double gridW = cols_ * sheetW_ + (cols_ - 1) * gap;
     const double left = (viewport()->width() - gridW) / 2;
-    const double ppi = sheetW_ / 8.5;
+    const double ppi = sheetW_ / ed_.paper().width;
     PagePainter::Extras ex;
     ex.sceneNumbers = opt_.sceneNumbers;
 
@@ -105,7 +104,7 @@ void SheetPreview::paintEvent(QPaintEvent*) {
         p.setClipRect(r);
         if (list[k] < 0) painter_.paintTitlePage(p, r.topLeft(), ppi);
         else painter_.paintPage(p, list[k], r.topLeft(), ppi, ex);
-        PagePainter::drawWatermark(p, r.topLeft(), ppi, opt_.watermark);
+        PagePainter::drawWatermark(p, r.topLeft(), ppi, opt_.watermark, ed_.paper());
         p.restore();
 
         p.setFont(small);
@@ -302,7 +301,7 @@ void PrintDialog::refresh() {
     const int sheets = (to - from + 1) + (o.titlePage && titlePage_->isEnabled() ? 1 : 0);
     const bool printer = target_ == Target::Printer;
     heading_->setText(printer ? tr("Print") : tr("Export PDF"));
-    QString info = tr("%n sheet(s)", "", sheets) + "  ·  " + tr("US Letter");
+    QString info = tr("%n sheet(s)", "", sheets) + "  ·  " + (ed_.layoutOptions().paper == Paper::A4 ? tr("A4") : tr("US Letter"));
     if (printer && copies_->value() > 1) info += "  ·  " + tr("%n copies", "", copies_->value());
     summary_->setText(info);
     go_->setText(printer ? tr("Print") : tr("Save PDF…"));
@@ -317,7 +316,7 @@ void PrintDialog::run(bool advanced) {
         if (!path.endsWith(".pdf", Qt::CaseInsensitive)) path += ".pdf";
         QPdfWriter w(path);
         w.setResolution(1200);
-        w.setPageLayout(kLetter);
+        w.setPageLayout(pageLayoutFor(ed_.layoutOptions().paper));
         w.setTitle(QString::fromStdString(ed_.doc().titleValue("Title")));
         w.setCreator("Owlio");
         renderScript(w, w.resolution(), ed_, o);
@@ -334,7 +333,7 @@ void PrintDialog::run(bool advanced) {
     printer.setPrinterName(printer_->currentText());
     printer.setCopyCount(copies_->value());
     printer.setFullPage(true);
-    printer.setPageLayout(kLetter);
+    printer.setPageLayout(pageLayoutFor(ed_.layoutOptions().paper));
     printer.setDocName(QString::fromStdString(ed_.doc().titleValue("Title")));
     if (advanced) {
         QPrintDialog dlg(&printer, this);

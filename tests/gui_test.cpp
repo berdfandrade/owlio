@@ -12,6 +12,7 @@
 #include <cstdio>
 
 #include "dictionarydialog.h"
+#include "synopsisdialog.h"
 #include "mainwindow.h"
 #include "speller.h"
 #include "theme.h"
@@ -248,7 +249,7 @@ int main(int argc, char* argv[]) {
         QTest::mouseClick(bvp, Qt::LeftButton, Qt::NoModifier, listBtn.toPoint());
         CHECK(b->listMode());
         const QRectF r0 = b->cardRect(0), r1 = b->cardRect(1);
-        CHECK(r1.top() > r0.bottom() && r0.left() == r1.left() && r0.height() < 100);
+        CHECK(r1.top() > r0.bottom() && r0.left() == r1.left() && r0.height() < 150);
         QTest::keyClick(b, Qt::Key_Home);
         QTest::keyClick(b, Qt::Key_Down);
         CHECK(b->selectedScene() == 1);
@@ -322,7 +323,7 @@ int main(int argc, char* argv[]) {
             QTest::qWait(400);
             if (argc > 3) w.grab().save(QString::fromLocal8Bit(argv[3]));
 
-            TitlePageDialog title(ed.doc(), &w);
+            TitlePageDialog title(ed.doc(), Paper::Letter, &w);
             title.resize(980, 660);
             title.show();
             QTest::qWait(250);
@@ -875,6 +876,28 @@ int main(int argc, char* argv[]) {
 
     // ---- Corretor ortográfico e dicionário do roteiro
     {
+        // Convenção em inglês, texto em português: o automático escolhe o dicionário pelo texto.
+        Editor mixed;
+        mixed.setScriptLanguage(ScriptLanguage::English);
+        mixed.setDocument(parseFountain(
+            "EXT. CINEMA ÍRIS - RUA DO OURO - FIM DE TARDE\n\nUma fachada estreita entre uma loja de conserto de celulares "
+            "e uma farmácia. O letreiro luminoso diz CINEMA ÍRIS. Algumas letras falham: o C pisca, o R está apagado.\n\n"
+            "Um cartaz desbotado anuncia: \"ÚLTIMA SEMANA — ENTRADA FRANCA\".\n\nO saguão é pequeno, mas tem a dignidade de "
+            "um lugar que já recebeu muita gente. Carpete vermelho gasto. Molduras douradas.\n\nLIA, 28, está sentada no chão, "
+            "tentando consertar uma letra do letreiro interno com fita isolante.\n"));
+        Speller ms(mixed);
+        CHECK(ms.dictionaryLanguage() == ScriptLanguage::Portuguese);
+        QStringList marked;
+        for (int li = 0; li < static_cast<int>(mixed.layout().lines.size()); ++li) {
+            const std::u32string text = mixed.layout().lineText(mixed.doc(), li);
+            for (const WordSpan& m : ms.marks(li)) marked << QString::fromStdU32String(text.substr(m.start, m.len));
+        }
+        if (!marked.isEmpty()) std::printf("marked: %s\n", qPrintable(marked.join(" ")));
+        CHECK(marked.isEmpty());
+        ms.setLanguage(Speller::Language::English);
+        CHECK(ms.dictionaryLanguage() == ScriptLanguage::English && ms.misspelled(U"fachada"));
+    }
+    {
         Editor pt;
         pt.setScriptLanguage(ScriptLanguage::Portuguese);
         pt.setDocument(parseFountain("INT. CINE KWYJIBO - NOITE\n\nHelena camimha até a bilheteria do Kwyjibo.\n\nHELENA\nUma entrada, por favor.\n"));
@@ -888,6 +911,7 @@ int main(int argc, char* argv[]) {
             return out;
         };
         pt.setCursor({0, 0});
+        CHECK(sp.dictionaryLanguage() == ScriptLanguage::Portuguese);
         CHECK(wrong() == QStringList({"KWYJIBO", "camimha", "Kwyjibo"}));  // Helena é personagem; INT não conta
         pt.addCustomWord(U"Kwyjibo");
         CHECK(wrong() == QStringList({"camimha"}));
@@ -923,6 +947,41 @@ int main(int argc, char* argv[]) {
         QTest::qWait(80);
         if (argc > 20) w.view()->viewport()->grab(QRect(0, 0, 900, 420)).save(QString::fromLocal8Bit(argv[20]));
         QFile::remove(file);
+    }
+
+    // ---- Papel A4: a página na tela fica mais estreita e mais alta.
+    {
+        const QString file = QDir::temp().filePath("owlio-a4.fountain");
+        QFile f(file);
+        if (f.open(QIODevice::WriteOnly)) { f.write("INT. CASA - DIA\n\nAna entra.\n"); f.close(); }
+        CHECK(w.openFile(file));
+        auto& ed = const_cast<Editor&>(w.editor());
+        ed.setPaper(Paper::A4);
+        w.view()->refreshAfterExternalEdit();
+        QTest::qWait(60);
+        CHECK(ed.layout().linesPerPage == 58);
+        if (argc > 22) w.view()->viewport()->grab().save(QString::fromLocal8Bit(argv[22]));
+        ed.setPaper(Paper::Letter);
+        w.view()->refreshAfterExternalEdit();
+        if (argc > 23) w.view()->viewport()->grab().save(QString::fromLocal8Bit(argv[23]));
+        QFile::remove(file);
+    }
+
+    // ---- Sinopse da cena: cabeçalho, contador de palavras e texto devolvido sem espaços nas pontas.
+    {
+        SceneSummary s;
+        s.heading = U"INT. CINEMA ÍRIS - SAGUÃO - FIM DE TARDE";
+        s.cast = {U"LIA", U"MARCOS"};
+        s.page = 0;
+        s.eighths = 12;
+        SynopsisDialog sd(1, s, &w);
+        auto* edit = sd.findChild<QPlainTextEdit*>("textoSinopse");
+        CHECK(edit != nullptr);
+        if (edit) {
+            edit->setPlainText("  Lia convence Marcos a abrir o cinema por uma noite.  ");
+            CHECK(sd.synopsis() == "Lia convence Marcos a abrir o cinema por uma noite.");
+        }
+        if (argc > 24) { sd.show(); QTest::qWait(60); sd.grab().save(QString::fromLocal8Bit(argv[24])); sd.close(); }
     }
 
     std::printf(failures == 0 ? "UI test passed.\n" : "%d failure(s).\n", failures);

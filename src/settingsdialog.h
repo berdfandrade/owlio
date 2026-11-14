@@ -20,6 +20,8 @@ public:
     QString uiLanguage() const;
     ScriptLanguage scriptLanguage() const;
     bool spellCheck() const;
+    QString spellLanguage() const;  // "auto", "pt" ou "en"
+    QString paper() const;          // "letter" ou "a4"
     ThemeManager::Mode themeMode() const;
     int autosaveMinutes() const;  // 0 = desligado
     bool keepBackups() const;
@@ -49,6 +51,8 @@ private:
     QLabel* scriptPreview_;
     QCheckBox* sceneNumbers_;
     QCheckBox* spellCheck_;
+    QComboBox* spellLanguage_;
+    QComboBox* paper_;
     QComboBox* autosave_;
     QCheckBox* backups_;
     QCheckBox* versionsFull_;

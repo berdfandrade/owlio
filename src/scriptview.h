@@ -20,6 +20,7 @@ public:
     bool focusMode() const { return focusMode_; }
     void setFocusMode(bool on);
     void setSpellCheck(bool on);  // sublinha as palavras que não estão no dicionário
+    void setSpellLanguage(Speller::Language l);
     PagePainter& painter() { return painter_; }
 
     int currentPage() const;
@@ -64,8 +65,8 @@ protected:
 
 private:
     double ppi() const { return 96.0 * zoom_; }
-    double pageW() const { return 8.5 * ppi(); }
-    double pageH() const { return 11.0 * ppi(); }
+    double pageW() const { return ed_->paper().width * ppi(); }
+    double pageH() const { return ed_->paper().height * ppi(); }
     double gap() const { return 28.0; }
     QPointF pageOrigin(int page) const;
     QRectF cursorRect() const;

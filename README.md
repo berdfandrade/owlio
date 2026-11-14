@@ -15,8 +15,8 @@
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/script-dark.png" width="49%" alt="Writing view, dark theme">
-  <img src="docs/screenshots/cards-light.png" width="49%" alt="Index cards view, light theme">
+  <img src="docs/screenshots/script-dark.webp" width="49%" alt="Writing view, dark theme">
+  <img src="docs/screenshots/cards-light.webp" width="49%" alt="Index cards view, light theme">
 </p>
 
 ---
@@ -37,10 +37,15 @@ It also follows the keyboard-first flow screenwriters know from tools like Final
 - Parentheticals get their parentheses automatically, and full Unicode support covers accented input.
 
 ### Pages and pagination
-- US Letter pages drawn on screen with exact industry margins (1.5" left, 1" elsewhere).
+- US Letter or A4 pages drawn on screen with exact industry margins (1.5" left, 1" elsewhere).
 - Professional page breaks: scene headings and character cues never sit alone at the bottom of a page, and dialogue split across pages gets **(MORE)** and **CHARACTER (CONT'D)**. Scripts written in Portuguese can use (MAIS)/(CONT.) instead.
 - Page numbers and optional scene numbers in both margins.
 - **Title page editor** with a live preview: title, credit, authors, source, revision, draft date, notes and contact. The title keeps the capitalization you type.
+
+<p align="center">
+  <img src="docs/screenshots/title-page.png" width="49%" alt="Title page editor with live preview">
+  <img src="docs/screenshots/script-light.webp" width="49%" alt="Writing view, light theme">
+</p>
 
 ### Index cards
 - Every scene becomes a card showing its number, INT/EXT, location, time of day (color-coded), starting page, the characters who speak in it, and its length in eighths of a page.
@@ -49,11 +54,19 @@ It also follows the keyboard-first flow screenwriters know from tools like Final
 - Double-click a card to jump to that scene in the script.
 - **Grid or list**: a toggle in the corner of the header switches between the card grid and a compact list with one row per scene (location, time, synopsis, cast, length and page). Dragging, arrow keys and F2 work in both, and Owlio remembers your choice.
 
+<p align="center">
+  <img src="docs/screenshots/cards-dark.webp" width="80%" alt="Index cards, dark theme">
+</p>
+
 ### Timeline
 - **View → Timeline** (Ctrl+Shift+L) lays the film out from left to right: a page ruler, the story structure, a strip of scene blocks and one lane per character showing where they speak. Hover a scene for its page and length; click it to open it in the script.
 - Compare what is written with the **planned length**, or zoom into the written pages only.
 - **Editable story structure**: drag act dividers and plot points, rename them, split or merge acts, and add or remove plot points from the right-click menu.
 - **Presets**: Conventional (three acts), Fragmented (nonlinear), TV episode (drama), Sitcom, Five acts (Freytag), Save the Cat, Hero's journey and Kishōtenketsu. Any edit turns the structure into Custom. It is saved in the `.fountain` file, and every change can be undone.
+
+<p align="center">
+  <img src="docs/screenshots/timeline.webp" width="80%" alt="Timeline with story structure, scene blocks and character lanes">
+</p>
 
 ### Relationship map
 - **View → Relationships** (Ctrl+Shift+M) shows the characters as avatars on a canvas. Drag from one character to another to link them.
@@ -61,16 +74,29 @@ It also follows the keyboard-first flow screenwriters know from tools like Final
 - **Show who shares scenes** draws the characters who appear together, **Arrange in a circle** tidies the layout, and **Fit to window** frames everything.
 - Relationships are saved in the `.fountain` file and can be undone.
 
+<p align="center">
+  <img src="docs/screenshots/relations.webp" width="80%" alt="Relationship map with typed, labelled links">
+</p>
+
 ### Saving and backups
 - **Autosave**: scripts that already have a file are saved automatically every 5 minutes (1 or 10 minutes, or off, in Settings).
 - **Crash recovery**: while there are unsaved changes, Owlio keeps a recovery copy every 20 seconds, untitled scripts included. If it closes unexpectedly, it offers the changes back the next time it starts.
 - **Backups**: every save also keeps a dated copy of the script, up to the 30 most recent per script. Automatic saves add at most one backup every 10 minutes. File → Open Backup File opens one as an untitled copy, so the backup itself is never overwritten.
 - **Versions** (File → Versions, Ctrl+Shift+H, or the clock button in the toolbar): a time machine for your script. It opens over the script area; Settings → Saving can make it full screen instead. Every saved version is stacked in perspective under a night sky, newest in front, with a timeline on the side. Step back with the arrows, the mouse wheel or the timeline, flip pages with ← and →, and press **Restore** to bring that version back. The restore is a normal edit, so Ctrl+Z returns to where you were.
 
+<p align="center">
+  <img src="docs/screenshots/versions.webp" width="80%" alt="Versions: saved copies stacked under a night sky">
+</p>
+
 ### Files
 - **Fountain** (`.fountain`) is the native format: plain text, open, and readable by many other screenwriting tools.
 - **Final Draft** (`.fdx`) import and export, including scene summaries.
 - **Print and PDF window** with a preview of every sheet, one below the other: pick a printer and number of copies, a page range, whether to include the title page and scene numbers, and an optional diagonal **watermark** (for example "DRAFT", or the name of the person receiving the copy). PDFs embed their fonts.
+
+<p align="center">
+  <img src="docs/screenshots/print.webp" width="58%" alt="Print and PDF window with sheet previews">
+  <img src="docs/screenshots/pdf-page.png" width="35%" alt="Exported PDF page">
+</p>
 
 ### Beat Board
 - A **free board for ideas**: press Ctrl+Shift+B (or the Beat Board button) and lay out beats anywhere, at any zoom.
@@ -78,6 +104,10 @@ It also follows the keyboard-first flow screenwriters know from tools like Final
 - **Images**: drop image files on the board, paste an image with Ctrl+V, or pick one in the beat window. They are shrunk and stored as JPEG inside the script file.
 - **Flow Lines** link one beat to another: drag the + on the edge of a beat onto the next beat. Click a line and press Delete to remove it.
 - Space or the middle mouse button pans; Ctrl+wheel zooms; Fit shows every beat. Every change can be undone, and the board is saved inside the `.fountain` file in a comment block that other Fountain apps ignore.
+
+<p align="center">
+  <img src="docs/screenshots/beat-board.webp" width="80%" alt="Beat Board with flow lines">
+</p>
 
 ### Characters
 - **Character sheets**: click a character in the side panel to open their sheet, with a photo, name, role, age, occupation, characteristics and a synopsis.
@@ -88,6 +118,15 @@ It also follows the keyboard-first flow screenwriters know from tools like Final
 - The Characters panel has two buttons in its header: one opens the Characters window, the other hides the panel (View → Characters brings it back).
 - Photos show up in the side panel and on the index cards. Sheets and photos are stored inside the `.fountain` file in a comment block that other Fountain apps ignore, so a script stays a single portable file.
 
+<p align="center">
+  <img src="docs/screenshots/character.webp" width="49%" alt="Character sheet with avatar, stats and synopsis">
+  <img src="docs/screenshots/avatar.webp" width="49%" alt="Pixel-art avatar creator">
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/cast.webp" width="80%" alt="Characters window: the whole cast in an editable table">
+</p>
+
 ### Interface
 - **English interface**, with a **Brazilian Portuguese** translation you can switch to in Edit → Settings.
 - Light and dark themes that follow the system automatically, with a quick switch in the corner of the menu bar.
@@ -96,25 +135,12 @@ It also follows the keyboard-first flow screenwriters know from tools like Final
 - **Focus mode** dims everything except the speech or paragraph you are writing.
 - Side panels list scenes (with page and cast) and characters (with line counts). The sidebar button at the left of the toolbar (Ctrl+\\) hides or shows them both.
 - Find and replace, unlimited undo and redo, and zoom.
-- **Spell check** as you type, in the language of the script (English or Brazilian Portuguese): unknown words get a red wavy underline on screen, never in the PDF. Character names are never marked. Right-click a word to add it to the **script dictionary** (Edit › Script Dictionary), which is saved inside the script. Turn it off in Settings › Script.
+- **US Letter or A4** (Settings › Script › Page). A4 keeps the same margins and line width and fits 4 more lines per page; the screen, the PDF and the printout all follow the choice.
+- **Spell check** as you type, in Brazilian Portuguese or English, picked automatically from the words of the script (or fixed in Settings › Script): unknown words get a red wavy underline on screen, never in the PDF. Character names are never marked. Right-click a word to add it to the **script dictionary** (Edit › Script Dictionary), which is saved inside the script. Turn it off in Settings › Script.
 
 <p align="center">
-  <img src="docs/screenshots/cards-dark.png" width="49%" alt="Index cards, dark theme">
-  <img src="docs/screenshots/pdf-page.png" width="35%" alt="Exported PDF page">
-</p>
-
-<p align="center">
-  <img src="docs/screenshots/beat-board.png" width="80%" alt="Beat Board with images and flow lines">
-</p>
-
-<p align="center">
-  <img src="docs/screenshots/character.png" width="49%" alt="Character sheet with photo, stats and synopsis">
-  <img src="docs/screenshots/settings.png" width="40%" alt="Settings: pages for general options, appearance and fonts, script and saving">
-</p>
-
-<p align="center">
-  <img src="docs/screenshots/title-page.png" width="49%" alt="Title page editor with live preview">
-  <img src="docs/screenshots/print.png" width="49%" alt="Print and PDF window with watermark">
+  <img src="docs/screenshots/settings.webp" width="49%" alt="Settings: script conventions, spelling and page font">
+  <img src="docs/screenshots/spell.webp" width="45%" alt="Spell check: a misspelled word with its right-click menu">
 </p>
 
 ## Keyboard shortcuts
@@ -239,9 +265,8 @@ The build compiles the `.ts` files and embeds them in the app. To add a language
 
 ## Status
 
-Owlio is young, and the page size is US Letter. On the roadmap:
+Owlio is young. On the roadmap:
 
-- A4 pages
 - Revision mode with colored pages
 - Reports (scenes, characters, locations)
 

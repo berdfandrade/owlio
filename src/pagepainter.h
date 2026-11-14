@@ -4,6 +4,7 @@
 #include <QPainter>
 #include <QPointF>
 #include <QRawFont>
+#include <QPageLayout>
 #include <QPagedPaintDevice>
 #include <climits>
 #include <functional>
@@ -42,7 +43,9 @@ public:
     void paintTitlePage(QPainter& p, QPointF origin, double ppi);
     bool hasTitlePage() const;
     // Marca d'água diagonal (ex.: "RASCUNHO" ou o nome de quem recebe a cópia).
-    static void drawWatermark(QPainter& p, QPointF origin, double ppi, const QString& text);
+    static void drawWatermark(QPainter& p, QPointF origin, double ppi, const QString& text,
+                              const PaperGeometry& paper = paperGeometry(Paper::Letter));
+    PaperGeometry paper() const { return ed_.paper(); }
 
 private:
     void drawText(QPainter& p, const QRawFont& f, const std::u32string& text, double x, double baseline,
@@ -63,4 +66,6 @@ struct PrintOptions {
 };
 
 // Desenha o roteiro inteiro (rosto + páginas) num PDF ou impressora.
+// Página do tamanho do papel, sem margens (o desenho já inclui as margens do roteiro).
+QPageLayout pageLayoutFor(Paper paper);
 void renderScript(QPagedPaintDevice& device, double ppi, const Editor& ed, const PrintOptions& opt);

@@ -55,6 +55,7 @@ set(UI_SOURCES
   src/beatdialog.cpp src/beatdialog.h
   src/speller.cpp src/speller.h
   src/dictionarydialog.cpp src/dictionarydialog.h
+  src/synopsisdialog.cpp src/synopsisdialog.h
   resources/owlio.qrc
   resources/dict.qrc
 )

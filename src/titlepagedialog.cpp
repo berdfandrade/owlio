@@ -70,11 +70,11 @@ void TitlePagePreview::paintEvent(QPaintEvent*) {
     p.setBrush(tc.canvas);
     p.drawRoundedRect(rect(), 12, 12);
 
-    // Página centralizada, mantendo a proporção do papel Carta.
-    const double margin = 26;
+    // Página centralizada, mantendo a proporção do papel.
+    const double margin = 26, ratio = ed_.paper().height / ed_.paper().width;
     double w = width() - 2 * margin, h = height() - 2 * margin;
-    if (w * 11.0 / 8.5 > h) w = h * 8.5 / 11.0;
-    else h = w * 11.0 / 8.5;
+    if (w * ratio > h) w = h / ratio;
+    else h = w * ratio;
     const QRectF page((width() - w) / 2, (height() - h) / 2, w, h);
     for (int i = 8; i >= 1; --i) {
         p.setBrush(QColor(0, 0, 0, static_cast<int>((tc.dark ? 0.12 : 0.05) * (1.0 - i / 9.0) * 255)));
@@ -82,7 +82,7 @@ void TitlePagePreview::paintEvent(QPaintEvent*) {
     }
     p.setBrush(Qt::white);
     p.drawRect(page);
-    const double ppi = w / 8.5;
+    const double ppi = w / ed_.paper().width;
     if (painter_.hasTitlePage()) {
         painter_.paintTitlePage(p, page.topLeft(), ppi);
     } else {
@@ -97,7 +97,7 @@ void TitlePagePreview::paintEvent(QPaintEvent*) {
 
 // ------------------------------------------------------------ janela
 
-TitlePageDialog::TitlePageDialog(const Document& doc, QWidget* parent) : QDialog(parent), base_(doc) {
+TitlePageDialog::TitlePageDialog(const Document& doc, Paper paper, QWidget* parent) : QDialog(parent), base_(doc) {
     setWindowTitle(tr("Title Page"));
     setMinimumSize(860, 600);
 
@@ -189,6 +189,7 @@ TitlePageDialog::TitlePageDialog(const Document& doc, QWidget* parent) : QDialog
     form->addStretch(1);
 
     preview_ = new TitlePagePreview;
+    preview_->setPaper(paper);
 
     auto* columns = new QHBoxLayout;
     columns->setSpacing(24);

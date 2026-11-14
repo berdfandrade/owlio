@@ -230,7 +230,7 @@ void PagePainter::paintTitlePage(QPainter& p, QPointF o, double ppi) {
 
     auto contact = splitLines(doc.titleValue("Contact"));
     if (doc.titleValue("Contact").empty()) contact.clear();
-    int crow = 60 - static_cast<int>(contact.size());
+    int crow = ed_.paper().contactRow - static_cast<int>(contact.size());
     for (auto& t : contact)
         drawText(p, f, t, o.x() + page::kLeftCol * charW, o.y() + (crow++) * lineH + baseOff, charW, ink);
 
@@ -246,7 +246,7 @@ void PagePainter::paintTitlePage(QPainter& p, QPointF o, double ppi) {
                  o.y() + (rrow++) * lineH + baseOff, charW, ink);
 }
 
-void PagePainter::drawWatermark(QPainter& p, QPointF o, double ppi, const QString& text) {
+void PagePainter::drawWatermark(QPainter& p, QPointF o, double ppi, const QString& text, const PaperGeometry& paper) {
     if (text.trimmed().isEmpty()) return;
     p.save();
     QFont f(QStringLiteral("Sans Serif"));
@@ -254,15 +254,20 @@ void PagePainter::drawWatermark(QPainter& p, QPointF o, double ppi, const QStrin
     f.setPixelSize(std::max(8, static_cast<int>(ppi * 0.85)));
     f.setLetterSpacing(QFont::PercentageSpacing, 108);
     QFontMetricsF fm(f);
-    const double diag = std::hypot(8.5, 11.0) * ppi * 0.82;
+    const double diag = std::hypot(paper.width, paper.height) * ppi * 0.82;
     const double w = fm.horizontalAdvance(text.trimmed().toUpper());
     if (w > diag) f.setPixelSize(std::max(8, static_cast<int>(f.pixelSize() * diag / w)));
     p.setFont(f);
     p.setPen(QColor(0, 0, 0, 26));
-    p.translate(o.x() + 4.25 * ppi, o.y() + 5.5 * ppi);
+    p.translate(o.x() + paper.width / 2 * ppi, o.y() + paper.height / 2 * ppi);
     p.rotate(-52);
     p.drawText(QRectF(-diag / 2, -ppi, diag, 2 * ppi), Qt::AlignCenter, text.trimmed().toUpper());
     p.restore();
+}
+
+QPageLayout pageLayoutFor(Paper paper) {
+    return QPageLayout(QPageSize(paper == Paper::A4 ? QPageSize::A4 : QPageSize::Letter), QPageLayout::Portrait,
+                       QMarginsF(0, 0, 0, 0));
 }
 
 void renderScript(QPagedPaintDevice& device, double ppi, const Editor& ed, const PrintOptions& opt) {
@@ -274,7 +279,7 @@ void renderScript(QPagedPaintDevice& device, double ppi, const Editor& ed, const
     bool first = true;
     if (opt.titlePage && pp.hasTitlePage()) {
         pp.paintTitlePage(p, QPointF(0, 0), ppi);
-        PagePainter::drawWatermark(p, QPointF(0, 0), ppi, opt.watermark);
+        PagePainter::drawWatermark(p, QPointF(0, 0), ppi, opt.watermark, ed.paper());
         first = false;
     }
     const int pages = ed.layout().pageCount;
@@ -282,7 +287,7 @@ void renderScript(QPagedPaintDevice& device, double ppi, const Editor& ed, const
     for (int i = from - 1; i < to; ++i) {
         if (!first) device.newPage();
         pp.paintPage(p, i, QPointF(0, 0), ppi, ex);
-        PagePainter::drawWatermark(p, QPointF(0, 0), ppi, opt.watermark);
+        PagePainter::drawWatermark(p, QPointF(0, 0), ppi, opt.watermark, ed.paper());
         first = false;
     }
 }

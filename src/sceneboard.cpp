@@ -17,16 +17,16 @@
 #include "sceneheading.h"
 #include "theme.h"
 
-namespace {
-
-QString q(const std::u32string& s) { return QString::fromStdU32String(s); }
-
 QString eighthsText(int eighths) {
     const int whole = eighths / 8, rest = eighths % 8;
     if (whole == 0) return QString("%1/8").arg(rest);
     if (rest == 0) return QString::number(whole);
     return QString("%1 %2/8").arg(whole).arg(rest);
 }
+
+namespace {
+
+QString q(const std::u32string& s) { return QString::fromStdU32String(s); }
 
 // Texto com quebra de linha, limitado a `maxLines`; a última linha recebe reticências.
 double drawWrapped(QPainter& p, const QRectF& r, const QString& text, const QFont& f, const QColor& c,
@@ -129,7 +129,7 @@ void SceneBoard::relayout() {
     if (list_) {
         cols_ = 1;
         cardW_ = avail;
-        cardH_ = 74;
+        cardH_ = 100;
     } else {
         cols_ = std::max(1, static_cast<int>((avail + gap()) / (minCardW_ + gap())));
         cardW_ = (avail - (cols_ - 1) * gap()) / cols_;
@@ -359,7 +359,6 @@ void SceneBoard::paintRow(QPainter& p, const QRectF& r, int index) const {
     QFontMetricsF sfm(small), tfm(title), bfm(base);
 
     const QRectF in = r.adjusted(22, 0, -18, 0);
-    const double line1 = r.top() + (r.height() - tfm.height() - 4 - bfm.height()) / 2;  // topo das duas linhas
 
     // Esquerda: número da cena, centralizado na altura da faixa.
     const QString num = QString::number(index + 1);
@@ -404,9 +403,31 @@ void SceneBoard::paintRow(QPainter& p, const QRectF& r, int index) const {
     }
     right -= avW + 20;
 
-    // Meio, linha 1: INT/EXT, local e horário.
+    // Meio: título (INT/EXT, local e horário) e texto, centralizados na faixa.
     double x = badge.right() + 14;
     const double textRight = std::max(x + 60, right);
+    // Sinopse ou começo da ação, em até duas linhas abaixo do título.
+    QFont bodyFont = base;
+    QColor bodyColor = tc.text;
+    QString body;
+    if (!s.synopsis.empty()) {
+        body = q(s.synopsis);
+    } else if (!s.preview.empty()) {
+        body = q(s.preview);
+        bodyFont.setItalic(true);
+        bodyColor = tc.muted;
+    } else {
+        body = tr("No action yet. Press F2 to write a synopsis.");
+        bodyFont = small;
+        bodyColor = tc.muted;
+    }
+    body = body.simplified();
+    const QFontMetricsF bodyFm(bodyFont);
+    const double tx2 = x, bodyW = std::max(20.0, textRight - tx2);
+    const int bodyLines = bodyFm.horizontalAdvance(body) > bodyW ? 2 : 1;
+    const double line1 = r.top() + (r.height() - tfm.height() - 6 - bodyLines * bodyFm.lineSpacing()) / 2;
+    const double y2 = line1 + tfm.height() + 6;
+
     const double chipH = sfm.height() + 4;
     const double y1 = line1 + (tfm.height() - chipH) / 2;
     if (!h.prefix.isEmpty()) {
@@ -439,28 +460,7 @@ void SceneBoard::paintRow(QPainter& p, const QRectF& r, int index) const {
         p.drawText(QPointF(tx + dot + 6, line1 + (tfm.height() + sfm.ascent() - sfm.descent()) / 2), time);
     }
 
-    // Meio, linha 2: sinopse ou começo da ação, numa linha só.
-    const double tx2 = badge.right() + 14;
-    const double y2 = line1 + tfm.height() + 4;
-    QFont bodyFont = base;
-    QColor bodyColor = tc.text;
-    QString body;
-    if (!s.synopsis.empty()) {
-        body = q(s.synopsis);
-    } else if (!s.preview.empty()) {
-        body = q(s.preview);
-        bodyFont.setItalic(true);
-        bodyColor = tc.muted;
-    } else {
-        body = tr("No action yet. Press F2 to write a synopsis.");
-        bodyFont = small;
-        bodyColor = tc.muted;
-    }
-    QFontMetricsF bodyFm(bodyFont);
-    p.setFont(bodyFont);
-    p.setPen(bodyColor);
-    p.drawText(QPointF(tx2, y2 + bodyFm.ascent()),
-               bodyFm.elidedText(body.simplified(), Qt::ElideRight, std::max(20.0, textRight - tx2)));
+    drawWrapped(p, QRectF(tx2, y2, bodyW, 2 * bodyFm.lineSpacing() + 1), body, bodyFont, bodyColor, 2);
 }
 
 void SceneBoard::paintEvent(QPaintEvent*) {
