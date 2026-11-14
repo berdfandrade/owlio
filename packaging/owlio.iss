@@ -1,9 +1,9 @@
 ; Instalador do Owlio para Windows (Inno Setup 6).
 ; Espera o programa já instalado em dist\ por:  cmake --install build --prefix "%CD%\dist"   (caminho absoluto)
-; Gerar:  iscc /DAppVersion=1.0 packaging\owlio.iss   (o .exe sai em packaging\Output)
+; Gerar:  iscc /DAppVersion=1.1 packaging\owlio.iss   (o .exe sai em packaging\Output)
 
 #ifndef AppVersion
-  #define AppVersion "1.0"
+  #define AppVersion "1.1"
 #endif
 #define AppName "Owlio"
 #define AppExe "bin\owlio.exe"
