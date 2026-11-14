@@ -19,6 +19,7 @@ public:
     explicit SettingsDialog(QWidget* parent = nullptr);
     QString uiLanguage() const;
     ScriptLanguage scriptLanguage() const;
+    bool spellCheck() const;
     ThemeManager::Mode themeMode() const;
     int autosaveMinutes() const;  // 0 = desligado
     bool keepBackups() const;
@@ -47,6 +48,7 @@ private:
     QComboBox* scriptFont_;
     QLabel* scriptPreview_;
     QCheckBox* sceneNumbers_;
+    QCheckBox* spellCheck_;
     QComboBox* autosave_;
     QCheckBox* backups_;
     QCheckBox* versionsFull_;

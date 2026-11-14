@@ -58,7 +58,7 @@ void selectData(QComboBox* c, const QVariant& v) { c->setCurrentIndex(std::max(0
 
 SettingsDialog::SettingsDialog(QWidget* parent) : QDialog(parent) {
     setWindowTitle(tr("Settings"));
-    setMinimumSize(820, 580);
+    setMinimumSize(840, 700);
     QSettings settings;
     ThemeManager& tm = ThemeManager::instance();
 
@@ -120,6 +120,10 @@ SettingsDialog::SettingsDialog(QWidget* parent) : QDialog(parent) {
     script_->setCurrentIndex(i18n::scriptLanguage() == ScriptLanguage::Portuguese ? 1 : 0);
     auto* convForm = makeForm();
     convForm->addRow(tr("Language"), script_);
+    spellCheck_ = new QCheckBox(tr("Check spelling as you type"));
+    spellCheck_->setChecked(settings.value("spellCheck", true).toBool());
+    auto* spellForm = makeForm();
+    spellForm->addRow(QString(), spellCheck_);
 
     scriptFont_ = new QComboBox;
     scriptFont_->addItem(tr("Automatic (%1)").arg(PagePainter::defaultFontFamily()), QString());
@@ -213,6 +217,9 @@ SettingsDialog::SettingsDialog(QWidget* parent) : QDialog(parent) {
         tr("Script"), tr("How the pages look and which conventions they follow."),
         {section(tr("Conventions"), convForm,
                  tr("Used for page breaks inside dialogue and for autocomplete suggestions.")),
+         section(tr("Spelling"), spellForm,
+                 tr("Underlines words that are not in the dictionary of the script language. Right-click a word "
+                    "to add it to the script dictionary (Edit › Script Dictionary).")),
          section(tr("Page font"), scriptFontForm,
                  tr("Only monospaced fonts keep the industry layout: the page is always set at 12 points, "
                     "10 characters per inch, so page count stays the same whatever font you pick."))}));
@@ -338,6 +345,7 @@ bool SettingsDialog::reopenLastScript() const { return reopen_->isChecked(); }
 QString SettingsDialog::interfaceFont() const { return uiFont_->currentData().toString(); }
 double SettingsDialog::interfaceFontSize() const { return uiSize_->value(); }
 QString SettingsDialog::scriptFont() const { return scriptFont_->currentData().toString(); }
+bool SettingsDialog::spellCheck() const { return spellCheck_->isChecked(); }
 bool SettingsDialog::numberScenes() const { return sceneNumbers_->isChecked(); }
 
 QString SettingsDialog::uiLanguage() const { return language_->currentData().toString(); }

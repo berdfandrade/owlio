@@ -71,6 +71,7 @@ private slots:
     void editCharacter(const QString& characterName);
     void gotoFirstLine(const QString& characterName);
     void showSettings();
+    void showDictionary();
     void browseBackups();
     void browseVersions();
     void showCast();

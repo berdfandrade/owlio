@@ -105,6 +105,7 @@ const char* const kAvatarBlock = "/* owlio-avatars";  // formato antigo: só fot
 const char* const kBoardBlock = "/* owlio-beatboard";  // Beat Board: beats e linhas de fluxo
 const char* const kRelationsBlock = "/* owlio-relations";  // mapa de relações entre personagens
 const char* const kStructureBlock = "/* owlio-structure";  // forma narrativa da linha do tempo
+const char* const kDictionaryBlock = "/* owlio-dictionary";  // palavras que o corretor aceita neste roteiro
 
 // Valores numa linha só: \ vira \\, quebra de linha vira \n e "*/" não pode fechar o comentário.
 std::string escapeValue(const std::u32string& v) {
@@ -225,6 +226,13 @@ RelationMap readRelations(const std::string& src) {
             kept.push_back(r);
     m.links = std::move(kept);
     return m;
+}
+
+std::vector<std::u32string> readDictionary(const std::string& src) {
+    std::vector<std::u32string> words;
+    for (const std::string& line : blockLines(src, kDictionaryBlock))
+        if (line.compare(0, 6, "word: ") == 0 && line.size() > 6) words.push_back(unescapeValue(line.substr(6)));
+    return words;
 }
 
 StoryStructure readStructure(const std::string& src) {
@@ -466,6 +474,7 @@ Document parseFountain(const std::string& utf8In, bool parseTitlePage) {
     doc.board = std::move(board);
     doc.relations = std::move(relations);
     doc.structure = std::move(structure);
+    if (parseTitlePage) doc.dictionary = readDictionary(utf8In);
     doc.ensureNotEmpty();
     return doc;
 }
@@ -577,6 +586,11 @@ std::string writeFountain(const Document& doc, bool writeTitlePage) {
             out << "end: " << a.end << "\ncolor: " << a.color << "\n";
         }
         for (const StoryBeat& b : doc.structure.beats) out << "beat: " << b.at << " " << escapeValue(b.name) << "\n";
+        out << "*/\n";
+    }
+    if (writeTitlePage && !doc.dictionary.empty()) {
+        out << "\n" << kDictionaryBlock << "\n";
+        for (const std::u32string& w : doc.dictionary) out << "word: " << escapeValue(w) << "\n";
         out << "*/\n";
     }
     if (writeTitlePage && !doc.relations.empty()) {

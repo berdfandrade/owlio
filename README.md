@@ -84,7 +84,7 @@ It also follows the keyboard-first flow screenwriters know from tools like Final
 - The sheet also shows how many lines, scenes and words the character has, where they first appear, and every scene they speak in. Double-click a scene to jump to it.
 - **Renaming** a character on the sheet updates every cue in the script and keeps extensions such as (V.O.). One Ctrl+Z undoes it.
 - **Characters window** (Document → Characters): an editable table of the whole cast with role, age, occupation, speeches, scenes and words. Search, add characters, open a sheet, create an avatar, upload a photo or jump to a character's first line. Renaming a character there updates every cue, the sheet and the relationship map, and merging two names asks first.
-- **16-bit avatar creator**: build a pixel-art portrait for any character on a 32×32 grid with shaded colors. Pick a body type, then skin, eyes, eyebrows, mouth, hair, facial hair, glasses, hats, clothes and background, each with color choices. It has undo and redo, a Random button and Reset.
+- **Avatar creator**: build a detailed pixel-art portrait for any character on a 64×64 grid, with curved shapes and six shades per color. Pick a body type, then head shape, skin, details, eyes, eyebrows, nose, mouth, 31 hairstyles, facial hair, glasses, hats, clothes, accessories and background, each with color choices. It has undo and redo, a Random button and Reset.
 - The Characters panel has two buttons in its header: one opens the Characters window, the other hides the panel (View → Characters brings it back).
 - Photos show up in the side panel and on the index cards. Sheets and photos are stored inside the `.fountain` file in a comment block that other Fountain apps ignore, so a script stays a single portable file.
 
@@ -96,6 +96,7 @@ It also follows the keyboard-first flow screenwriters know from tools like Final
 - **Focus mode** dims everything except the speech or paragraph you are writing.
 - Side panels list scenes (with page and cast) and characters (with line counts). The sidebar button at the left of the toolbar (Ctrl+\\) hides or shows them both.
 - Find and replace, unlimited undo and redo, and zoom.
+- **Spell check** as you type, in the language of the script (English or Brazilian Portuguese): unknown words get a red wavy underline on screen, never in the PDF. Character names are never marked. Right-click a word to add it to the **script dictionary** (Edit › Script Dictionary), which is saved inside the script. Turn it off in Settings › Script.
 
 <p align="center">
   <img src="docs/screenshots/cards-dark.png" width="49%" alt="Index cards, dark theme">
@@ -207,7 +208,10 @@ LD_LIBRARY_PATH=$HOME/Qt/6.8.3/gcc_64/lib ./build/owlio_gui_test   # drives the 
 | `src/titlepagedialog.*`, `src/printdialog.*` | Title page editor and print/PDF window, both with previews |
 | `src/characterdialog.*` | Character sheet window |
 | `src/castdialog.*` | Characters window (editable cast table) |
-| `src/pixelavatar.*` | 16-bit avatar creator |
+| `src/pixelavatar.*` | Pixel-art avatar creator |
+| `src/spell.*` | Hunspell-format spell checker (core) |
+| `src/speller.*`, `src/dictionarydialog.*` | Spell check in the script view and the script dictionary window |
+| `resources/dict/` | Embedded pt_BR and en_US dictionaries, with their licenses |
 | `src/autosave.*` | Autosave, crash recovery copies and dated backups |
 | `src/versionbrowser.*` | Versions window: saved versions stacked in perspective, with a timeline |
 | `src/settingsdialog.*`, `src/i18n.*` | Settings window, interface language and translation loading |

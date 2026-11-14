@@ -5,6 +5,7 @@
 #include <QLocale>
 #include <QDialogButtonBox>
 #include <QFormLayout>
+#include <algorithm>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
@@ -164,6 +165,16 @@ TitlePageDialog::TitlePageDialog(const Document& doc, QWidget* parent) : QDialog
     f2->addRow(tr("Notes"), notes_);
     auto* f3 = makeForm();
     f3->addRow(tr("Contact"), contact_);
+    // Os três blocos com a mesma largura de rótulo, para os campos começarem na mesma linha.
+    int labelW = 0;
+    QList<QWidget*> labels;
+    for (QFormLayout* f : {f1, f2, f3})
+        for (int r = 0; r < f->rowCount(); ++r)
+            if (QLayoutItem* it = f->itemAt(r, QFormLayout::LabelRole); it && it->widget()) {
+                labels << it->widget();
+                labelW = std::max(labelW, it->widget()->sizeHint().width());
+            }
+    for (QWidget* l : labels) l->setMinimumWidth(labelW);
 
     auto* form = new QVBoxLayout;
     form->setSpacing(10);

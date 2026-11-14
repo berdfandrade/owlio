@@ -6,6 +6,7 @@
 #include "fdx.h"
 #include "fountain.h"
 #include "layout.h"
+#include "spell.h"
 
 static int failures = 0;
 #define CHECK(cond)                                                       \
@@ -566,6 +567,39 @@ static void testRestoreContent() {
     CHECK(e.doc().paragraphs[1].text == U"Ana sai.");
 }
 
+static void testSpelling() {
+    SpellChecker sp;
+    CHECK(!sp.loaded());
+    const std::string aff = "\xEF\xBB\xBFSET UTF-8\nFLAG UTF-8\nPFX R Y 1\nPFX R 0 re .\nSFX S Y 2\nSFX S 0 s [^s]\n"
+                            "SFX S 0 es s\nSFX A Y 1\nSFX A o a [^ã]o\n";
+    CHECK(sp.load(aff, "\xEF\xBB\xBF" "5\ncasa/S\nfazer/RS\nmenino/AS\nBrasil\npaís/S\n"));
+    auto ok = [&](const char* w) { return sp.check(utf8ToU32(w)); };
+    CHECK(ok("casa") && ok("casas") && ok("Casa") && ok("CASAS"));
+    CHECK(ok("refazer") && ok("refazers"));                   // prefixo, e prefixo com sufixo
+    CHECK(ok("menina") && ok("meninos") && ok("países"));     // troca de final e condição
+    CHECK(!ok("paíss") && !ok("caza") && !ok("recasa") && !ok("casaes"));
+    CHECK(ok("Brasil") && ok("BRASIL") && !ok("brasil"));     // nome próprio só com maiúscula
+    CHECK(ok("casa-menino") && !ok("casa-caza") && ok("d'casa") && ok("a"));
+
+    const std::u32string text = utf8ToU32("Ana disse: guarda-chuva, d’água 2ª vez — fim!");
+    std::vector<std::string> words;
+    for (const WordSpan& w : wordSpans(text)) words.push_back(u32ToUtf8(text.substr(w.start, w.len)));
+    CHECK((words == std::vector<std::string>{"Ana", "disse", "guarda-chuva", "d’água", "vez", "fim"}));
+
+    // O dicionário do roteiro vai e volta no arquivo e entra no desfazer.
+    Editor e;
+    e.setDocument(parseFountain("INT. CASA - DIA\n\nAna entra.\n"));
+    e.addCustomWord(utf8ToU32("Odeon"));
+    e.addCustomWord(utf8ToU32("odeon"));  // repetida
+    e.addCustomWord(utf8ToU32("xodó */ fim"));
+    CHECK(e.doc().dictionary.size() == 2 && e.isCustomWord(utf8ToU32("ODEON")) && !e.isCustomWord(utf8ToU32("Ana")));
+    const Document back = parseFountain(writeFountain(e.doc()));
+    CHECK(back.dictionary == e.doc().dictionary);
+    CHECK(back.paragraphs.size() == e.doc().paragraphs.size());
+    e.undo();
+    CHECK(e.doc().dictionary.size() == 1);
+}
+
 int main() {
     testScenes();
     testFountain();
@@ -578,6 +612,7 @@ int main() {
     testRelations();
     testStructure();
     testRestoreContent();
+    testSpelling();
     if (failures == 0) std::printf("All tests passed.\n");
     return failures == 0 ? 0 : 1;
 }

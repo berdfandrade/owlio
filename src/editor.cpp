@@ -80,6 +80,7 @@ void Editor::restoreContent(const Document& d) {
     doc_.board = d.board;
     doc_.relations = d.relations;
     doc_.structure = d.structure;
+    doc_.dictionary = d.dictionary;
     lastKind_ = EditKind::None;
     changed();
 }
@@ -315,6 +316,37 @@ void Editor::setStructure(const StoryStructure& st) {
     changed();
 }
 
+namespace {
+std::u32string lowered(std::u32string w) {
+    for (char32_t& c : w) c = toLower(c);
+    return w;
+}
+}  // namespace
+
+void Editor::setCustomWords(const std::vector<std::u32string>& words) {
+    std::vector<std::u32string> clean;
+    for (const std::u32string& raw : words) {
+        const std::u32string w = trim(raw);
+        const bool repeated = std::any_of(clean.begin(), clean.end(), [&](const std::u32string& c) { return lowered(c) == lowered(w); });
+        if (!w.empty() && !repeated) clean.push_back(w);
+    }
+    if (clean == doc_.dictionary) return;
+    beginEdit(EditKind::Other);
+    doc_.dictionary = std::move(clean);
+    changed();
+}
+
+void Editor::addCustomWord(const std::u32string& word) {
+    std::vector<std::u32string> words = doc_.dictionary;
+    words.push_back(word);
+    setCustomWords(words);
+}
+
+bool Editor::isCustomWord(const std::u32string& word) const {
+    const std::u32string w = lowered(word);
+    return std::any_of(doc_.dictionary.begin(), doc_.dictionary.end(), [&](const std::u32string& c) { return lowered(c) == w; });
+}
+
 // ------------------------------------------------------------ undo
 
 void Editor::beginEdit(EditKind kind) {
@@ -322,7 +354,7 @@ void Editor::beginEdit(EditKind kind) {
     bool coalesce = kind != EditKind::Other && kind == lastKind_ &&
                     now - lastEditTime_ < std::chrono::milliseconds(1500) && !undo_.empty();
     if (!coalesce) {
-        undo_.push_back({doc_.paragraphs, doc_.titlePage, doc_.cast, doc_.board, doc_.relations, doc_.structure, cursor_, anchor_});
+        undo_.push_back({doc_.paragraphs, doc_.titlePage, doc_.cast, doc_.board, doc_.relations, doc_.structure, doc_.dictionary, cursor_, anchor_});
         if (undo_.size() > kMaxUndo) undo_.erase(undo_.begin());
     }
     redo_.clear();
@@ -340,7 +372,7 @@ void Editor::changed() {
 
 void Editor::undo() {
     if (undo_.empty()) return;
-    redo_.push_back({doc_.paragraphs, doc_.titlePage, doc_.cast, doc_.board, doc_.relations, doc_.structure, cursor_, anchor_});
+    redo_.push_back({doc_.paragraphs, doc_.titlePage, doc_.cast, doc_.board, doc_.relations, doc_.structure, doc_.dictionary, cursor_, anchor_});
     Snapshot s = std::move(undo_.back());
     undo_.pop_back();
     doc_.paragraphs = std::move(s.paragraphs);
@@ -349,6 +381,7 @@ void Editor::undo() {
     doc_.board = std::move(s.board);
     doc_.relations = std::move(s.relations);
     doc_.structure = std::move(s.structure);
+    doc_.dictionary = std::move(s.dictionary);
     cursor_ = s.cursor;
     anchor_ = s.anchor;
     lastKind_ = EditKind::None;
@@ -357,7 +390,7 @@ void Editor::undo() {
 
 void Editor::redo() {
     if (redo_.empty()) return;
-    undo_.push_back({doc_.paragraphs, doc_.titlePage, doc_.cast, doc_.board, doc_.relations, doc_.structure, cursor_, anchor_});
+    undo_.push_back({doc_.paragraphs, doc_.titlePage, doc_.cast, doc_.board, doc_.relations, doc_.structure, doc_.dictionary, cursor_, anchor_});
     Snapshot s = std::move(redo_.back());
     redo_.pop_back();
     doc_.paragraphs = std::move(s.paragraphs);
@@ -366,6 +399,7 @@ void Editor::redo() {
     doc_.board = std::move(s.board);
     doc_.relations = std::move(s.relations);
     doc_.structure = std::move(s.structure);
+    doc_.dictionary = std::move(s.dictionary);
     cursor_ = s.cursor;
     anchor_ = s.anchor;
     lastKind_ = EditKind::None;

@@ -1,0 +1,8 @@
+<RCC>
+  <qresource prefix="/dict">
+    <file alias="pt_BR.aff">dict/pt_BR.aff</file>
+    <file alias="pt_BR.dic">dict/pt_BR.dic</file>
+    <file alias="en_US.aff">dict/en_US.aff</file>
+    <file alias="en_US.dic">dict/en_US.dic</file>
+  </qresource>
+</RCC>

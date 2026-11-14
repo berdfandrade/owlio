@@ -11,7 +11,9 @@
 #include <QTest>
 #include <cstdio>
 
+#include "dictionarydialog.h"
 #include "mainwindow.h"
+#include "speller.h"
 #include "theme.h"
 #include "pagepainter.h"
 #include "pixelavatar.h"
@@ -436,13 +438,13 @@ int main(int argc, char* argv[]) {
                 // Trocar uma cor e um estilo de cabelo, desfazer e refazer.
                 const PixelAvatar before = pav.avatar();
                 auto swatches = pav.findChildren<QToolButton*>("corAvatar");
-                CHECK(swatches.size() == 12);  // começa pelo cabelo: cores do cabelo
+                CHECK(swatches.size() == 16);  // começa pelo cabelo: cores do cabelo
                 const int target = before.hairColor == 3 ? 4 : 3;
                 swatches[target]->click();
                 QTest::qWait(20);
                 CHECK(pav.avatar().hairColor == target);
                 auto* opts = pav.findChild<QListWidget*>("opcoesAvatar");
-                CHECK(opts && opts->count() == 15);
+                CHECK(opts && opts->count() == 31);
                 emit opts->itemClicked(opts->item(7));
                 CHECK(pav.avatar().hairStyle == 7);
                 QPushButton* undoB = nullptr;
@@ -451,8 +453,8 @@ int main(int argc, char* argv[]) {
                 CHECK(undoB);
                 if (undoB) { undoB->click(); undoB->click(); }
                 CHECK(pav.avatar().hairColor == before.hairColor && pav.avatar().hairStyle == before.hairStyle);
-                pav.setCategory(8);
-                CHECK(opts->count() == 7);
+                pav.setCategory(10);  // roupas
+                CHECK(opts->count() == 14);
                 // O tipo de corpo fica à vista, fora das categorias.
                 QToolButton* masc = pav.findChildren<QToolButton*>("corpo").value(1);
                 CHECK(masc && masc->isVisible());
@@ -462,17 +464,17 @@ int main(int argc, char* argv[]) {
                 if (argc > 12) pav.grab().save(QString::fromLocal8Bit(argv[12]));
                 pav.reject();
                 if (argc > 13) {  // folha com variações, para conferir o desenho
-                    QImage sheet(8 * 100, 5 * 100, QImage::Format_RGB32);
+                    QImage sheet(8 * 132, 7 * 132, QImage::Format_RGB32);
                     sheet.fill(Qt::white);
                     QPainter sp(&sheet);
                     for (int i = 0; i < 24; ++i)
-                        sp.drawImage((i % 8) * 100 + 2, (i / 8) * 100 + 2, PixelAvatar::random(i * 7919u + 3).render(96));
-                    for (int i = 0; i < 15; ++i) {  // todos os cabelos
+                        sp.drawImage((i % 8) * 132 + 2, (i / 8) * 132 + 2, PixelAvatar::random(i * 7919u + 3).render(128));
+                    for (int i = 0; i < 31; ++i) {  // todos os cabelos
                         PixelAvatar h = PixelAvatar::random(11);
                         h.hairStyle = i;
                         h.hat = 0;
                         h.glasses = 0;
-                        sp.drawImage((i % 8) * 100 + 2, 300 + (i / 8) * 100 + 2, h.render(96));
+                        sp.drawImage((i % 8) * 132 + 2, 3 * 132 + (i / 8) * 132 + 2, h.render(128));
                     }
                     sp.end();
                     sheet.save(QString::fromLocal8Bit(argv[13]));
@@ -869,6 +871,58 @@ int main(int argc, char* argv[]) {
         QTest::qWait(50);
         CHECK(over.size() == w.centralWidget()->size());
         QDir(dir).removeRecursively();
+    }
+
+    // ---- Corretor ortográfico e dicionário do roteiro
+    {
+        Editor pt;
+        pt.setScriptLanguage(ScriptLanguage::Portuguese);
+        pt.setDocument(parseFountain("INT. CINE KWYJIBO - NOITE\n\nHelena camimha até a bilheteria do Kwyjibo.\n\nHELENA\nUma entrada, por favor.\n"));
+        Speller sp(pt);
+        auto wrong = [&] {
+            QStringList out;
+            for (int li = 0; li < static_cast<int>(pt.layout().lines.size()); ++li) {
+                const std::u32string text = pt.layout().lineText(pt.doc(), li);
+                for (const WordSpan& m : sp.marks(li)) out << QString::fromStdU32String(text.substr(m.start, m.len));
+            }
+            return out;
+        };
+        pt.setCursor({0, 0});
+        CHECK(wrong() == QStringList({"KWYJIBO", "camimha", "Kwyjibo"}));  // Helena é personagem; INT não conta
+        pt.addCustomWord(U"Kwyjibo");
+        CHECK(wrong() == QStringList({"camimha"}));
+        pt.setCursor({1, 10});  // cursor dentro de "camimha": ainda sendo digitada
+        CHECK(wrong().isEmpty());
+        CHECK(sp.wordAt({1, 10}) == U"camimha");
+        sp.setEnabled(false);
+        pt.setCursor({0, 0});
+        CHECK(wrong().isEmpty());
+
+        DictionaryDialog dd(pt.doc().dictionary, &w);
+        auto* list = dd.findChild<QListWidget*>();
+        auto* input = dd.findChild<QLineEdit*>();
+        CHECK(list && input && list->count() == 1);
+        if (list && input) {
+            input->setText("Bilheteiro");
+            emit input->returnPressed();
+            input->setText("kwyjibo");  // repetida
+            emit input->returnPressed();
+            CHECK(list->count() == 2 && dd.words().size() == 2);
+        }
+        if (argc > 21) { dd.show(); QTest::qWait(60); dd.grab().save(QString::fromLocal8Bit(argv[21])); dd.close(); }
+
+        // Na tela: o sublinhado aparece na página.
+        const QString file = QDir::temp().filePath("owlio-spell.fountain");
+        QFile f(file);
+        if (f.open(QIODevice::WriteOnly)) {
+            f.write("INT. ODEON CINEMA - NIGHT\n\nHelena wakls to the box office of the Kwyjibo and smilse.\n\nHELENA\nOne tiket, please.\n");
+            f.close();
+        }
+        CHECK(w.openFile(file));
+        w.view()->setFocusMode(false);
+        QTest::qWait(80);
+        if (argc > 20) w.view()->viewport()->grab(QRect(0, 0, 900, 420)).save(QString::fromLocal8Bit(argv[20]));
+        QFile::remove(file);
     }
 
     std::printf(failures == 0 ? "UI test passed.\n" : "%d failure(s).\n", failures);

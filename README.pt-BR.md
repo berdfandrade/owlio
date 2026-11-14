@@ -64,6 +64,7 @@ O idioma oficial do Owlio é o inglês. A interface em **português do Brasil** 
 - Janela de impressão e PDF com a prévia das folhas uma embaixo da outra.
 - Ícones SVG próprios (`resources/icons`), recoloridos automaticamente para cada tema.
 - Painéis em cartões: cenas com número, página e quem fala, e personagens com avatar.
+- **Corretor ortográfico** ao digitar, no idioma do roteiro (português do Brasil ou inglês): palavras desconhecidas ganham um sublinhado vermelho ondulado na tela, nunca no PDF. Nomes de personagens não são marcados. Clique com o botão direito numa palavra para adicioná-la ao **dicionário do roteiro** (Editar › Dicionário do roteiro), que é salvo dentro do arquivo. Dá para desligar em Configurações › Roteiro.
 - **Modo foco** (Ctrl+Shift+F): esmaece tudo menos o trecho atual. Numa fala, o personagem, os parentéticos e o diálogo ficam em destaque juntos.
 
 ## Beat Board
@@ -83,7 +84,7 @@ Clique num personagem no painel lateral para abrir a ficha dele:
 - Quantas falas, cenas e palavras ele tem, onde aparece pela primeira vez e a lista das cenas em que fala. Duplo clique numa cena leva até ela.
 - **Trocar o nome** na ficha renomeia todas as deixas do roteiro, mantendo extensões como (V.O.). Um Ctrl+Z desfaz.
 - **Janela de personagens** (Documento → Personagens): uma tabela editável com todo o elenco, com papel, idade, ocupação, falas, cenas e palavras. Dá para buscar, criar personagens, abrir a ficha, criar avatar, enviar foto ou ir para a primeira fala. Renomear ali atualiza todas as deixas, a ficha e o mapa de relações, e juntar dois nomes pede confirmação.
-- **Criador de avatar 16-bit**: monte um retrato em pixel art numa grade de 32×32 com cores sombreadas. Escolha o tipo de corpo e depois pele, olhos, sobrancelhas, boca, cabelo, barba, óculos, chapéu, roupa e fundo, cada um com opções de cor. Tem desfazer e refazer, botão Aleatório e Redefinir.
+- **Criador de avatar**: monte um retrato detalhado em pixel art numa grade de 64×64, com formas em curvas e seis tons por cor. Escolha o tipo de corpo e depois formato do rosto, pele, detalhes, olhos, sobrancelhas, nariz, boca, 31 cortes de cabelo, barba, óculos, chapéu, roupa, acessórios e fundo, cada um com opções de cor. Tem desfazer e refazer, botão Aleatório e Redefinir.
 - O painel Personagens tem dois botões no cabeçalho: um abre a janela de personagens e o outro esconde o painel (Exibir → Personagens traz de volta).
 - A foto aparece no painel e nos cartões. Fichas e fotos ficam guardadas dentro do próprio `.fountain`, num bloco de comentário que outros apps Fountain ignoram.
 
@@ -146,7 +147,10 @@ LD_LIBRARY_PATH=$HOME/Qt/6.8.3/gcc_64/lib:$HOME/Qt/extra/usr/lib/x86_64-linux-gn
 | `src/titlepagedialog.*`, `src/printdialog.*` | Janelas de página de rosto e de impressão/PDF, com prévia |
 | `src/characterdialog.*` | Janela da ficha do personagem |
 | `src/castdialog.*` | Janela de personagens (tabela editável do elenco) |
-| `src/pixelavatar.*` | Criador de avatar 16-bit |
+| `src/pixelavatar.*` | Criador de avatar em pixel art |
+| `src/spell.*` | Corretor ortográfico no formato Hunspell (núcleo) |
+| `src/speller.*`, `src/dictionarydialog.*` | Corretor na tela do roteiro e janela do dicionário do roteiro |
+| `resources/dict/` | Dicionários pt_BR e en_US embutidos, com as licenças |
 | `src/autosave.*` | Salvamento automático, cópias de recuperação e backups |
 | `src/versionbrowser.*` | Janela de versões: versões salvas empilhadas em perspectiva, com linha do tempo |
 | `src/settingsdialog.*`, `src/i18n.*` | Configurações, idioma da interface e carregamento das traduções |

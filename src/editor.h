@@ -76,6 +76,10 @@ public:
     void setRelations(const RelationMap& map);
     // ---- forma narrativa da linha do tempo (um passo de desfazer)
     void setStructure(const StoryStructure& st);
+    // Dicionário do roteiro (palavras que o corretor aceita). Sem repetidas, ignorando maiúsculas.
+    void setCustomWords(const std::vector<std::u32string>& words);
+    void addCustomWord(const std::u32string& word);
+    bool isCustomWord(const std::u32string& word) const;
 
     // ---- cursor e seleção
     Pos cursor() const { return cursor_; }
@@ -152,6 +156,7 @@ private:
         BeatBoard board;
         RelationMap relations;
         StoryStructure structure;
+        std::vector<std::u32string> dictionary;
         Pos cursor, anchor;
     };
 

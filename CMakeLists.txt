@@ -14,6 +14,7 @@ add_library(owlio_core STATIC
   src/fountain.cpp
   src/fdx.cpp
   src/editor.cpp
+  src/spell.cpp
 )
 target_include_directories(owlio_core PUBLIC src)
 if(MSVC)
@@ -52,7 +53,10 @@ set(UI_SOURCES
   src/autosave.cpp src/autosave.h
   src/beatboard.cpp src/beatboard.h
   src/beatdialog.cpp src/beatdialog.h
+  src/speller.cpp src/speller.h
+  src/dictionarydialog.cpp src/dictionarydialog.h
   resources/owlio.qrc
+  resources/dict.qrc
 )
 set(UI_LIBS owlio_core Qt6::Widgets Qt6::PrintSupport Qt6::Svg)
 

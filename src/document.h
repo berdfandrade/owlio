@@ -125,6 +125,8 @@ struct Document {
     BeatBoard board;
     RelationMap relations;
     StoryStructure structure;
+    // Dicionário do roteiro: nomes, lugares e gírias que o corretor não deve sublinhar.
+    std::vector<std::u32string> dictionary;
 
     std::string titleValue(const std::string& key) const;
     void setTitleValue(const std::string& key, const std::string& value);

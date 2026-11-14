@@ -49,6 +49,7 @@
 #include "beatboard.h"
 #include "characterdialog.h"
 #include "i18n.h"
+#include "dictionarydialog.h"
 #include "settingsdialog.h"
 #include "printdialog.h"
 #include "titlepagedialog.h"
@@ -255,6 +256,7 @@ MainWindow::MainWindow() {
     restoreState(s.value("windowState").toByteArray());
     view_->setZoom(s.value("zoom", 1.0).toDouble());
     sceneNumsAct_->setChecked(s.value("sceneNumbers", false).toBool());
+    view_->setSpellCheck(s.value("spellCheck", true).toBool());
     syncSidebarAction();
     if (!s.contains("geometry")) {
         resize(1320, 900);
@@ -379,6 +381,7 @@ void MainWindow::buildActions() {
     edit->addSeparator();
     QAction* findAct = iconAction(edit->addAction(tr("&Find and Replace..."), this, &MainWindow::showFind), "localizar");
     findAct->setShortcut(QKeySequence::Find);
+    iconAction(edit->addAction(tr("Script &Dictionary..."), this, &MainWindow::showDictionary), "fonte");
     edit->addSeparator();
     QAction* settingsAct = iconAction(edit->addAction(tr("Se&ttings..."), this, &MainWindow::showSettings), "configuracoes");
     settingsAct->setShortcuts({QKeySequence::Preferences, QKeySequence(Qt::CTRL | Qt::Key_Comma)});
@@ -957,6 +960,10 @@ void MainWindow::showShortcuts() {
     row("Ctrl+Shift+E", tr("Export PDF"));
     row("Ctrl+F", tr("Find and replace"));
     row("Ctrl+Shift+C / Ctrl+Shift+R", tr("Index cards / script"));
+    row("Ctrl+Shift+B / Ctrl+Shift+L", tr("Beat Board / timeline"));
+    row("Ctrl+Shift+M", tr("Relationship map"));
+    row("Ctrl+Shift+H", tr("Versions: browse and restore saved copies"));
+    row("Ctrl+Shift+D", tr("Dual dialogue"));
     row("Ctrl+Shift+F", tr("Focus mode"));
     row("Ctrl+,", tr("Settings"));
     row("Ctrl+\\", tr("Show or hide the sidebar"));
@@ -981,7 +988,7 @@ void MainWindow::showShortcuts() {
     lay->addLayout(grid);
     lay->addWidget(ok, 0, Qt::AlignRight);
     ok->setDefault(true);
-    dlg.resize(720, dlg.sizeHint().height());
+    dlg.resize(860, dlg.sizeHint().height());
     dlg.exec();
 }
 
@@ -993,6 +1000,13 @@ void MainWindow::about() {
                            .arg(QApplication::applicationVersion(), qVersion()));
 }
 
+void MainWindow::showDictionary() {
+    DictionaryDialog dlg(editor_.doc().dictionary, this);
+    if (dlg.exec() != QDialog::Accepted) return;
+    editor_.setCustomWords(dlg.words());
+    view_->refreshAfterExternalEdit();
+}
+
 void MainWindow::showSettings() {
     SettingsDialog dlg(this);
     if (dlg.exec() != QDialog::Accepted) return;
@@ -1001,6 +1015,8 @@ void MainWindow::showSettings() {
     s.setValue("autosaveMinutes", dlg.autosaveMinutes());
     s.setValue("keepBackups", dlg.keepBackups());
     s.setValue("versionsFullScreen", dlg.versionsFullScreen());
+    s.setValue("spellCheck", dlg.spellCheck());
+    view_->setSpellCheck(dlg.spellCheck());
     s.setValue("reopenLast", dlg.reopenLastScript());
     s.setValue("uiFont", dlg.interfaceFont());
     s.setValue("uiFontSize", dlg.interfaceFontSize());
