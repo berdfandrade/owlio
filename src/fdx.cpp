@@ -1,10 +1,31 @@
 #include "fdx.h"
 
+#include <algorithm>
 #include <cstdlib>
 #include <sstream>
 #include <vector>
 
 namespace {
+
+// A próxima ocorrência de um texto a partir de uma posição, guardada entre chamadas. Enquanto a
+// leitura só avança, cada trecho do arquivo é varrido uma vez: sem isso, procurar <DualDialogue> ou
+// <SceneProperties> a cada parágrafo percorria o resto do arquivo de novo (quadrático).
+class NextOf {
+public:
+    NextOf(const std::string& text, const char* needle) : text_(text), needle_(needle) {}
+    size_t from(size_t pos) {
+        if (pos < searchedFrom_ || (found_ != std::string::npos && found_ < pos)) {
+            found_ = text_.find(needle_, pos);
+            searchedFrom_ = pos;
+        }
+        return found_;
+    }
+
+private:
+    const std::string& text_;
+    const char* needle_;
+    size_t searchedFrom_ = std::string::npos, found_ = std::string::npos;
+};
 
 std::string xmlEscape(const std::string& s) {
     std::string out;
@@ -128,6 +149,7 @@ Document parseFdx(const std::string& xml) {
     size_t pos = cStart;
     bool inDual = false;
     int dualCues = 0;
+    NextOf nextDual(xml, "<DualDialogue"), nextProps(xml, "<SceneProperties"), nextText(xml, "<Text");
     while (true) {
         size_t p = xml.find("<Paragraph", pos);
         // Fim de um bloco <DualDialogue> antes do próximo parágrafo.
@@ -145,12 +167,14 @@ Document parseFdx(const std::string& xml) {
         if (tagEnd == std::string::npos) break;
         std::string tag = xml.substr(p, tagEnd - p + 1);
         // <Paragraph><DualDialogue>...: os parágrafos de dentro são lidos normalmente.
-        size_t dd = xml.find("<DualDialogue", tagEnd);
+        size_t dd = nextDual.from(tagEnd);
         size_t nextPara = xml.find("<Paragraph", tagEnd);
-        if (dd != std::string::npos && dd < nextPara && xml.find("<Text", tagEnd) > dd) {
+        if (dd != std::string::npos && dd < nextPara && nextText.from(tagEnd) > dd) {
+            const size_t ddEnd = xml.find('>', dd);
+            if (ddEnd == std::string::npos) break;  // <DualDialogue sem fim: o arquivo acabou aqui
             inDual = true;
             dualCues = 0;
-            pos = xml.find('>', dd) + 1;
+            pos = ddEnd + 1;
             continue;
         }
         Paragraph para;
@@ -163,7 +187,7 @@ Document parseFdx(const std::string& xml) {
         // <SceneProperties> pode conter parágrafos aninhados (a sinopse); trata antes.
         size_t searchFrom = tagEnd;
         std::string summary;
-        size_t sp = xml.find("<SceneProperties", tagEnd);
+        size_t sp = nextProps.from(tagEnd);
         size_t firstClose = xml.find("</Paragraph>", tagEnd);
         if (sp != std::string::npos && sp < firstClose) {
             size_t spEnd = xml.find("</SceneProperties>", sp);
@@ -181,10 +205,11 @@ Document parseFdx(const std::string& xml) {
                 searchFrom = spEnd + 18;
             }
         }
+        const size_t bodyStart = searchFrom == tagEnd ? tagEnd + 1 : searchFrom;
         size_t close = xml.find("</Paragraph>", searchFrom);
         if (close == std::string::npos) close = cEnd;
-        std::string body = xml.substr(searchFrom == tagEnd ? tagEnd + 1 : searchFrom,
-                                      close - (searchFrom == tagEnd ? tagEnd + 1 : searchFrom));
+        close = std::max(close, bodyStart);  // XML quebrado: nunca um trecho de tamanho negativo
+        std::string body = xml.substr(bodyStart, close - bodyStart);
         para.synopsis = utf8ToU32(summary);
         std::string text;
         size_t t = 0;

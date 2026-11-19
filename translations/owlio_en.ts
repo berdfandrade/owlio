@@ -113,6 +113,13 @@
             <numerusform>%n words</numerusform>
         </translation>
     </message>
+    <message numerus="yes">
+        <source>%n word(s) corrected. Ctrl+Z undoes it.</source>
+        <translation>
+            <numerusform>%n word corrected. Ctrl+Z undoes it.</numerusform>
+            <numerusform>%n words corrected. Ctrl+Z undoes it.</numerusform>
+        </translation>
+    </message>
 </context>
 <context>
     <name>PrintDialog</name>
@@ -166,10 +173,20 @@
     </message>
 </context>
 <context>
+    <name>SpellFixDialog</name>
+    <message numerus="yes">
+        <source>Correct %n word(s)?</source>
+        <translation>
+            <numerusform>Correct %n word?</numerusform>
+            <numerusform>Correct %n words?</numerusform>
+        </translation>
+    </message>
+</context>
+<context>
     <name>SynopsisDialog</name>
     <message numerus="yes">
         <source>%n word(s)</source>
-        <translation type="unfinished">
+        <translation>
             <numerusform>%n word</numerusform>
             <numerusform>%n words</numerusform>
         </translation>

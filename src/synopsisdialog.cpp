@@ -23,6 +23,7 @@ SynopsisDialog::SynopsisDialog(int sceneIndex, const SceneSummary& scene, QWidge
     eyebrow->setObjectName("papelFicha");
     auto* heading = new QLabel(scene.heading.empty() ? tr("(scene without a heading)") : q(scene.heading));
     heading->setObjectName("tituloDialogo");
+    heading->setTextFormat(Qt::PlainText);  // texto do roteiro, nunca HTML
     heading->setWordWrap(true);
 
     QStringList meta{tr("Page %1").arg(scene.page + 1), eighthsText(scene.eighths) + " " + tr("pg.")};
@@ -31,6 +32,7 @@ SynopsisDialog::SynopsisDialog(int sceneIndex, const SceneSummary& scene, QWidge
     if (!cast.isEmpty()) meta << cast.join(", ");
     auto* info = new QLabel(meta.join("  ·  "));
     info->setObjectName("subtituloDialogo");
+    info->setTextFormat(Qt::PlainText);
     info->setWordWrap(true);
 
     text_ = new QPlainTextEdit(q(scene.synopsis));

@@ -18,6 +18,7 @@
 
 #include "avatars.h"
 #include "pixelavatar.h"
+#include "plaintext.h"
 #include "theme.h"
 
 namespace {
@@ -215,7 +216,7 @@ void CastDialog::reload() {
         it->setData(Words, Qt::DisplayRole, st.words);
         for (int c : {Speeches, Scenes, Words}) it->setTextAlignment(c, Qt::AlignRight | Qt::AlignVCenter);
         it->setFlags(it->flags() | Qt::ItemIsEditable);
-        it->setToolTip(Name, info && !info->synopsis.empty() ? q(info->synopsis) : QString());
+        it->setToolTip(Name, info ? plaintext::tip(q(info->synopsis)) : QString());
         table_->addTopLevelItem(it);
         speeches += st.speeches;
         if (q(n) == keep) table_->setCurrentItem(it);
@@ -259,12 +260,14 @@ bool CastDialog::editCell(const QString& name, int column, const QString& value)
             for (const auto& [n, count] : ed_->characters()) exists = exists || q(n) == newName;
             exists = exists || ed_->doc().character(newName.toStdU32String()) != nullptr;
             if (exists && isVisible() &&
-                QMessageBox::question(this, tr("Rename Character"),
-                                      tr("There is already a character called %1. Merge %2 into %1?")
-                                          .arg(newName, name)) != QMessageBox::Yes) {
+                !plaintext::ask(this, tr("Rename Character"),
+                                tr("There is already a character called %1. Merge %2 into %1?").arg(newName, name))) {
                 reload();
                 return false;
             }
+            // Juntar um nome sem ficha a um que tem ficha: fica a ficha que existe, não uma em branco.
+            if (const CharacterInfo* target = ed_->doc().character(newName.toStdU32String()); target && info.blank())
+                info = *target;
             info.name = newName.toStdU32String();
             break;
         }
@@ -316,9 +319,8 @@ void CastDialog::createAvatar() {
 void CastDialog::removeSheet() {
     const QString n = current();
     if (n.isEmpty()) return;
-    if (QMessageBox::question(this, tr("Clear Sheet"),
-                              tr("Erase the sheet of %1 (role, age, notes and photo)? The cues stay in the script.")
-                                  .arg(n)) != QMessageBox::Yes)
+    if (!plaintext::ask(this, tr("Clear Sheet"),
+                        tr("Erase the sheet of %1 (role, age, notes and photo)? The cues stay in the script.").arg(n)))
         return;
     CharacterInfo blank;
     blank.name = n.toStdU32String();

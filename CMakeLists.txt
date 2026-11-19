@@ -56,6 +56,9 @@ set(UI_SOURCES
   src/speller.cpp src/speller.h
   src/dictionarydialog.cpp src/dictionarydialog.h
   src/synopsisdialog.cpp src/synopsisdialog.h
+  src/imageio.cpp src/imageio.h
+  src/plaintext.h
+  src/spellfixdialog.cpp src/spellfixdialog.h
   resources/owlio.qrc
   resources/dict.qrc
 )

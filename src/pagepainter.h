@@ -68,4 +68,6 @@ struct PrintOptions {
 // Desenha o roteiro inteiro (rosto + páginas) num PDF ou impressora.
 // Página do tamanho do papel, sem margens (o desenho já inclui as margens do roteiro).
 QPageLayout pageLayoutFor(Paper paper);
-void renderScript(QPagedPaintDevice& device, double ppi, const Editor& ed, const PrintOptions& opt);
+// Desenha o roteiro no dispositivo. Devolve false se ele não pôde ser aberto ou fechado: no Windows,
+// um PDF aberto em outro programa não pode ser sobrescrito, e o arquivo antigo continuaria lá.
+bool renderScript(QPagedPaintDevice& device, double ppi, const Editor& ed, const PrintOptions& opt);

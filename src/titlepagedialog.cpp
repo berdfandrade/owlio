@@ -97,7 +97,7 @@ void TitlePagePreview::paintEvent(QPaintEvent*) {
 
 // ------------------------------------------------------------ janela
 
-TitlePageDialog::TitlePageDialog(const Document& doc, Paper paper, QWidget* parent) : QDialog(parent), base_(doc) {
+TitlePageDialog::TitlePageDialog(const Document& doc, Paper paper, QWidget* parent) : QDialog(parent) {
     setWindowTitle(tr("Title Page"));
     setMinimumSize(860, 600);
 

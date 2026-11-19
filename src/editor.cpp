@@ -355,12 +355,36 @@ bool Editor::isCustomWord(const std::u32string& word) const {
 
 // ------------------------------------------------------------ undo
 
+// O estado do documento para o histórico. As fichas (com fotos em base64) são o pedaço pesado e quase
+// nunca mudam enquanto se digita: a cópia anterior é reaproveitada se o elenco continua igual, em vez
+// de duplicar todas as fotos em cada um dos até kMaxUndo passos.
+Editor::Snapshot Editor::snapshot() {
+    if (!castShared_ || *castShared_ != doc_.cast) castShared_ = std::make_shared<const Cast>(doc_.cast);
+    return {doc_.paragraphs, doc_.titlePage, castShared_, doc_.board, doc_.relations, doc_.structure,
+            doc_.dictionary, cursor_, anchor_};
+}
+
+void Editor::restore(Snapshot&& s) {
+    doc_.paragraphs = std::move(s.paragraphs);
+    doc_.titlePage = std::move(s.titlePage);
+    doc_.cast = *s.cast;
+    castShared_ = std::move(s.cast);
+    doc_.board = std::move(s.board);
+    doc_.relations = std::move(s.relations);
+    doc_.structure = std::move(s.structure);
+    doc_.dictionary = std::move(s.dictionary);
+    cursor_ = s.cursor;
+    anchor_ = s.anchor;
+    lastKind_ = EditKind::None;
+    changed();
+}
+
 void Editor::beginEdit(EditKind kind) {
     auto now = std::chrono::steady_clock::now();
     bool coalesce = kind != EditKind::Other && kind == lastKind_ &&
                     now - lastEditTime_ < std::chrono::milliseconds(1500) && !undo_.empty();
     if (!coalesce) {
-        undo_.push_back({doc_.paragraphs, doc_.titlePage, doc_.cast, doc_.board, doc_.relations, doc_.structure, doc_.dictionary, cursor_, anchor_});
+        undo_.push_back(snapshot());
         if (undo_.size() > kMaxUndo) undo_.erase(undo_.begin());
     }
     redo_.clear();
@@ -378,38 +402,18 @@ void Editor::changed() {
 
 void Editor::undo() {
     if (undo_.empty()) return;
-    redo_.push_back({doc_.paragraphs, doc_.titlePage, doc_.cast, doc_.board, doc_.relations, doc_.structure, doc_.dictionary, cursor_, anchor_});
+    redo_.push_back(snapshot());
     Snapshot s = std::move(undo_.back());
     undo_.pop_back();
-    doc_.paragraphs = std::move(s.paragraphs);
-    doc_.titlePage = std::move(s.titlePage);
-    doc_.cast = std::move(s.cast);
-    doc_.board = std::move(s.board);
-    doc_.relations = std::move(s.relations);
-    doc_.structure = std::move(s.structure);
-    doc_.dictionary = std::move(s.dictionary);
-    cursor_ = s.cursor;
-    anchor_ = s.anchor;
-    lastKind_ = EditKind::None;
-    changed();
+    restore(std::move(s));
 }
 
 void Editor::redo() {
     if (redo_.empty()) return;
-    undo_.push_back({doc_.paragraphs, doc_.titlePage, doc_.cast, doc_.board, doc_.relations, doc_.structure, doc_.dictionary, cursor_, anchor_});
+    undo_.push_back(snapshot());
     Snapshot s = std::move(redo_.back());
     redo_.pop_back();
-    doc_.paragraphs = std::move(s.paragraphs);
-    doc_.titlePage = std::move(s.titlePage);
-    doc_.cast = std::move(s.cast);
-    doc_.board = std::move(s.board);
-    doc_.relations = std::move(s.relations);
-    doc_.structure = std::move(s.structure);
-    doc_.dictionary = std::move(s.dictionary);
-    cursor_ = s.cursor;
-    anchor_ = s.anchor;
-    lastKind_ = EditKind::None;
-    changed();
+    restore(std::move(s));
 }
 
 // ------------------------------------------------------------ cursor
@@ -445,7 +449,9 @@ void Editor::selectAll() {
 }
 
 void Editor::selectWordAt(Pos p) {
+    if (p.para < 0 || p.para >= static_cast<int>(doc_.paragraphs.size())) return;
     const auto& t = doc_.paragraphs[p.para].text;
+    p.off = std::clamp(p.off, 0, static_cast<int>(t.size()));
     int a = p.off, b = p.off;
     while (a > 0 && isWordChar(t[a - 1])) --a;
     while (b < static_cast<int>(t.size()) && isWordChar(t[b])) ++b;
@@ -471,6 +477,12 @@ int Editor::columnOf(Pos p) const {
 
 Pos Editor::posAtLine(int line, int col) const {
     const Layout& L = layout();
+    if (L.lines.empty()) return {0, 0};
+    // Fora da faixa, ou numa linha que não é texto (MORE, CONT'D): vale a linha de texto mais próxima acima.
+    line = std::clamp(line, 0, static_cast<int>(L.lines.size()) - 1);
+    while (line > 0 && L.lines[line].para < 0) --line;
+    while (line + 1 < static_cast<int>(L.lines.size()) && L.lines[line].para < 0) ++line;
+    if (L.lines[line].para < 0) return {0, 0};
     const LayoutLine& l = L.lines[line];
     const auto& idx = L.paraLines[l.para];
     const bool lastOfPara = idx.back() == line;
@@ -817,11 +829,10 @@ void Editor::paste(const std::string& utf8) {
     p.text.erase(cursor_.off);
     if (trim(p.text).empty()) p.type = frag.paragraphs[0].type;
     p.text += frag.paragraphs[0].text;
-    int idx = cursor_.para;
-    for (size_t k = 1; k < frag.paragraphs.size(); ++k) {
-        ++idx;
-        doc_.paragraphs.insert(doc_.paragraphs.begin() + idx, frag.paragraphs[k]);
-    }
+    // Os demais parágrafos entram de uma vez (inseri-los um a um no meio do vetor era quadrático).
+    doc_.paragraphs.insert(doc_.paragraphs.begin() + cursor_.para + 1, frag.paragraphs.begin() + 1,
+                           frag.paragraphs.end());
+    const int idx = cursor_.para + static_cast<int>(frag.paragraphs.size()) - 1;
     Paragraph& last = doc_.paragraphs[idx];
     cursor_ = {idx, static_cast<int>(last.text.size())};
     last.text += tail;
@@ -1010,6 +1021,24 @@ int Editor::replaceAll(const std::u32string& q, const std::u32string& rep) {
         }
     }
     if (began) changed();
+    return count;
+}
+
+int Editor::applyFixes(std::vector<TextFix> fixes) {
+    // Do fim para o começo: trocar um trecho não desloca os que vêm antes dele no mesmo parágrafo.
+    std::sort(fixes.begin(), fixes.end(),
+              [](const TextFix& a, const TextFix& b) { return a.para != b.para ? a.para > b.para : a.start > b.start; });
+    int count = 0;
+    for (const TextFix& f : fixes) {
+        if (f.para < 0 || f.para >= static_cast<int>(doc_.paragraphs.size())) continue;
+        std::u32string& text = doc_.paragraphs[f.para].text;
+        if (f.start < 0 || f.len <= 0 || f.start + f.len > static_cast<int>(text.size()) ||
+            text.compare(f.start, f.len, f.expected) != 0)
+            continue;
+        if (count++ == 0) beginEdit(EditKind::Other);
+        text.replace(f.start, f.len, f.replacement);
+    }
+    if (count) changed();
     return count;
 }
 

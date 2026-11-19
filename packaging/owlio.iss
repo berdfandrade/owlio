@@ -53,6 +53,9 @@ Name: "assoc"; Description: "{cm:AssocFiles}"
 [Files]
 Source: "..\dist\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "..\LICENSE"; DestDir: "{app}"; DestName: "LICENSE.txt"; Flags: ignoreversion
+; Os dicionários do corretor vão embutidos no programa; as licenças deles vão junto (VERO: LGPL/MPL, SCOWL).
+Source: "..\resources\dict\README.md"; DestDir: "{app}\licenses"; DestName: "dictionaries.md"; Flags: ignoreversion
+Source: "..\resources\dict\en_US.LICENSE.txt"; DestDir: "{app}\licenses"; Flags: ignoreversion
 
 [Icons]
 Name: "{autoprograms}\{#AppName}"; Filename: "{app}\{#AppExe}"

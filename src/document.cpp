@@ -180,14 +180,15 @@ char32_t toUpper(char32_t c) {
     if (c >= U'a' && c <= U'z') return c - 32;
     if (c >= 0xE0 && c <= 0xFE && c != 0xF7) return c - 32;
     if (c == 0xFF) return 0x178;
-    if (c < 0x80) return c;
+    // No Windows, wint_t tem 16 bits: acima do plano básico a conversão truncaria o caractere.
+    if (c < 0x80 || c > 0xFFFF) return c;
     return static_cast<char32_t>(std::towupper(static_cast<wint_t>(c)));
 }
 
 char32_t toLower(char32_t c) {
     if (c >= U'A' && c <= U'Z') return c + 32;
     if (c >= 0xC0 && c <= 0xDE && c != 0xD7) return c + 32;
-    if (c < 0x80) return c;
+    if (c < 0x80 || c > 0xFFFF) return c;
     return static_cast<char32_t>(std::towlower(static_cast<wint_t>(c)));
 }
 

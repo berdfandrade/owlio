@@ -25,6 +25,7 @@
 #include <cmath>
 
 #include "beatdialog.h"
+#include "imageio.h"
 #include "theme.h"
 
 namespace {
@@ -417,11 +418,18 @@ void BeatBoardView::drawBackground(QPainter* p, const QRectF& rect) {
     if (zoom_ < 0.45) return;
     QColor dot = c.dark ? QColor(255, 255, 255, 26) : QColor(0, 0, 0, 30);
     p->setPen(QPen(dot, 2.0 / zoom_, Qt::SolidLine, Qt::RoundCap));
+    // Pontos só onde a conta é exata: longe demais da origem, x + kGrid == x e o laço não terminaria.
+    if (!std::isfinite(rect.left()) || !std::isfinite(rect.top()) || std::abs(rect.left()) > 1e9 ||
+        std::abs(rect.top()) > 1e9)
+        return;
     const double left = std::floor(rect.left() / kGrid) * kGrid;
     const double top = std::floor(rect.top() / kGrid) * kGrid;
+    const int cols = static_cast<int>(std::min(1000.0, (rect.right() - left) / kGrid + 1));
+    const int rows = static_cast<int>(std::min(1000.0, (rect.bottom() - top) / kGrid + 1));
     QVector<QPointF> pts;
-    for (double x = left; x < rect.right(); x += kGrid)
-        for (double y = top; y < rect.bottom(); y += kGrid) pts << QPointF(x, y);
+    pts.reserve(cols * rows);
+    for (int i = 0; i < cols; ++i)
+        for (int j = 0; j < rows; ++j) pts << QPointF(left + i * kGrid, top + j * kGrid);
     p->drawPoints(pts.constData(), static_cast<int>(pts.size()));
 }
 
@@ -747,8 +755,8 @@ void BeatBoardView::paste(QPointF scenePos) {
     }
     if (md->hasUrls()) {
         for (const QUrl& u : md->urls()) {
-            QString err;
-            const std::string data = u.isLocalFile() ? beatimage::fromFile(u.toLocalFile(), &err) : std::string();
+            const QString path = imageio::localPath(u);
+            const std::string data = path.isEmpty() ? std::string() : beatimage::fromFile(path);
             if (!data.empty()) {
                 createBeatAt(scenePos, {}, data);
                 scenePos += QPointF(kGrid, kGrid);
@@ -853,14 +861,24 @@ void BeatBoardView::contextMenuEvent(QContextMenuEvent* e) {
     menu.exec(e->globalPos());
 }
 
+namespace {
+// Imagens viram beats; qualquer outro arquivo (um roteiro, por exemplo) segue para a janela principal.
+bool carriesImage(const QMimeData* md) {
+    if (md->hasImage()) return true;
+    for (const QUrl& u : md->urls())
+        if (imageio::isImagePath(imageio::localPath(u))) return true;
+    return false;
+}
+}  // namespace
+
 void BeatBoardView::dragEnterEvent(QDragEnterEvent* e) {
-    if (e->mimeData()->hasImage() || e->mimeData()->hasUrls()) e->acceptProposedAction();
-    else QGraphicsView::dragEnterEvent(e);
+    if (carriesImage(e->mimeData())) e->acceptProposedAction();
+    else e->ignore();
 }
 
 void BeatBoardView::dragMoveEvent(QDragMoveEvent* e) {
-    if (e->mimeData()->hasImage() || e->mimeData()->hasUrls()) e->acceptProposedAction();
-    else QGraphicsView::dragMoveEvent(e);
+    if (carriesImage(e->mimeData())) e->acceptProposedAction();
+    else e->ignore();
 }
 
 void BeatBoardView::dropEvent(QDropEvent* e) {
@@ -871,11 +889,10 @@ void BeatBoardView::dropEvent(QDropEvent* e) {
         if (!data.empty()) createBeatAt(at, {}, data);
     } else {
         for (const QUrl& u : md->urls()) {
-            QString err;
-            if (!u.isLocalFile()) continue;
-            const std::string data = beatimage::fromFile(u.toLocalFile(), &err);
+            const QString path = imageio::localPath(u);
+            const std::string data = path.isEmpty() ? std::string() : beatimage::fromFile(path);
             if (data.empty()) continue;
-            createBeatAt(at, QFileInfo(u.toLocalFile()).completeBaseName(), data);
+            createBeatAt(at, QFileInfo(path).completeBaseName(), data);
             at += QPointF(kGrid * 2, kGrid * 2);
         }
     }

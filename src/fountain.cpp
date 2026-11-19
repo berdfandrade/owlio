@@ -1,12 +1,19 @@
 #include "fountain.h"
 
 #include <algorithm>
+#include <cmath>
 #include <cstdlib>
 #include <cstring>
 #include <sstream>
 #include <vector>
 
 namespace {
+
+// Um número lido do arquivo dentro de [lo, hi]; NaN ou infinito viram `fallback`. std::atof e
+// operator>> aceitam "nan" e "inf", e std::clamp(NaN, ...) devolve NaN, que quebra std::sort e o zoom.
+double finiteIn(double v, double lo, double hi, double fallback) {
+    return std::isfinite(v) ? std::clamp(v, lo, hi) : fallback;
+}
 
 bool isLetter(char32_t c) { return toUpper(c) != toLower(c); }
 bool isLowercase(char32_t c) { return isLetter(c) && toUpper(c) != c; }
@@ -204,6 +211,8 @@ RelationMap readRelations(const std::string& src) {
             std::istringstream in(raw);
             CharacterNode n;
             if (!(in >> n.x >> n.y)) continue;
+            n.x = finiteIn(n.x, -1e6, 1e6, 0);
+            n.y = finiteIn(n.y, -1e6, 1e6, 0);
             std::string rest;
             std::getline(in, rest);
             n.name = toUpper(trim(unescapeValue(rest)));
@@ -246,7 +255,7 @@ StoryStructure readStructure(const std::string& src) {
         if (key == "preset") st.preset = raw;
         else if (key == "act") { st.acts.emplace_back(); st.acts.back().name = unescapeValue(raw); }
         else if (key == "sub" && !st.acts.empty()) st.acts.back().subtitle = unescapeValue(raw);
-        else if (key == "end" && !st.acts.empty()) st.acts.back().end = std::atof(raw.c_str());
+        else if (key == "end" && !st.acts.empty()) st.acts.back().end = finiteIn(std::atof(raw.c_str()), 0, 1, 1);
         else if (key == "color" && !st.acts.empty()) st.acts.back().color = raw;
         else if (key == "beat") {  // beat: 0.25 Nome
             std::istringstream in(raw);
@@ -255,7 +264,7 @@ StoryStructure readStructure(const std::string& src) {
             std::string rest;
             std::getline(in, rest);
             b.name = trim(unescapeValue(rest));
-            b.at = std::clamp(b.at, 0.0, 1.0);
+            b.at = finiteIn(b.at, 0, 1, 0.5);
             st.beats.push_back(b);
         }
     }
@@ -311,8 +320,12 @@ BeatBoard readBoard(const std::string& src) {
     for (Beat& b : bb.beats) {
         if (b.id <= 0 || std::find(seen.begin(), seen.end(), b.id) != seen.end()) b.id = next++;
         seen.push_back(b.id);
-        b.w = std::max(b.w, 80.0);
-        b.h = std::max(b.h, 60.0);
+        // Posição e tamanho dentro de limites sãos: NaN, infinito ou 1e300 vindos de um arquivo
+        // travariam o desenho do quadro.
+        b.x = finiteIn(b.x, -1e6, 1e6, 0);
+        b.y = finiteIn(b.y, -1e6, 1e6, 0);
+        b.w = finiteIn(b.w, 80, 10000, 240);
+        b.h = finiteIn(b.h, 60, 10000, 150);
     }
     bb.flows.erase(std::remove_if(bb.flows.begin(), bb.flows.end(),
                                   [&](const FlowLine& f) { return !bb.beat(f.from) || !bb.beat(f.to) || f.from == f.to; }),
@@ -387,6 +400,7 @@ Document parseFountain(const std::string& utf8In, bool parseTitlePage) {
 
     auto isBlank = [&](size_t k) { return k >= lines.size() || trim(lines[k]).empty(); };
     bool inDialogue = false;
+    size_t lastScene = std::string::npos, scannedForScene = 0;  // para as sinopses "= texto"
 
     for (; i < lines.size(); ++i) {
         const std::u32string& raw = lines[i];
@@ -413,13 +427,15 @@ Document parseFountain(const std::string& utf8In, bool parseTitlePage) {
         }
 
         if (l[0] == U'=' && l.rfind(U"===", 0) != 0) {
-            // Sinopse "= texto": pertence ao último cabeçalho de cena.
-            for (auto it = doc.paragraphs.rbegin(); it != doc.paragraphs.rend(); ++it) {
-                if (it->type != Element::SceneHeading) continue;
-                std::u32string syn = trim(l.substr(1));
-                if (!it->synopsis.empty() && !syn.empty()) it->synopsis += U" ";
-                it->synopsis += syn;
-                break;
+            // Sinopse "= texto": pertence ao último cabeçalho de cena. A busca continua de onde
+            // parou na sinopse anterior, então cada parágrafo é olhado uma vez só.
+            for (; scannedForScene < doc.paragraphs.size(); ++scannedForScene)
+                if (doc.paragraphs[scannedForScene].type == Element::SceneHeading) lastScene = scannedForScene;
+            if (lastScene != std::string::npos) {
+                Paragraph& scene = doc.paragraphs[lastScene];
+                const std::u32string syn = trim(l.substr(1));
+                if (!scene.synopsis.empty() && !syn.empty()) scene.synopsis += U" ";
+                scene.synopsis += syn;
             }
             continue;
         }

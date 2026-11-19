@@ -14,6 +14,7 @@
 #include <QRandomGenerator>
 #include <QToolButton>
 #include <QVBoxLayout>
+#include <QtMath>
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -477,7 +478,7 @@ HairShape hairShape(int style) {
         case 26:  // espetado
             f = cap(1.6) | temples(25);
             for (int deg = -75; deg <= 75; deg += 25) {
-                const double a = deg * M_PI / 180.0, sx = std::sin(a), cy = -std::cos(a);
+                const double a = qDegreesToRadians(deg), sx = std::sin(a), cy = -std::cos(a);
                 const QPointF base(C + 15 * sx, 22 + 14 * cy), tip(C + 23 * sx, 22 + 22 * cy);
                 const QPointF side(-cy * 3.4, sx * 3.4);
                 f |= poly({base - side, tip, base + side});
@@ -1257,6 +1258,7 @@ PixelAvatarDialog::PixelAvatarDialog(const QString& name, QWidget* parent) : QDi
     preview_->setObjectName("amostraAvatar");
     auto* nameLabel = new QLabel(name);
     nameLabel->setObjectName("nomeAvatar");
+    nameLabel->setTextFormat(Qt::PlainText);
     nameLabel->setAlignment(Qt::AlignCenter);
 
     undo_ = iconButton(tm.icon("desfazer"), tr("Undo"));

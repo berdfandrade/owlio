@@ -22,7 +22,7 @@ O idioma oficial do Owlio é o inglês. A interface em **português do Brasil** 
 - **Autocompletar (SmartType)**: nomes de personagens, locações, horários, extensões (V.O., O.S.) e transições.
 - **Paginação profissional**: cabeçalho e personagem nunca ficam sozinhos no pé da página, falas quebradas recebem (MORE) / NOME (CONT'D), e as páginas são numeradas.
 - **Convenções do roteiro** (Configurações): inglês, com (MORE)/(CONT'D), DAY, NIGHT e CUT TO:, ou português, com (MAIS)/(CONT.), DIA, NOITE e CORTA PARA:. Valem para a paginação e para as sugestões do autocompletar, independente do idioma da interface.
-- **Arquivos**: Fountain (`.fountain`, formato nativo, texto puro) e Final Draft (`.fdx`, abrir e salvar).
+- **Arquivos**: Fountain (`.fountain`, formato nativo, texto puro) e Final Draft (`.fdx`, abrir e salvar). Arraste um arquivo para a janela para abri-lo.
 - **Página de rosto** editada numa janela com prévia ao vivo: título, crédito, autores, fonte, versão, data, observações e contato. O título sai do jeito que você digita, com as maiúsculas e minúsculas que escolher.
 - **Janela de impressão e PDF** com miniaturas das folhas: impressora, cópias, intervalo de páginas, página de rosto, numeração de cenas e **marca d'água** opcional (por exemplo "RASCUNHO" ou o nome de quem recebe a cópia).
 - Navegador de cenas, lista de personagens, localizar/substituir, desfazer/refazer, numeração de cenas e zoom.
@@ -91,7 +91,7 @@ O idioma oficial do Owlio é o inglês. A interface em **português do Brasil** 
 - Ícones SVG próprios (`resources/icons`), recoloridos automaticamente para cada tema.
 - Painéis em cartões: cenas com número, página e quem fala, e personagens com avatar.
 - **Carta (US Letter) ou A4** (Configurações › Roteiro › Página). O A4 mantém as margens e a largura das linhas e cabe 4 linhas a mais por página; a tela, o PDF e a impressão seguem a escolha.
-- **Corretor ortográfico** ao digitar, em português do Brasil ou inglês, escolhido automaticamente pelas palavras do roteiro (ou fixado em Configurações › Roteiro): palavras desconhecidas ganham um sublinhado vermelho ondulado na tela, nunca no PDF. Nomes de personagens não são marcados. Clique com o botão direito numa palavra para adicioná-la ao **dicionário do roteiro** (Editar › Dicionário do roteiro), que é salvo dentro do arquivo. Dá para desligar em Configurações › Roteiro.
+- **Corretor ortográfico** ao digitar, em português do Brasil ou inglês, escolhido automaticamente pelas palavras do roteiro (ou fixado em Configurações › Roteiro): palavras desconhecidas ganham um sublinhado vermelho ondulado na tela, nunca no PDF. Nomes de personagens não são marcados. Clique com o botão direito numa palavra para ver sugestões ou adicioná-la ao **dicionário do roteiro** (Editar › Dicionário do roteiro), que é salvo dentro do arquivo. **Editar › Corrigir ortografia** (F7, ou o botão na barra de ferramentas) lista cada palavra marcada com a correção e, depois de você confirmar, corrige todas de uma vez; um Ctrl+Z desfaz. Dá para desligar o corretor em Configurações › Roteiro.
 - **Modo foco** (Ctrl+Shift+F): esmaece tudo menos o trecho atual. Numa fala, o personagem, os parentéticos e o diálogo ficam em destaque juntos.
 
 <p align="center">

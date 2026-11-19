@@ -4,7 +4,11 @@
 #include <QApplication>
 #include <QIcon>
 #include <QKeyEvent>
+#include <QLabel>
 #include <QMenu>
+#include <QUrl>
+#include <QDropEvent>
+#include <QMimeData>
 #include <QMenuBar>
 #include <QScrollBar>
 #include <QStyleFactory>
@@ -12,6 +16,7 @@
 #include <cstdio>
 
 #include "dictionarydialog.h"
+#include "spellfixdialog.h"
 #include "synopsisdialog.h"
 #include "mainwindow.h"
 #include "speller.h"
@@ -947,6 +952,46 @@ int main(int argc, char* argv[]) {
         QTest::qWait(80);
         if (argc > 20) w.view()->viewport()->grab(QRect(0, 0, 900, 420)).save(QString::fromLocal8Bit(argv[20]));
         QFile::remove(file);
+
+        // Corrigir tudo: as palavras sublinhadas com sugestão, confirmadas numa lista, num passo de desfazer.
+        std::vector<std::u32string> left;
+        const auto fixes = w.view()->speller().corrections(&left);
+        auto fixedTo = [&](const char32_t* from) {
+            for (const auto& f : fixes)
+                if (f.expected == from) return QString::fromStdU32String(f.replacement);
+            return QString();
+        };
+        CHECK(fixedTo(U"wakls") == "walks" && fixedTo(U"smilse") == "smiles" && fixedTo(U"tiket") == "ticket");
+        CHECK(fixedTo(U"Helena").isEmpty() && fixedTo(U"HELENA").isEmpty());  // nomes nunca são "corrigidos"
+        SpellFixDialog fixDlg(fixes, left, &w);
+        if (argc > 25) { fixDlg.show(); QTest::qWait(60); fixDlg.grab().save(QString::fromLocal8Bit(argv[25])); fixDlg.close(); }
+        auto& ed = const_cast<Editor&>(w.editor());
+        CHECK(ed.applyFixes(fixes) == static_cast<int>(fixes.size()));
+        CHECK(ed.doc().paragraphs[1].text.find(U"walks") != std::u32string::npos);
+        ed.undo();
+        CHECK(ed.doc().paragraphs[1].text.find(U"wakls") != std::u32string::npos);
+        ed.markSaved();
+
+        // Arrastar um roteiro para a janela abre o arquivo (e mostra o aviso enquanto arrasta).
+        const QString dropped = QDir::temp().filePath("owlio-drop.fountain");
+        QFile df(dropped);
+        if (df.open(QIODevice::WriteOnly)) { df.write("EXT. PRAIA - DIA\n\nO mar.\n"); df.close(); }
+        QMimeData mime;
+        mime.setUrls({QUrl::fromLocalFile(dropped)});
+        QDragEnterEvent enter(QPoint(400, 300), Qt::CopyAction, &mime, Qt::LeftButton, Qt::NoModifier);
+        QApplication::sendEvent(&w, &enter);
+        auto* hint = w.findChild<QLabel*>("avisoSoltar");
+        CHECK(enter.isAccepted() && hint && hint->isVisible());
+        QDropEvent drop(QPointF(400, 300), Qt::CopyAction, &mime, Qt::LeftButton, Qt::NoModifier);
+        QApplication::sendEvent(&w, &drop);
+        QTest::qWait(80);
+        CHECK(hint && !hint->isVisible() && w.editor().doc().paragraphs[0].text == U"EXT. PRAIA - DIA");
+        QMimeData image;  // um arquivo que não é roteiro é recusado
+        image.setUrls({QUrl::fromLocalFile(QDir::temp().filePath("foto.png"))});
+        QDragEnterEvent other(QPoint(400, 300), Qt::CopyAction, &image, Qt::LeftButton, Qt::NoModifier);
+        QApplication::sendEvent(&w, &other);
+        CHECK(!other.isAccepted());
+        QFile::remove(dropped);
     }
 
     // ---- Papel A4: a página na tela fica mais estreita e mais alta.

@@ -1,6 +1,6 @@
 #pragma once
-#include <QHash>
 #include <QMainWindow>
+#include <QPointer>
 #include <QTimer>
 
 #include "autosave.h"
@@ -50,6 +50,10 @@ public:
 
 protected:
     void closeEvent(QCloseEvent* e) override;
+    // Arrastar um roteiro (.fountain, .fdx) para a janela abre o arquivo.
+    void dragEnterEvent(QDragEnterEvent* e) override;
+    void dragLeaveEvent(QDragLeaveEvent* e) override;
+    void dropEvent(QDropEvent* e) override;
 
 private slots:
     void newFile();
@@ -72,6 +76,7 @@ private slots:
     void gotoFirstLine(const QString& characterName);
     void showSettings();
     void showDictionary();
+    void correctSpelling();
     void browseBackups();
     void browseVersions();
     void showCast();
@@ -84,6 +89,7 @@ private:
     bool saveNow(bool automatic);
     void applySaveSettings();
     void clearRecovery();
+    QString suggestedBase() const;
     QString suggestedPdfPath() const;
     void openPrintDialog(bool pdf);
     void updateTitle();
@@ -110,6 +116,7 @@ private:
     QTimer panelTimer_;
     QTimer recoveryTimer_;
     QTimer autosaveTimer_;
+    bool askingToSave_ = false;  // a pergunta de salvar está aberta: o autosave espera
     autosave::Session session_;
     int recoveryRevision_ = -1;
 
@@ -118,6 +125,7 @@ private:
     QComboBox* elementCombo_ = nullptr;
     QComboBox* zoomCombo_ = nullptr;
     QLabel* pageLabel_ = nullptr;
+    QLabel* dropHint_ = nullptr;  // aviso sobre a janela enquanto um roteiro é arrastado
     QLabel* sceneLabel_ = nullptr;
     QLabel* wordLabel_ = nullptr;
     QList<QAction*> elementActions_;
@@ -129,5 +137,7 @@ private:
     QAction* undoAct_ = nullptr;
     QAction* redoAct_ = nullptr;
     FindDialog* findDialog_ = nullptr;
-    QHash<QAction*, QString> actionIcons_;  // ação -> nome do ícone (recolorido ao trocar o tema)
+    // Ação -> nome do ícone, recolorido ao trocar o tema. QPointer: uma ação destruída (de um menu
+    // que já fechou) vira nula e é descartada, em vez de deixar um ponteiro solto.
+    QList<QPair<QPointer<QAction>, QString>> actionIcons_;
 };

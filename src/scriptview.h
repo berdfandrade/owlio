@@ -11,6 +11,7 @@
 class ScriptView : public QAbstractScrollArea {
     Q_OBJECT
 public:
+    Speller& speller() { return speller_; }
     explicit ScriptView(Editor* editor, QWidget* parent = nullptr);
 
     double zoom() const { return zoom_; }

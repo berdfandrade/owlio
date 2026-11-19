@@ -42,6 +42,11 @@ struct CharacterInfo {
     std::u32string traits;    // características: aparência, personalidade
     std::u32string synopsis;  // história e arco do personagem
     bool blank() const;       // nada além do nome
+    bool operator==(const CharacterInfo& o) const {
+        return name == o.name && photo == o.photo && age == o.age && occupation == o.occupation && role == o.role &&
+               traits == o.traits && synopsis == o.synopsis;
+    }
+    bool operator!=(const CharacterInfo& o) const { return !(*this == o); }
 };
 
 // Beat Board: cartões livres de ideias num quadro, ligados por linhas de fluxo.

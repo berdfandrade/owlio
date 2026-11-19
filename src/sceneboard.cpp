@@ -101,6 +101,7 @@ SceneBoard::SceneBoard(Editor* editor, QWidget* parent) : QAbstractScrollArea(pa
 }
 
 void SceneBoard::reload() {
+    cancelDrag();  // os índices do arraste valiam para a lista antiga
     cards_ = ed_->sceneSummaries();
     pages_ = ed_->layout().pageCount;
     if (selected_ >= static_cast<int>(cards_.size())) selected_ = static_cast<int>(cards_.size()) - 1;
@@ -199,14 +200,35 @@ void SceneBoard::selectScene(int index, bool scrollTo) {
 }
 
 void SceneBoard::requestMove(int from, int to) {
-    to = std::clamp(to, 0, static_cast<int>(cards_.size()));
-    if (from < 0 || to == from || to == from + 1) return;
+    const int n = static_cast<int>(cards_.size());
+    to = std::clamp(to, 0, n);
+    if (from < 0 || from >= n || to == from || to == from + 1) return;
     emit moveRequested(from, to);
+}
+
+void SceneBoard::cancelDrag() {
+    dragging_ = false;
+    pressIndex_ = -1;
+    dropIndex_ = -1;
+    autoScroll_.stop();
+}
+
+void SceneBoard::focusOutEvent(QFocusEvent* e) {
+    QAbstractScrollArea::focusOutEvent(e);
+    if (!dragging_) return;
+    cancelDrag();
+    viewport()->update();
+}
+
+void SceneBoard::hideEvent(QHideEvent* e) {
+    QAbstractScrollArea::hideEvent(e);
+    cancelDrag();
 }
 
 // ------------------------------------------------------------------ pintura
 
 void SceneBoard::paintCard(QPainter& p, const QRectF& r, int index, bool selected, bool hover) const {
+    if (index < 0 || index >= static_cast<int>(cards_.size())) return;
     const ThemeColors& tc = ThemeManager::instance().colors();
     const SceneSummary& s = cards_[index];
     const HeadingParts h = splitHeading(q(s.heading));
@@ -603,10 +625,7 @@ void SceneBoard::mouseReleaseEvent(QMouseEvent* e) {
     if (e->button() != Qt::LeftButton) return;
     const bool wasDragging = dragging_;
     const int from = pressIndex_, to = dropIndex_;
-    dragging_ = false;
-    pressIndex_ = -1;
-    dropIndex_ = -1;
-    autoScroll_.stop();
+    cancelDrag();
     viewport()->setCursor(cardAt(e->position()) >= 0 ? Qt::OpenHandCursor : Qt::ArrowCursor);
     viewport()->update();
     if (wasDragging && from >= 0 && to >= 0) requestMove(from, to);

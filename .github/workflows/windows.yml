@@ -161,6 +161,9 @@ jobs:
           Copy-Item dist $root -Recurse
           Copy-Item packaging\msix\Assets "$root\Assets" -Recurse
           Copy-Item LICENSE "$root\LICENSE.txt"
+          New-Item "$root\licenses" -ItemType Directory -Force | Out-Null
+          Copy-Item resources\dict\README.md "$root\licenses\dictionaries.md"
+          Copy-Item resources\dict\en_US.LICENSE.txt "$root\licenses\"
           (Get-Content packaging\msix\AppxManifest.xml.in -Raw).
             Replace('@IDENTITY_NAME@', $env:IDENTITY_NAME).
             Replace('@PUBLISHER@', [Security.SecurityElement]::Escape($env:PUBLISHER)).

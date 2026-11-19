@@ -41,7 +41,10 @@ bool Speller::unknown(ScriptLanguage lang, const std::u32string& word) {
     if (!dict.loaded()) return false;
     auto& cache = cache_[lang == ScriptLanguage::Portuguese ? 1 : 0];
     auto it = cache.find(word);
-    if (it == cache.end()) it = cache.emplace(word, !dict.check(word)).first;
+    if (it == cache.end()) {
+        if (cache.size() >= kMaxCached) cache.clear();  // teto: um roteiro enorme não acumula sem fim
+        it = cache.emplace(word, !dict.check(word)).first;
+    }
     return it->second;
 }
 
@@ -74,14 +77,46 @@ bool Speller::misspelled(const std::u32string& word) {
     return !sceneWord(lower) && !names_.count(lower) && !ed_.isCustomWord(word);
 }
 
+namespace {
+// Deixas de personagem e transições nunca são conferidas (são nomes e termos técnicos).
+bool checked(Element type) { return type != Element::Character && type != Element::Transition; }
+}  // namespace
+
+std::vector<std::u32string> Speller::suggestions(const std::u32string& word) {
+    return dictionary(dictionaryLanguage()).suggest(word);
+}
+
+std::vector<Editor::TextFix> Speller::corrections(std::vector<std::u32string>* unfixable) {
+    std::vector<Editor::TextFix> out;
+    if (!enabled_) return out;
+    std::unordered_map<std::u32string, std::u32string> best;  // a mesma palavra errada várias vezes: uma busca
+    const auto& paragraphs = ed_.doc().paragraphs;
+    for (int i = 0; i < static_cast<int>(paragraphs.size()); ++i) {
+        if (!checked(paragraphs[i].type)) continue;
+        const std::u32string& text = paragraphs[i].text;
+        for (const WordSpan& w : wordSpans(text)) {
+            const std::u32string word = text.substr(w.start, w.len);
+            if (!misspelled(word)) continue;
+            auto it = best.find(word);
+            if (it == best.end()) {
+                const std::vector<std::u32string> s = suggestions(word);
+                it = best.emplace(word, s.empty() ? std::u32string() : s.front()).first;
+                if (s.empty() && unfixable) unfixable->push_back(word);
+            }
+            if (!it->second.empty()) out.push_back({i, w.start, w.len, word, it->second});
+        }
+    }
+    return out;
+}
+
 std::vector<WordSpan> Speller::marks(int line) {
     std::vector<WordSpan> out;
     if (!enabled_) return out;
     const Layout& L = ed_.layout();
+    if (line < 0 || line >= static_cast<int>(L.lines.size())) return out;
     const LayoutLine& l = L.lines[line];
     if (l.para < 0) return out;
-    const Element type = ed_.doc().paragraphs[l.para].type;
-    if (type == Element::Character || type == Element::Transition) return out;
+    if (!checked(ed_.doc().paragraphs[l.para].type)) return out;
     const std::u32string text = L.lineText(ed_.doc(), line);
     const Pos c = ed_.cursor();
     for (const WordSpan& w : wordSpans(text)) {
@@ -92,11 +127,15 @@ std::vector<WordSpan> Speller::marks(int line) {
     return out;
 }
 
-std::u32string Speller::wordAt(Pos p) const {
+WordSpan Speller::spanAt(Pos p) const {
     const auto& paragraphs = ed_.doc().paragraphs;
-    if (p.para < 0 || p.para >= static_cast<int>(paragraphs.size())) return {};
-    const std::u32string& text = paragraphs[p.para].text;
-    for (const WordSpan& w : wordSpans(text))
-        if (p.off >= w.start && p.off <= w.start + w.len) return text.substr(w.start, w.len);
-    return {};
+    if (p.para < 0 || p.para >= static_cast<int>(paragraphs.size())) return {0, 0};
+    for (const WordSpan& w : wordSpans(paragraphs[p.para].text))
+        if (p.off >= w.start && p.off <= w.start + w.len) return w;
+    return {0, 0};
+}
+
+std::u32string Speller::wordAt(Pos p) const {
+    const WordSpan w = spanAt(p);
+    return w.len ? ed_.doc().paragraphs[p.para].text.substr(w.start, w.len) : std::u32string();
 }

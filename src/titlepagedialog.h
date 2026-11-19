@@ -39,7 +39,6 @@ public:
 private:
     void updatePreview();
 
-    Document base_;
     TitlePagePreview* preview_;
     QLineEdit* title_;
     QComboBox* credit_;
