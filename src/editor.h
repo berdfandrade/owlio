@@ -133,6 +133,13 @@ public:
     bool find(const std::u32string& query, bool forward = true);
     bool replaceCurrent(const std::u32string& query, const std::u32string& replacement);
     int replaceAll(const std::u32string& query, const std::u32string& replacement);
+    // Troca vários trechos de uma vez, num só passo de desfazer (a correção ortográfica em lote).
+    // Trechos que não batem mais com `expected` são pulados. Devolve quantos foram trocados.
+    struct TextFix {
+        int para, start, len;
+        std::u32string expected, replacement;
+    };
+    int applyFixes(std::vector<TextFix> fixes);
 
     // ---- cenas (tela de cartões)
     std::vector<SceneSummary> sceneSummaries() const;
@@ -151,10 +158,11 @@ public:
 
 private:
     enum class EditKind { None, Typing, Deleting, Other };
+    using Cast = std::vector<CharacterInfo>;
     struct Snapshot {
         std::vector<Paragraph> paragraphs;
         std::vector<std::pair<std::string, std::string>> titlePage;
-        std::vector<CharacterInfo> cast;
+        std::shared_ptr<const Cast> cast;  // dividido entre as cópias enquanto o elenco não muda
         BeatBoard board;
         RelationMap relations;
         StoryStructure structure;
@@ -162,6 +170,8 @@ private:
         Pos cursor, anchor;
     };
 
+    Snapshot snapshot();
+    void restore(Snapshot&& s);
     void beginEdit(EditKind kind);
     void changed();
     void clampCursor();
@@ -183,6 +193,7 @@ private:
     bool modified_ = false;
 
     std::vector<Snapshot> undo_, redo_;
+    std::shared_ptr<const Cast> castShared_;  // a última cópia do elenco guardada no histórico
     EditKind lastKind_ = EditKind::None;
     std::chrono::steady_clock::time_point lastEditTime_;
 };

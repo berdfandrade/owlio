@@ -1324,6 +1324,45 @@ Todas as deixas de %2 passam a ser de %1, e esta ficha substitui a dele.</transl
         <source>&lt;h3&gt;Owlio %1&lt;/h3&gt;&lt;p&gt;A screenwriting app written in C++ and Qt %2.&lt;/p&gt;&lt;p&gt;Industry-standard formatting (12 pt Courier, US Letter or A4), page breaks with (MORE)/(CONT&apos;D), Fountain and Final Draft (.fdx) files, PDF export.&lt;/p&gt;</source>
         <translation>&lt;h3&gt;Owlio %1&lt;/h3&gt;&lt;p&gt;Editor de roteiros em C++ e Qt %2.&lt;/p&gt;&lt;p&gt;Formatação padrão da indústria (Courier 12, Carta ou A4), paginação com (MAIS)/(CONT.), arquivos Fountain e Final Draft (.fdx), exportação para PDF.&lt;/p&gt;</translation>
     </message>
+    <message>
+        <source>Drop to open the script</source>
+        <translation>Solte para abrir o roteiro</translation>
+    </message>
+    <message>
+        <source>&amp;Correct Spelling...</source>
+        <translation>&amp;Corrigir ortografia...</translation>
+    </message>
+    <message>
+        <source>Correct every spelling mistake in the script</source>
+        <translation>Corrigir todos os erros de ortografia do roteiro</translation>
+    </message>
+    <message>
+        <source>Corrects every spelling mistake, after you confirm</source>
+        <translation>Corrige todos os erros de ortografia, depois de você confirmar</translation>
+    </message>
+    <message>
+        <source>Correct Spelling</source>
+        <translation>Corrigir ortografia</translation>
+    </message>
+    <message>
+        <source>Spell check is off. Turn it on in Settings › Script to correct the script.</source>
+        <translation>O corretor está desligado. Ligue em Configurações › Roteiro para corrigir o roteiro.</translation>
+    </message>
+    <message>
+        <source>No spelling mistakes found.</source>
+        <translation>Nenhum erro de ortografia encontrado.</translation>
+    </message>
+    <message>
+        <source>The words still marked have no suggestion. Correct them by hand or add them to the Script Dictionary.</source>
+        <translation>As palavras ainda marcadas não têm sugestão. Corrija à mão ou adicione ao dicionário do roteiro.</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n word(s) corrected. Ctrl+Z undoes it.</source>
+        <translation>
+            <numerusform>%n palavra corrigida. Ctrl+Z desfaz.</numerusform>
+            <numerusform>%n palavras corrigidas. Ctrl+Z desfaz.</numerusform>
+        </translation>
+    </message>
 </context>
 <context>
     <name>PixelAvatarDialog</name>
@@ -2153,6 +2192,10 @@ Todas as deixas de %2 passam a ser de %1, e esta ficha substitui a dele.</transl
         <source>A4</source>
         <translation>A4</translation>
     </message>
+    <message>
+        <source>Could not print to %1.</source>
+        <translation>Não foi possível imprimir em %1.</translation>
+    </message>
 </context>
 <context>
     <name>QObject</name>
@@ -2372,6 +2415,10 @@ Escreva um cabeçalho (INT. ou EXT.) no roteiro e ele aparece aqui como cartão.
     <message>
         <source>Remove “%1” from the Script Dictionary</source>
         <translation>Remover “%1” do dicionário do roteiro</translation>
+    </message>
+    <message>
+        <source>No suggestions</source>
+        <translation>Sem sugestões</translation>
     </message>
 </context>
 <context>
@@ -2622,6 +2669,36 @@ Escreva um cabeçalho (INT. ou EXT.) no roteiro e ele aparece aqui como cartão.
     <message>
         <source>Nothing to print.</source>
         <translation>Nada para imprimir.</translation>
+    </message>
+</context>
+<context>
+    <name>SpellFixDialog</name>
+    <message>
+        <source>Correct Spelling</source>
+        <translation>Corrigir ortografia</translation>
+    </message>
+    <message numerus="yes">
+        <source>Correct %n word(s)?</source>
+        <translation>
+            <numerusform>Corrigir %n palavra?</numerusform>
+            <numerusform>Corrigir %n palavras?</numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>Each word gets the first suggestion of the dictionary. Check the list before you confirm: names and slang may need the Script Dictionary instead. One Ctrl+Z undoes all of it.</source>
+        <translation>Cada palavra recebe a primeira sugestão do dicionário. Confira a lista antes de confirmar: nomes e gírias talvez devam ir para o dicionário do roteiro. Um Ctrl+Z desfaz tudo.</translation>
+    </message>
+    <message>
+        <source>No suggestion, left as they are: %1</source>
+        <translation>Sem sugestão, ficam como estão: %1</translation>
+    </message>
+    <message>
+        <source>Correct All</source>
+        <translation>Corrigir tudo</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>Cancelar</translation>
     </message>
 </context>
 <context>
@@ -3317,7 +3394,15 @@ E-mail</translation>
     </message>
 </context>
 <context>
-    <name>avatars</name>
+    <name>imageio</name>
+    <message>
+        <source>Only JPEG, PNG and WebP images can be used.</source>
+        <translation>Só dá para usar imagens JPEG, PNG e WebP.</translation>
+    </message>
+    <message>
+        <source>The image is too large.</source>
+        <translation>A imagem é grande demais.</translation>
+    </message>
     <message>
         <source>Images (%1)</source>
         <translation>Imagens (%1)</translation>

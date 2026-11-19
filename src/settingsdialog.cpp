@@ -19,6 +19,7 @@
 #include <QUrl>
 #include <QVBoxLayout>
 #include <algorithm>
+#include <cmath>
 
 #include "autosave.h"
 #include "i18n.h"
@@ -98,7 +99,8 @@ SettingsDialog::SettingsDialog(QWidget* parent) : QDialog(parent) {
     uiSize_ = new QSpinBox;
     uiSize_->setRange(8, 16);
     uiSize_->setSuffix(" pt");
-    uiSize_->setValue(qRound(settings.value("uiFontSize", ThemeManager::kDefaultFontSize).toDouble()));
+    const double uiSize = settings.value("uiFontSize", ThemeManager::kDefaultFontSize).toDouble();
+    uiSize_->setValue(std::isfinite(uiSize) ? qRound(std::clamp(uiSize, 8.0, 16.0)) : qRound(ThemeManager::kDefaultFontSize));
     uiSize_->setFixedWidth(80);
     auto* uiRow = new QHBoxLayout;
     uiRow->setSpacing(8);

@@ -240,7 +240,8 @@ void RelationMapView::zoomToFit() {
         box = box.isNull() ? r : box.united(r);
     }
     const QRectF area = QRectF(rect()).adjusted(30, 60, -30, -60);
-    zoom_ = std::clamp(std::min(area.width() / box.width(), area.height() / box.height()), 0.3, 1.4);
+    const double fit = std::min(area.width() / box.width(), area.height() / box.height());
+    zoom_ = std::isfinite(fit) ? std::clamp(fit, 0.3, 1.4) : 1.0;
     pan_ = area.center() - box.center() * zoom_;
     update();
 }

@@ -45,12 +45,12 @@ const ElementStyle& elementStyle(Element e, int side) {
 std::vector<int> wrapText(const std::u32string& text, int width) {
     std::vector<int> starts{0};
     const int n = static_cast<int>(text.size());
+    // Fim do texto sem os espaços finais: calculado uma vez, não a cada linha quebrada.
+    int contentEnd = n;
+    while (contentEnd > 0 && isSpace(text[contentEnd - 1])) --contentEnd;
     int pos = 0;
     while (n - pos > width) {
-        // Se o texto restante cabe ignorando espaços finais, não quebra.
-        int contentEnd = n;
-        while (contentEnd > pos && isSpace(text[contentEnd - 1])) --contentEnd;
-        if (contentEnd - pos <= width) break;
+        if (contentEnd - pos <= width) break;  // o resto cabe se os espaços finais forem ignorados
 
         int brk = -1;
         for (int j = std::min(pos + width, n - 1); j > pos; --j) {

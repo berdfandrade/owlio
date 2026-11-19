@@ -15,7 +15,7 @@ class QPushButton;
 // Imagens dos beats: reduzidas para no máximo 720 px e guardadas como JPEG em base64.
 namespace beatimage {
 std::string fromImage(QImage img);
-std::string fromFile(const QString& path, QString* error);
+std::string fromFile(const QString& path, QString* error = nullptr);
 QImage decode(const std::shared_ptr<const std::string>& data);  // com cache
 QString fileFilter();
 }  // namespace beatimage

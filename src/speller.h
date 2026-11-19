@@ -23,8 +23,14 @@ public:
     // Palavras erradas numa linha da página, em colunas a partir do começo da linha. Deixas de
     // personagem e transições ficam de fora, assim como a palavra que está sendo digitada.
     std::vector<WordSpan> marks(int line);
-    // A palavra do roteiro que cobre a posição (vazia se não houver).
+    // A palavra do roteiro que cobre a posição: onde fica no parágrafo (len 0 se não houver) e o texto.
+    WordSpan spanAt(Pos p) const;
     std::u32string wordAt(Pos p) const;
+    // Sugestões para uma palavra errada, no dicionário em uso, a melhor primeiro.
+    std::vector<std::u32string> suggestions(const std::u32string& word);
+    // Todas as palavras erradas do roteiro (as mesmas que ficam sublinhadas) que têm sugestão, cada uma
+    // com a melhor delas. As que não têm sugestão vão para `unfixable`, se pedido.
+    std::vector<Editor::TextFix> corrections(std::vector<std::u32string>* unfixable = nullptr);
 
 private:
     void syncNames();
@@ -35,6 +41,7 @@ private:
     Language language_ = Language::Automatic;
     ScriptLanguage detected_ = ScriptLanguage::English;
     int detectedRevision_ = -1;
+    static constexpr size_t kMaxCached = 16384;
     std::unordered_map<std::u32string, bool> cache_[2];  // por idioma: palavra -> errada no dicionário
     std::unordered_set<std::u32string> names_;           // palavras das deixas e das fichas, em minúsculas
     int namesRevision_ = -1;

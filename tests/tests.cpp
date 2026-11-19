@@ -1,4 +1,5 @@
 // Core tests (no Qt). Run: ./build/owlio_tests
+#include <cmath>
 #include <cstdio>
 #include <cstdlib>
 
@@ -598,6 +599,42 @@ static void testSpelling() {
     CHECK(back.paragraphs.size() == e.doc().paragraphs.size());
     e.undo();
     CHECK(e.doc().dictionary.size() == 1);
+
+    // Sugestões: acento, letras fora de ordem, letra a mais; com as maiúsculas da palavra.
+    SpellChecker sg;
+    CHECK(sg.load("SET UTF-8\nTRY aeiouscnrtlpm\n", "5\nnão\nwalks\nsmiles\ncasa\ncaso\n"));
+    auto first = [&](const char* w) {
+        const auto s = sg.suggest(utf8ToU32(w));
+        return s.empty() ? std::string() : u32ToUtf8(s.front());
+    };
+    CHECK(first("nao") == "não" && first("wakls") == "walks" && first("smilse") == "smiles");
+    CHECK(first("Cassa") == "Casa" && first("NAO") == "NÃO" && first("xyzw").empty());
+
+    // Correção em lote: um passo de desfazer, e trechos que mudaram desde a busca são pulados.
+    Editor fx;
+    fx.setDocument(parseFountain("INT. CASA - DIA\n\nAna wakls e smilse.\n"));
+    const int before = fx.revision();
+    CHECK(fx.applyFixes({{1, 4, 5, U"wakls", U"walks"}, {1, 12, 6, U"smilse", U"smiles"}, {1, 0, 3, U"Bia", U"Ana"}}) == 2);
+    CHECK(fx.doc().paragraphs[1].text == U"Ana walks e smiles." && fx.revision() > before);
+    fx.undo();
+    CHECK(fx.doc().paragraphs[1].text == U"Ana wakls e smilse.");
+}
+
+// Arquivos quebrados ou maliciosos: nada trava, nada vira NaN.
+static void testMalformedInput() {
+    // <DualDialogue sem '>' fazia a leitura recomeçar do início para sempre.
+    const Document d = parseFdx("<FinalDraft><Content><Paragraph Type=\"Action\"><DualDialogue");
+    CHECK(!d.paragraphs.empty());
+    // "nan" e "inf" nos blocos do roteiro viram valores sãos.
+    const Document f = parseFountain("INT. CASA - DIA\n\nAna.\n\n/* owlio-structure\npreset: custom\nact: Um\nend: nan\n"
+                                     "act: Dois\nend: 1\nbeat: inf Virada\n*/\n\n/* owlio-beatboard\nbeat: 1\n"
+                                     "frame: 1e300 nan inf 50\ntitle: x\n*/\n");
+    CHECK(!f.structure.acts.empty() && std::isfinite(f.structure.acts[0].end));
+    for (const StoryBeat& b : f.structure.beats) CHECK(std::isfinite(b.at) && b.at >= 0 && b.at <= 1);
+    CHECK(f.board.beats.size() == 1 && std::abs(f.board.beats[0].x) <= 1e6 && std::isfinite(f.board.beats[0].y) &&
+          f.board.beats[0].w <= 10000 && f.board.beats[0].h >= 60);
+    // Fora do plano básico (emoji), maiúsculas e minúsculas não truncam o caractere.
+    CHECK(toUpper(char32_t(0x1F600)) == 0x1F600 && toLower(char32_t(0x1D400)) == 0x1D400);
 }
 
 static void testPaper() {
@@ -630,6 +667,7 @@ int main() {
     testRestoreContent();
     testSpelling();
     testPaper();
+    testMalformedInput();
     if (failures == 0) std::printf("All tests passed.\n");
     return failures == 0 ? 0 : 1;
 }

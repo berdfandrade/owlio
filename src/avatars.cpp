@@ -2,26 +2,24 @@
 
 #include <QBuffer>
 #include <QCache>
-#include <QCoreApplication>
 #include <QImage>
-#include <QImageReader>
 #include <QPainterPath>
-#include <QStringList>
 
+#include "imageio.h"
 #include "theme.h"
 
 namespace avatars {
 
 namespace {
 
-// Cache de imagens decodificadas: chave = hash do base64.
+// Fotos decodificadas, pelo hash do base64, até 16 MB. Uma foto inválida também entra (nula, custo 1)
+// para não ser decodificada de novo a cada pintura.
 QImage decoded(const std::string& base64) {
-    static QCache<size_t, QImage> cache(64);
+    static QCache<size_t, QImage> cache(16 * 1024 * 1024);
     const size_t key = std::hash<std::string>{}(base64);
     if (QImage* hit = cache.object(key)) return *hit;
-    QImage img;
-    img.loadFromData(QByteArray::fromBase64(QByteArray::fromStdString(base64)));
-    if (!img.isNull()) cache.insert(key, new QImage(img));
+    QImage img = imageio::fromBase64(base64, 256);
+    cache.insert(key, new QImage(img), std::max<qsizetype>(1, img.sizeInBytes()));
     return img;
 }
 
@@ -69,13 +67,8 @@ void draw(QPainter& p, const QRectF& r, const QString& name, const std::string& 
 }
 
 std::string fromImageFile(const QString& path, QString* error) {
-    QImageReader reader(path);
-    reader.setAutoTransform(true);  // respeita a orientação EXIF de fotos de celular
-    QImage img = reader.read();
-    if (img.isNull()) {
-        if (error) *error = reader.errorString();
-        return {};
-    }
+    QImage img = imageio::readFile(path, 1024, error);
+    if (img.isNull()) return {};
     const int side = std::min(img.width(), img.height());
     img = img.copy((img.width() - side) / 2, (img.height() - side) / 2, side, side)
               .scaled(192, 192, Qt::IgnoreAspectRatio, Qt::SmoothTransformation)
@@ -87,16 +80,6 @@ std::string fromImageFile(const QString& path, QString* error) {
     return bytes.toBase64().toStdString();
 }
 
-QString fileFilter() {
-    QStringList patterns;
-    for (const QByteArray& f : QImageReader::supportedImageFormats()) {
-        const QString fmt = QString::fromLatin1(f).toLower();
-        if (fmt == "svg" || fmt == "svgz" || fmt == "ico" || fmt == "pbm" || fmt == "pgm" || fmt == "ppm" ||
-            fmt == "xbm" || fmt == "xpm" || fmt == "cur")
-            continue;
-        patterns << "*." + fmt;
-    }
-    return QCoreApplication::translate("avatars", "Images (%1)").arg(patterns.join(' '));
-}
+QString fileFilter() { return imageio::fileFilter(); }
 
 }  // namespace avatars

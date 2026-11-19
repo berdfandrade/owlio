@@ -319,8 +319,7 @@ void PrintDialog::run(bool advanced) {
         w.setPageLayout(pageLayoutFor(ed_.layoutOptions().paper));
         w.setTitle(QString::fromStdString(ed_.doc().titleValue("Title")));
         w.setCreator("Owlio");
-        renderScript(w, w.resolution(), ed_, o);
-        if (QFileInfo(path).size() <= 0) {
+        if (!renderScript(w, w.resolution(), ed_, o)) {
             QMessageBox::warning(this, tr("Export PDF"), tr("Could not write %1.").arg(path));
             return;
         }
@@ -340,6 +339,9 @@ void PrintDialog::run(bool advanced) {
         dlg.setOption(QAbstractPrintDialog::PrintPageRange, false);
         if (dlg.exec() != QDialog::Accepted) return;
     }
-    renderScript(printer, printer.resolution(), ed_, o);
+    if (!renderScript(printer, printer.resolution(), ed_, o)) {
+        QMessageBox::warning(this, tr("Print"), tr("Could not print to %1.").arg(printer.printerName()));
+        return;
+    }
     accept();
 }

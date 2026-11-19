@@ -40,6 +40,8 @@ protected:
     void wheelEvent(QWheelEvent*) override;
     void contextMenuEvent(QContextMenuEvent*) override;
     void leaveEvent(QEvent*) override;
+    void focusOutEvent(QFocusEvent*) override;
+    void hideEvent(QHideEvent*) override;
     void scrollContentsBy(int, int) override { viewport()->update(); }
 
 private:
@@ -51,6 +53,7 @@ private:
     QRectF toggleRect(bool listButton) const;                      // alternador grade/lista, no cabeçalho
     double gap() const { return list_ ? 10 : kGap; }
     void requestMove(int from, int to);
+    void cancelDrag();  // larga o cartão sem mover (recarga, foco perdido, quadro escondido)
 
     Editor* ed_;
     std::vector<SceneSummary> cards_;

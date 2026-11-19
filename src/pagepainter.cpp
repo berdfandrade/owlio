@@ -270,8 +270,9 @@ QPageLayout pageLayoutFor(Paper paper) {
                        QMarginsF(0, 0, 0, 0));
 }
 
-void renderScript(QPagedPaintDevice& device, double ppi, const Editor& ed, const PrintOptions& opt) {
+bool renderScript(QPagedPaintDevice& device, double ppi, const Editor& ed, const PrintOptions& opt) {
     QPainter p(&device);
+    if (!p.isActive()) return false;
     p.setRenderHint(QPainter::TextAntialiasing, true);
     PagePainter pp(ed);
     PagePainter::Extras ex;
@@ -290,4 +291,5 @@ void renderScript(QPagedPaintDevice& device, double ppi, const Editor& ed, const
         PagePainter::drawWatermark(p, QPointF(0, 0), ppi, opt.watermark, ed.paper());
         first = false;
     }
+    return p.end();
 }

@@ -6,8 +6,7 @@
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QHBoxLayout>
-#include <QHash>
-#include <QImageReader>
+#include <QCache>
 #include <QLabel>
 #include <QLineEdit>
 #include <QMessageBox>
@@ -20,8 +19,8 @@
 #include <QToolButton>
 #include <QVBoxLayout>
 
-#include "avatars.h"
 #include "beatboard.h"
+#include "imageio.h"
 #include "theme.h"
 
 // ------------------------------------------------------------ imagens
@@ -47,30 +46,26 @@ std::string fromImage(QImage img) {
 }
 
 std::string fromFile(const QString& path, QString* error) {
-    QImageReader reader(path);
-    reader.setAutoTransform(true);
-    QImage img = reader.read();
-    if (img.isNull()) {
-        if (error) *error = reader.errorString();
-        return {};
-    }
-    return fromImage(img);
+    const QImage img = imageio::readFile(path, 2048, error);
+    return img.isNull() ? std::string() : fromImage(img);
 }
 
 QImage decode(const std::shared_ptr<const std::string>& data) {
     if (!data || data->empty()) return {};
-    // A chave é o ponteiro; a entrada guarda o shared_ptr, então o ponteiro não é reaproveitado enquanto vale.
-    static QHash<const std::string*, QPair<std::shared_ptr<const std::string>, QImage>> cache;
-    auto it = cache.find(data.get());
-    if (it != cache.end()) return it->second;
-    if (cache.size() > 96) cache.clear();
-    QImage img;
-    img.loadFromData(QByteArray::fromBase64(QByteArray::fromStdString(*data)));
-    cache.insert(data.get(), {data, img});
+    // Imagens decodificadas, pelo endereço do texto, até 64 MB. A entrada guarda só um weak_ptr: não
+    // segura o roteiro antigo na memória, e um endereço reaproveitado por outro texto é percebido.
+    struct Entry {
+        std::weak_ptr<const std::string> source;
+        QImage image;
+    };
+    static QCache<const std::string*, Entry> cache(64 * 1024 * 1024);
+    if (Entry* hit = cache.object(data.get()); hit && hit->source.lock() == data) return hit->image;
+    QImage img = imageio::fromBase64(*data, 720);
+    cache.insert(data.get(), new Entry{data, img}, std::max<qsizetype>(1, img.sizeInBytes()));
     return img;
 }
 
-QString fileFilter() { return avatars::fileFilter(); }
+QString fileFilter() { return imageio::fileFilter(); }
 
 }  // namespace beatimage
 

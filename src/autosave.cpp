@@ -13,12 +13,19 @@
 namespace autosave {
 
 namespace {
-QString dataDir() { return QStandardPaths::writableLocation(QStandardPaths::AppDataLocation); }
+// A pasta de dados do app. Se o sistema não informar uma, usa a pasta temporária, nunca a raiz do disco.
+QString dataDir() {
+    const QString dir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    return dir.isEmpty() ? QDir::tempPath() + "/Owlio" : dir;
+}
 
 bool writeFile(const QString& path, const QByteArray& data) {
     QSaveFile f(path);
     if (!f.open(QIODevice::WriteOnly)) return false;
-    f.write(data);
+    if (f.write(data) != data.size()) {
+        f.cancelWriting();
+        return false;
+    }
     return f.commit();
 }
 

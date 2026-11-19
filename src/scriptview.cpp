@@ -68,6 +68,7 @@ void ScriptView::refreshAfterExternalEdit() {
 }
 
 void ScriptView::setZoom(double z) {
+    if (!std::isfinite(z)) z = 1.0;  // valor salvo corrompido
     z = std::clamp(z, 0.5, 3.0);
     if (std::abs(z - zoom_) < 1e-6) return;
     QScrollBar* vb = verticalScrollBar();
@@ -392,10 +393,25 @@ void ScriptView::setSpellLanguage(Speller::Language l) {
 
 void ScriptView::contextMenuEvent(QContextMenuEvent* e) {
     QMenu menu(this);
-    // Palavra sob o ponteiro: entra no dicionário do roteiro, ou sai dele.
-    const std::u32string word = speller_.wordAt(posFromPoint(e->pos()));
+    // Palavra sob o ponteiro: as sugestões do corretor, e entrar no dicionário do roteiro ou sair dele.
+    const Pos at = posFromPoint(e->pos());
+    const WordSpan span = speller_.spanAt(at);
+    const std::u32string word = speller_.wordAt(at);
     const QString shown = QString::fromStdU32String(word);
     if (!word.empty() && speller_.misspelled(word)) {
+        const std::vector<std::u32string> suggestions = speller_.suggestions(word);
+        for (const std::u32string& s : suggestions) {
+            QAction* a = menu.addAction(QString::fromStdU32String(s), this, [this, at, span, word, s] {
+                const int rev = ed_->revision();
+                ed_->applyFixes({{at.para, span.start, span.len, word, s}});
+                afterEdit(rev);
+            });
+            QFont f = a->font();
+            f.setBold(true);
+            a->setFont(f);
+        }
+        if (suggestions.empty()) menu.addAction(tr("No suggestions"))->setEnabled(false);
+        menu.addSeparator();
         menu.addAction(tr("Add “%1” to the Script Dictionary").arg(shown), this, [this, word] {
             const int rev = ed_->revision();
             ed_->addCustomWord(word);

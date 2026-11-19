@@ -1,6 +1,4 @@
 #include "characterdialog.h"
-#include "pixelavatar.h"
-#include "theme.h"
 
 #include <QComboBox>
 #include <QDialogButtonBox>
@@ -22,6 +20,8 @@
 #include <QVBoxLayout>
 
 #include "avatars.h"
+#include "pixelavatar.h"
+#include "plaintext.h"
 #include "sceneheading.h"
 #include "theme.h"
 
@@ -232,10 +232,12 @@ CharacterDialog::CharacterDialog(const Editor& ed, const QString& name, QWidget*
     for (QPushButton* b : {choose, create, removePhoto_}) b->setCursor(Qt::PointingHandCursor);
 
     nameLabel_ = new QLabel;
+    nameLabel_->setTextFormat(Qt::PlainText);
     nameLabel_->setObjectName("nomeFicha");
     nameLabel_->setAlignment(Qt::AlignCenter);
     nameLabel_->setWordWrap(true);
     roleLabel_ = new QLabel;
+    roleLabel_->setTextFormat(Qt::PlainText);
     roleLabel_->setObjectName("papelFicha");
     roleLabel_->setAlignment(Qt::AlignCenter);
 
@@ -287,7 +289,7 @@ CharacterDialog::CharacterDialog(const Editor& ed, const QString& name, QWidget*
         it->setData(kPrefixRole, h.prefix);
         it->setData(kTimeRole, h.time);
         it->setData(kPageRole, tr("p. %1").arg(summaries[s].page + 1));
-        it->setToolTip(heading);
+        it->setToolTip(plaintext::tip(heading));
         scenes_->addItem(it);
     }
     connect(scenes_, &QListWidget::itemDoubleClicked, this, [this](QListWidgetItem* it) {
@@ -416,11 +418,12 @@ void CharacterDialog::accept() {
     if (newName != original_) {
         bool exists = false;
         for (const auto& [n, count] : ed_.characters()) exists = exists || q(n) == newName;
-        if (exists &&
-            QMessageBox::question(this, tr("Rename Character"),
-                                  tr("There is already a character called %1. Merge %2 into %1?\n\n"
-                                     "Every cue of %2 will become %1, and this sheet replaces theirs.")
-                                      .arg(newName, original_)) != QMessageBox::Yes) {
+        // Também quem só tem ficha, sem falas ainda: a ficha dele seria substituída sem aviso.
+        exists = exists || ed_.doc().character(newName.toStdU32String()) != nullptr;
+        if (exists && !plaintext::ask(this, tr("Rename Character"),
+                                      tr("There is already a character called %1. Merge %2 into %1?\n\n"
+                                         "Every cue of %2 will become %1, and this sheet replaces theirs.")
+                                          .arg(newName, original_))) {
             gotoPara_ = -1;
             return;
         }

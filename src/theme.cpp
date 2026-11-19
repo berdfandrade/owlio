@@ -15,6 +15,7 @@
 #include <QSvgRenderer>
 #include <QTimer>
 #include <algorithm>
+#include <cmath>
 
 namespace {
 
@@ -119,6 +120,10 @@ void ThemeManager::init() {
     if (!livePath_.isEmpty() && QFileInfo::exists(livePath_)) {
         livePath_ = QFileInfo(livePath_).absoluteFilePath();
         watcher_.addPath(livePath_);
+        // O ThemeManager é estático e sobrevive ao QApplication: solta o arquivo antes de o app acabar.
+        connect(qApp, &QCoreApplication::aboutToQuit, this, [this] {
+            if (!watcher_.files().isEmpty()) watcher_.removePaths(watcher_.files());
+        });
         connect(&watcher_, &QFileSystemWatcher::fileChanged, this, [this] {
             // Editores costumam substituir o arquivo; espera e volta a observar.
             QTimer::singleShot(100, this, [this] {
@@ -147,7 +152,7 @@ void ThemeManager::setInterfaceFont(const QString& family, double pointSize) {
     QString f = family;
     if (f.isEmpty() || !QFontDatabase::families().contains(f)) f = defaultInterfaceFamily();
     QFont font = f.isEmpty() ? QFontDatabase::systemFont(QFontDatabase::GeneralFont) : QFont(f);
-    font.setPointSizeF(std::clamp(pointSize, 8.0, 16.0));
+    font.setPointSizeF(std::isfinite(pointSize) ? std::clamp(pointSize, 8.0, 16.0) : double(kDefaultFontSize));
     QApplication::setFont(font);
     if (!qApp->styleSheet().isEmpty()) apply();  // repole os widgets com a nova fonte
 }

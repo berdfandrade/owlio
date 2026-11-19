@@ -5,22 +5,24 @@
 #include <QComboBox>
 #include <QDate>
 #include <QDialog>
-#include <QDir>
-#include <QLocale>
 #include <QDialogButtonBox>
+#include <QDir>
 #include <QDockWidget>
+#include <QDragEnterEvent>
+#include <QDropEvent>
 #include <QFile>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QFormLayout>
 #include <QGridLayout>
-#include <QRegularExpression>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
 #include <QListWidget>
+#include <QLocale>
 #include <QMenuBar>
 #include <QMessageBox>
+#include <QMimeData>
 #include <QPageLayout>
 #include <QPainter>
 #include <QPdfWriter>
@@ -28,8 +30,11 @@
 #include <QPrintDialog>
 #include <QPrinter>
 #include <QPushButton>
+#include <QRegularExpression>
 #include <QSaveFile>
+#include <QScopedValueRollback>
 #include <QSettings>
+#include <QStandardPaths>
 #include <QStatusBar>
 #include <QStyle>
 #include <QToolBar>
@@ -46,24 +51,27 @@
 
 #include "avatars.h"
 #include "beatboard.h"
-#include "characterdialog.h"
-#include "i18n.h"
-#include "dictionarydialog.h"
-#include "settingsdialog.h"
-#include "printdialog.h"
-#include "titlepagedialog.h"
 #include "carddelegate.h"
-#include "sceneboard.h"
-#include "synopsisdialog.h"
 #include "castdialog.h"
-#include "relationmap.h"
-#include "timeline.h"
-#include "versionbrowser.h"
+#include "characterdialog.h"
+#include "dictionarydialog.h"
 #include "fdx.h"
 #include "fountain.h"
+#include "i18n.h"
+#include "imageio.h"
 #include "pagepainter.h"
+#include "plaintext.h"
+#include "printdialog.h"
+#include "relationmap.h"
+#include "sceneboard.h"
 #include "scriptview.h"
+#include "settingsdialog.h"
+#include "spellfixdialog.h"
+#include "synopsisdialog.h"
 #include "theme.h"
+#include "timeline.h"
+#include "titlepagedialog.h"
+#include "versionbrowser.h"
 
 namespace {
 QString q(const std::u32string& s) { return QString::fromStdU32String(s); }
@@ -149,6 +157,12 @@ MainWindow::MainWindow() {
     beats_ = new BeatBoardView(&editor_, this);
     stack_->addWidget(beats_);
     setCentralWidget(stack_);
+    setAcceptDrops(true);
+    dropHint_ = new QLabel(tr("Drop to open the script"), this);
+    dropHint_->setObjectName("avisoSoltar");
+    dropHint_->setAlignment(Qt::AlignCenter);
+    dropHint_->setAttribute(Qt::WA_TransparentForMouseEvents);
+    dropHint_->hide();
     connect(beats_, &BeatBoardView::changed, this, [this] { view_->refreshAfterExternalEdit(); });
     relations_ = new RelationMapView(&editor_, this);
     stack_->addWidget(relations_);
@@ -222,7 +236,8 @@ MainWindow::MainWindow() {
         menu.addSeparator();
         menu.addAction(tr("Go to First Line"), this, [this, name] { gotoFirstLine(name); });
         menu.addSeparator();
-        iconAction(menu.addAction(tr("Manage Characters..."), this, &MainWindow::showCast), "elenco");
+        // Menu temporário: o ícone vai direto, sem entrar em actionIcons_ (a ação morre com o menu).
+        menu.addAction(ThemeManager::instance().icon("elenco"), tr("Manage Characters..."), this, &MainWindow::showCast);
         menu.exec(charList_->viewport()->mapToGlobal(pos));
     });
 
@@ -312,7 +327,7 @@ QToolButton* MainWindow::addDockButton(QDockWidget* dock, const QString& icon, c
 }
 
 QAction* MainWindow::iconAction(QAction* a, const QString& icon) {
-    actionIcons_.insert(a, icon);
+    actionIcons_.append({a, icon});
     return a;
 }
 
@@ -327,10 +342,11 @@ void MainWindow::refreshIcons() {
     }
     for (QToolButton* b : findChildren<QToolButton*>("botaoPainel"))
         b->setIcon(tm.icon(b->property("icone").toString(), tm.colors().muted));
-    for (auto it = actionIcons_.begin(); it != actionIcons_.end(); ++it) {
+    actionIcons_.removeIf([](const auto& entry) { return entry.first.isNull(); });
+    for (const auto& [action, icon] : actionIcons_) {
         QColor color;
-        if (it.key()->property("primario").toBool()) color = tm.colors().accentText;
-        it.key()->setIcon(tm.icon(it.value(), color));
+        if (action->property("primario").toBool()) color = tm.colors().accentText;
+        action->setIcon(tm.icon(icon, color));
     }
     static const char* elementIcons[] = {"el-cabecalho", "el-acao", "el-personagem",
                                          "el-parentetico", "el-dialogo", "el-transicao"};
@@ -389,6 +405,8 @@ void MainWindow::buildActions() {
     edit->addSeparator();
     QAction* findAct = iconAction(edit->addAction(tr("&Find and Replace..."), this, &MainWindow::showFind), "localizar");
     findAct->setShortcut(QKeySequence::Find);
+    QAction* spellAct = iconAction(edit->addAction(tr("&Correct Spelling..."), this, &MainWindow::correctSpelling), "ortografia");
+    spellAct->setShortcut(QKeySequence(Qt::Key_F7));  // o atalho de ortografia de outros editores
     iconAction(edit->addAction(tr("Script &Dictionary..."), this, &MainWindow::showDictionary), "fonte");
     edit->addSeparator();
     QAction* settingsAct = iconAction(edit->addAction(tr("Se&ttings..."), this, &MainWindow::showSettings), "configuracoes");
@@ -460,7 +478,7 @@ void MainWindow::buildActions() {
     connect(timelineModeAct_, &QAction::triggered, this, [this] { setViewMode(ViewMode::Timeline); });
     viewMenu->addSeparator();
     QMenu* themeMenu = viewMenu->addMenu(tr("&Theme"));
-    actionIcons_.insert(themeMenu->menuAction(), "tema");
+    iconAction(themeMenu->menuAction(), "tema");
     auto* themeGroup = new QActionGroup(this);
     const std::tuple<QString, ThemeManager::Mode, const char*> modes[] = {
         {tr("Follow System"), ThemeManager::Mode::System, "sistema"},
@@ -560,6 +578,7 @@ void MainWindow::buildActions() {
     tip(undoAct_, tr("Undo"));
     tip(redoAct_, tr("Redo"));
     tip(findAct, tr("Find and Replace"));
+    tip(spellAct, tr("Correct every spelling mistake in the script"));
     tip(sidebarAct_, tr("Show or hide the sidebar"));
     tb->addAction(sidebarAct_);
     tb->addSeparator();
@@ -593,6 +612,7 @@ void MainWindow::buildActions() {
     tb->addWidget(spacer);
 
     tb->addAction(findAct);
+    tb->addAction(spellAct);
     tb->addAction(focusAct);
     tb->addSeparator();
     tb->addAction(titleAct);
@@ -647,6 +667,9 @@ void MainWindow::syncSidebarAction() {
 
 bool MainWindow::maybeSave() {
     if (!editor_.modified()) return true;
+    // Enquanto a pergunta está aberta, o salvamento automático não grava por cima do arquivo:
+    // o usuário pode estar prestes a descartar essas alterações.
+    const QScopedValueRollback<bool> asking(askingToSave_, true);
     QMessageBox box(QMessageBox::Warning, tr("Owlio"), tr("The script has unsaved changes."), QMessageBox::NoButton,
                     this);
     box.setInformativeText(tr("Do you want to save them before closing?"));
@@ -713,8 +736,9 @@ bool MainWindow::writeTo(const QString& path, bool quiet) {
         return false;
     }
     const std::string data = serialize(path);
-    f.write(data.data(), static_cast<qint64>(data.size()));
-    if (!f.commit()) {
+    const bool complete = f.write(data.data(), static_cast<qint64>(data.size())) == static_cast<qint64>(data.size());
+    if (!complete) f.cancelWriting();  // disco cheio ou erro: o arquivo antigo fica intacto
+    if (!complete || !f.commit()) {
         if (quiet) statusBar()->showMessage(tr("Failed to write %1.").arg(path), 6000);
         else QMessageBox::critical(this, tr("Error"), tr("Failed to write %1.").arg(path));
         return false;
@@ -748,7 +772,7 @@ void MainWindow::applySaveSettings() {
 
 void MainWindow::autosaveNow() {
     // Só salva no próprio arquivo quando ele já existe; sem título, fica a cópia de recuperação.
-    if (editor_.modified() && !path_.isEmpty()) saveNow(true);
+    if (editor_.modified() && !path_.isEmpty() && !askingToSave_) saveNow(true);
 }
 
 void MainWindow::writeRecoveryNow() {
@@ -829,35 +853,43 @@ void MainWindow::browseBackups() {
     statusBar()->showMessage(tr("Opened a copy of the backup. Use Save As to keep it."), 6000);
 }
 
+// Caminho sugerido para salvar ou exportar, sem extensão: ao lado do roteiro aberto ou, sem arquivo,
+// na última pasta usada (na primeira vez, em Documentos, e nunca na raiz do disco).
+QString MainWindow::suggestedBase() const {
+    if (!path_.isEmpty()) return QFileInfo(path_).absolutePath() + "/" + QFileInfo(path_).completeBaseName();
+    QString dir = QSettings().value("lastDir").toString();
+    if (dir.isEmpty() || !QDir(dir).exists())
+        dir = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+    return dir + "/" + tr("script");
+}
+
 bool MainWindow::saveAs() {
-    QSettings s;
-    QString suggested = path_.isEmpty() ? s.value("lastDir").toString() + "/" + tr("script") + ".fountain" : path_;
-    QString p = QFileDialog::getSaveFileName(this, tr("Save Script"), suggested,
+    QString p = QFileDialog::getSaveFileName(this, tr("Save Script"), path_.isEmpty() ? suggestedBase() + ".fountain" : path_,
                                              tr("Fountain (*.fountain);;Final Draft (*.fdx)"));
     if (p.isEmpty()) return false;
     if (!p.endsWith(".fountain", Qt::CaseInsensitive) && !p.endsWith(".fdx", Qt::CaseInsensitive))
         p += ".fountain";
+    // O roteiro só passa a ser `p` depois de gravado: se falhar, continua ligado ao arquivo de antes.
+    const QString previous = path_;
     path_ = p;
-    s.setValue("lastDir", QFileInfo(p).absolutePath());
-    return save();
+    if (!saveNow(false)) {
+        path_ = previous;
+        updateTitle();
+        return false;
+    }
+    QSettings().setValue("lastDir", QFileInfo(p).absolutePath());
+    return true;
 }
 
 void MainWindow::exportFdx() {
-    QString base = path_.isEmpty() ? QSettings().value("lastDir").toString() + "/" + tr("script")
-                                   : QFileInfo(path_).absolutePath() + "/" + QFileInfo(path_).completeBaseName();
-    QString p = QFileDialog::getSaveFileName(this, tr("Export to Final Draft"), base + ".fdx",
+    QString p = QFileDialog::getSaveFileName(this, tr("Export to Final Draft"), suggestedBase() + ".fdx",
                                              tr("Final Draft (*.fdx)"));
     if (p.isEmpty()) return;
     if (!p.endsWith(".fdx", Qt::CaseInsensitive)) p += ".fdx";
     if (writeTo(p)) statusBar()->showMessage(tr("Exported: %1").arg(QFileInfo(p).fileName()), 4000);
 }
 
-QString MainWindow::suggestedPdfPath() const {
-    const QString base = path_.isEmpty()
-                             ? QSettings().value("lastDir").toString() + "/" + tr("script")
-                             : QFileInfo(path_).absolutePath() + "/" + QFileInfo(path_).completeBaseName();
-    return base + ".pdf";
-}
+QString MainWindow::suggestedPdfPath() const { return suggestedBase() + ".pdf"; }
 
 void MainWindow::openPrintDialog(bool pdf) {
     PrintDialog dlg(editor_, pdf ? PrintDialog::Target::Pdf : PrintDialog::Target::Printer, suggestedPdfPath(),
@@ -881,8 +913,7 @@ bool MainWindow::exportPdfTo(const QString& p) {
     w.setCreator("Owlio");
     PrintOptions opt;
     opt.sceneNumbers = view_->sceneNumbers();
-    renderScript(w, w.resolution(), editor_, opt);
-    return QFileInfo(p).size() > 0;
+    return renderScript(w, w.resolution(), editor_, opt);
 }
 
 // ------------------------------------------------------------ diálogos
@@ -981,6 +1012,7 @@ void MainWindow::showShortcuts() {
     row(tr("Alt+arrows"), tr("Moves the selected card"));
     row(tr("Enter / double-click"), tr("Opens the scene in the script"));
     row("F2", tr("Edits the scene synopsis"));
+    row("F7", tr("Corrects every spelling mistake, after you confirm"));
     row(tr("Ctrl+wheel"), tr("Bigger or smaller cards"));
     row("Ctrl+Z / Ctrl+Y", tr("Undo / redo"));
 
@@ -1006,6 +1038,29 @@ void MainWindow::about() {
                           "<p>Industry-standard formatting (12 pt Courier, US Letter or A4), page breaks with "
                           "(MORE)/(CONT'D), Fountain and Final Draft (.fdx) files, PDF export.</p>")
                            .arg(QApplication::applicationVersion(), qVersion()));
+}
+
+// Corrige de uma vez as palavras sublinhadas que têm sugestão, depois de o usuário confirmar a lista.
+void MainWindow::correctSpelling() {
+    if (!QSettings().value("spellCheck", true).toBool()) {
+        QMessageBox::information(this, tr("Correct Spelling"),
+                                 tr("Spell check is off. Turn it on in Settings › Script to correct the script."));
+        return;
+    }
+    std::vector<std::u32string> unfixable;
+    const std::vector<Editor::TextFix> fixes = view_->speller().corrections(&unfixable);
+    if (fixes.empty()) {
+        QMessageBox::information(this, tr("Correct Spelling"),
+                                 unfixable.empty() ? tr("No spelling mistakes found.")
+                                                   : tr("The words still marked have no suggestion. Correct them by "
+                                                        "hand or add them to the Script Dictionary."));
+        return;
+    }
+    SpellFixDialog dlg(fixes, unfixable, this);
+    if (dlg.exec() != QDialog::Accepted) return;
+    const int done = editor_.applyFixes(fixes);
+    view_->refreshAfterExternalEdit();
+    statusBar()->showMessage(tr("%n word(s) corrected. Ctrl+Z undoes it.", "", done), 5000);
 }
 
 void MainWindow::showDictionary() {
@@ -1062,10 +1117,11 @@ void MainWindow::showSettings() {
     box.setDefaultButton(now);
     box.exec();
     if (box.clickedButton() != now || !maybeSave()) return;
-    editor_.markSaved();  // já salvo ou descartado: não perguntar de novo ao fechar
     QStringList args;
-    if (!path_.isEmpty()) args << path_;
-    if (QProcess::startDetached(QCoreApplication::applicationFilePath(), args)) close();
+    if (!path_.isEmpty()) args << "--" << path_;  // "--": um arquivo cujo nome começa com "-" não vira opção
+    if (!QProcess::startDetached(QCoreApplication::applicationFilePath(), args)) return;
+    editor_.markSaved();  // já salvo ou descartado: não perguntar de novo ao fechar
+    close();
 }
 
 void MainWindow::editCharacter(const QString& name) {
@@ -1262,7 +1318,7 @@ void MainWindow::refreshPanels() {
         it->setData(Qt::UserRole, scenes[i].para);
         it->setData(CardDelegate::kSubtitleRole, sub);
         it->setData(CardDelegate::kBadgeRole, QString::number(i + 1));
-        it->setToolTip(q(h));
+        it->setToolTip(plaintext::tip(q(h)));
         sceneList_->addItem(it);
     }
     sceneList_->verticalScrollBar()->setValue(keep);
@@ -1297,6 +1353,41 @@ void MainWindow::updateTitle() {
     if (!t.empty()) full = q(t) + " (" + name + ")[*]";
     setWindowTitle(full + " — Owlio");
     setWindowModified(editor_.modified());
+}
+
+// ------------------------------------------------------------ arrastar e soltar
+
+namespace {
+// O primeiro roteiro entre os arquivos arrastados, se estiver no próprio computador (nada de rede).
+QString droppedScript(const QMimeData* md) {
+    for (const QUrl& u : md->urls()) {
+        const QString path = imageio::localPath(u);
+        const QString ext = QFileInfo(path).suffix().toLower();
+        if (!path.isEmpty() && (ext == "fountain" || ext == "fdx" || ext == "spmd" || ext == "txt")) return path;
+    }
+    return {};
+}
+}  // namespace
+
+void MainWindow::dragEnterEvent(QDragEnterEvent* e) {
+    if (droppedScript(e->mimeData()).isEmpty()) return e->ignore();
+    e->acceptProposedAction();
+    dropHint_->setGeometry(centralWidget()->geometry().adjusted(24, 24, -24, -24));
+    dropHint_->raise();
+    dropHint_->show();
+}
+
+void MainWindow::dragLeaveEvent(QDragLeaveEvent*) { dropHint_->hide(); }
+
+void MainWindow::dropEvent(QDropEvent* e) {
+    dropHint_->hide();
+    const QString path = droppedScript(e->mimeData());
+    if (path.isEmpty()) return e->ignore();
+    e->acceptProposedAction();
+    // Abre depois de o arraste terminar: a pergunta de salvar não pode ficar presa dentro dele.
+    QTimer::singleShot(0, this, [this, path] {
+        if (maybeSave()) openFile(path);
+    });
 }
 
 void MainWindow::closeEvent(QCloseEvent* e) {

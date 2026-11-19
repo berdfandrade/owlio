@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <sstream>
 #include <string_view>
+#include <unordered_set>
 
 #include "document.h"
 
@@ -66,7 +67,13 @@ void SpellChecker::loadAffixes(const std::string& affIn) {
     int remaining = 0;
     bool cross = false;
     auto text = [](const std::string& t) { return t == "0" ? std::u32string() : utf8ToU32(t); };
+    try_.clear();
     while (std::getline(in, line)) {
+        if (line.compare(0, 4, "TRY ") == 0) {
+            for (char32_t c : utf8ToU32(line.substr(4)))
+                if (isLetter(c) && toLower(c) == c) try_ += c;  // as maiúsculas vêm da palavra original
+            continue;
+        }
         std::istringstream fields(line);
         std::string kind, flag, a, b, cond;
         if (!(fields >> kind >> flag >> a >> b) || (kind != "PFX" && kind != "SFX")) continue;
@@ -168,6 +175,7 @@ bool SpellChecker::exact(const std::u32string& w) const {
 
 bool SpellChecker::check(const std::u32string& wordIn) const {
     if (wordIn.size() <= 1) return true;
+    if (wordIn.size() > kMaxWord) return false;  // nenhuma palavra do dicionário é tão longa; poupa as variações
     std::u32string w = wordIn;
     for (char32_t& c : w)
         if (c == 0x2019) c = U'\'';
@@ -186,6 +194,60 @@ bool SpellChecker::check(const std::u32string& wordIn) const {
         if (std::all_of(parts.begin(), parts.end(), [this](const std::u32string& p) { return check(p); })) return true;
     }
     return false;
+}
+
+namespace {
+// Letras que só diferem pelo acento: "nao" acha "não", "cafe" acha "café".
+const std::u32string kAccentFamilies[] = {U"aáàâãä", U"eéèêë", U"iíìîï", U"oóòôõö", U"uúùûü", U"cç", U"nñ"};
+
+std::u32string sameCase(const std::u32string& candidate, const std::u32string& original) {
+    bool allUpper = original.size() > 1, firstUpper = toUpper(original[0]) == original[0] && toLower(original[0]) != original[0];
+    for (char32_t c : original)
+        if (toLower(c) == c && toUpper(c) != c) allUpper = false;
+    if (allUpper) return toUpper(candidate);
+    std::u32string out = candidate;
+    if (firstUpper && !out.empty()) out[0] = toUpper(out[0]);
+    return out;
+}
+}  // namespace
+
+std::vector<std::u32string> SpellChecker::suggest(const std::u32string& word, size_t max) const {
+    std::vector<std::u32string> out;
+    if (word.size() < 2 || word.size() > kMaxWord || !loaded()) return out;
+    std::u32string w = word;
+    for (char32_t& c : w) c = toLower(c);
+    std::unordered_set<std::u32string> seen;
+    auto offer = [&](const std::u32string& c) {
+        if (out.size() >= max || c == w || c.empty() || !seen.insert(c).second) return;
+        if (check(c)) out.push_back(sameCase(c, word));
+    };
+    const size_t n = w.size();
+    // 1. Acento trocado ou faltando: o erro mais comum em português.
+    for (size_t i = 0; i < n; ++i)
+        for (const std::u32string& family : kAccentFamilies)
+            if (family.find(w[i]) != std::u32string::npos)
+                for (char32_t c : family) {
+                    std::u32string t = w;
+                    t[i] = c;
+                    offer(t);
+                }
+    // 2. Duas letras vizinhas fora de ordem ("wakls" -> "walks").
+    for (size_t i = 0; i + 1 < n; ++i) {
+        std::u32string t = w;
+        std::swap(t[i], t[i + 1]);
+        offer(t);
+    }
+    // 3. Uma letra trocada, 4. sobrando, 5. faltando.
+    for (size_t i = 0; i < n; ++i)
+        for (char32_t c : try_) {
+            std::u32string t = w;
+            t[i] = c;
+            offer(t);
+        }
+    for (size_t i = 0; i < n; ++i) offer(w.substr(0, i) + w.substr(i + 1));
+    for (size_t i = 0; i <= n; ++i)
+        for (char32_t c : try_) offer(w.substr(0, i) + c + w.substr(i));
+    return out;
 }
 
 std::vector<WordSpan> wordSpans(const std::u32string& t) {

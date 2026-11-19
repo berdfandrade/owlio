@@ -184,10 +184,15 @@ Font: first installed of Courier Prime, Courier Final Draft, …, Nimbus Mono PS
 | titlepagedialog.cpp | title page fields + `TitlePagePreview` (own private Editor) | 2574 |
 | printdialog.cpp | printer/PDF toggle, range, copies, watermark, `SheetPreview` | 3417 |
 | settingsdialog.cpp | paged settings: language, reopen last, theme, interface font/size, conventions, page font, scene numbers, autosave, backups | 1702 |
+| synopsisdialog.cpp | scene synopsis: heading, page, length, cast, word count, Ctrl+Enter | — |
+| dictionarydialog.cpp | the script dictionary word list | — |
+| spellfixdialog.cpp | confirmation for Edit › Correct Spelling: every change with its count, words without a suggestion | — |
 
 Dialogs read the editor via `const Editor&` and expose getters; `MainWindow` applies results.
 
-### Services — `src/i18n.*`, `src/autosave.*`, `src/theme.*`, `src/avatars.*`
+### Services — `src/i18n.*`, `src/autosave.*`, `src/theme.*`, `src/avatars.*`, `src/imageio.*`, `src/plaintext.h`
+
+`imageio` is the only way images enter the app (photos, beat images, embedded base64): JPEG/PNG/WebP only, header size checked before decoding, scaled while reading; `imageio::localPath()` refuses network (UNC/SMB) paths for drag and drop. `plaintext.h` escapes script text shown in tooltips and yes/no questions so it is never read as HTML.
 
 | File | Purpose | Tokens |
 |------|---------|--------|

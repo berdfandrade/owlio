@@ -74,6 +74,13 @@ public:
     int hover = -1;
     int dragAct = -1, dragBeat = -1, hoverAct = -1, hoverBeat = -1;
 
+    // Esquece o mouse: depois de recarregar as cenas ou de perder o foco no meio de um arraste,
+    // nenhum desses índices pode apontar para um item que já não existe.
+    void resetPointer() {
+        hover = dragAct = dragBeat = hoverAct = hoverBeat = -1;
+        unsetCursor();
+    }
+
     double scale() const { return fitWritten ? std::max(total, 1.0) : std::max<double>({total, double(target), 1.0}); }
     double xOf(double page) const { return kLeft + page / scale() * (width() - kLeft - kRight); }
     double xOfFrac(double f) const { return xOf(f * target); }
@@ -161,6 +168,7 @@ protected:
     }
     void mouseMoveEvent(QMouseEvent* e) override {
         const double f = fracAt(e->position().x());
+        if (dragBeat >= int(st.beats.size()) || dragAct + 1 >= int(st.acts.size())) resetPointer();
         if (dragBeat >= 0) {
             st.beats[dragBeat].at = f;
             update();
@@ -169,7 +177,7 @@ protected:
         if (dragAct >= 0) {
             const double lo = (dragAct > 0 ? st.acts[dragAct - 1].end : 0.0) + 0.02;
             const double hi = st.acts[dragAct + 1].end - 0.02;
-            st.acts[dragAct].end = std::clamp(f, lo, hi);
+            if (lo <= hi) st.acts[dragAct].end = std::clamp(f, lo, hi);  // atos colados: não há onde pôr
             update();
             return;
         }
@@ -203,6 +211,12 @@ protected:
     }
     void leaveEvent(QEvent*) override {
         hover = hoverAct = hoverBeat = -1;
+        update();
+    }
+    void focusOutEvent(QFocusEvent* e) override {
+        QWidget::focusOutEvent(e);
+        if (dragBeat >= 0 || dragAct >= 0) commit();  // o arraste termina onde estava
+        resetPointer();
         update();
     }
     void mouseReleaseEvent(QMouseEvent* e) override {
@@ -449,7 +463,7 @@ void TimelineCanvas::paintEvent(QPaintEvent*) {
 
     // ---- Onde o roteiro está agora e coluna da cena sob o mouse.
     const int bottom = ly + int(lanes.size()) * kLane;
-    if (hover >= 0) {
+    if (hover >= 0 && hover < int(scenes.size())) {
         const Scene& s = scenes[hover];
         QColor band = c.accent;
         band.setAlphaF(0.10f);
@@ -684,6 +698,7 @@ QWidget* TimelineView::canvas() const { return canvas_; }
 
 void TimelineView::reload() {
     const auto summaries = ed_->sceneSummaries();
+    canvas_->resetPointer();
     canvas_->scenes.clear();
     double at = 0;
     QHash<QString, int> laneIndex;

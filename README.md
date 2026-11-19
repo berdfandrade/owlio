@@ -90,6 +90,7 @@ It also follows the keyboard-first flow screenwriters know from tools like Final
 
 ### Files
 - **Fountain** (`.fountain`) is the native format: plain text, open, and readable by many other screenwriting tools.
+- **Drag and drop**: drop a `.fountain` or `.fdx` file on the window to open it.
 - **Final Draft** (`.fdx`) import and export, including scene summaries.
 - **Print and PDF window** with a preview of every sheet, one below the other: pick a printer and number of copies, a page range, whether to include the title page and scene numbers, and an optional diagonal **watermark** (for example "DRAFT", or the name of the person receiving the copy). PDFs embed their fonts.
 
@@ -136,7 +137,7 @@ It also follows the keyboard-first flow screenwriters know from tools like Final
 - Side panels list scenes (with page and cast) and characters (with line counts). The sidebar button at the left of the toolbar (Ctrl+\\) hides or shows them both.
 - Find and replace, unlimited undo and redo, and zoom.
 - **US Letter or A4** (Settings › Script › Page). A4 keeps the same margins and line width and fits 4 more lines per page; the screen, the PDF and the printout all follow the choice.
-- **Spell check** as you type, in Brazilian Portuguese or English, picked automatically from the words of the script (or fixed in Settings › Script): unknown words get a red wavy underline on screen, never in the PDF. Character names are never marked. Right-click a word to add it to the **script dictionary** (Edit › Script Dictionary), which is saved inside the script. Turn it off in Settings › Script.
+- **Spell check** as you type, in Brazilian Portuguese or English, picked automatically from the words of the script (or fixed in Settings › Script): unknown words get a red wavy underline on screen, never in the PDF. Character names are never marked. Right-click a word for suggestions, or to add it to the **script dictionary** (Edit › Script Dictionary), which is saved inside the script. **Edit › Correct Spelling** (F7, or the button in the toolbar) lists every marked word with its correction and, once you confirm, fixes them all at once; one Ctrl+Z undoes it. Turn spell check off in Settings › Script.
 
 <p align="center">
   <img src="docs/screenshots/settings.webp" width="49%" alt="Settings: script conventions, spelling and page font">
